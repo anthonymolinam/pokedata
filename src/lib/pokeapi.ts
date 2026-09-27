@@ -234,7 +234,6 @@ function formatVarietyLabel(name: string, baseName: string): string {
 
   if (VARIETY_SUFFIX_MAP[suffix]) return VARIETY_SUFFIX_MAP[suffix];
 
-  // Fallback for compound or unknown suffixes
   return suffix
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -339,7 +338,6 @@ export async function getEvolutionChain(
       if (node.evolution_details && node.evolution_details.length > 0) {
         const d = node.evolution_details[0];
 
-        // English canonical conditions for special modern evolution mechanics
         let otherCondition: string | undefined = undefined;
         const triggerName = d.trigger?.name;
         const speciesName = node.species.name.toLowerCase();
@@ -414,13 +412,15 @@ export async function getAllPokemonIndex(): Promise<
   });
 }
 
-// 5. Global search result details
+// 5. Global search result details with offset and limit pagination
 export async function searchPokemonGlobal(
   matches: { id: number; name: string }[],
-): Promise<PokemonSummary[]> {
-  const slice = matches.slice(0, 30);
+  offset: number = 0,
+  limit: number = 24,
+): Promise<{ results: PokemonSummary[]; hasMore: boolean }> {
+  const slice = matches.slice(offset, offset + limit);
 
-  return await Promise.all(
+  const results = await Promise.all(
     slice.map(async (item) => {
       const data = await pokeFetch<ApiPokemonResponse>(`pokemon/${item.id}`);
       return {
@@ -434,6 +434,11 @@ export async function searchPokemonGlobal(
       };
     }),
   );
+
+  return {
+    results,
+    hasMore: offset + limit < matches.length,
+  };
 }
 
 // 6. Summary details for a specific variant
@@ -622,7 +627,6 @@ export async function getFilteredPokemonList({
   try {
     let candidateIds: number[] = [];
 
-    // If types are selected, calculate intersection
     if (types.length > 0) {
       const typeLists = await Promise.all(
         types.map(async (t) => {
@@ -657,7 +661,6 @@ export async function getFilteredPokemonList({
       }
     }
 
-    // Filter by generation ID boundaries
     if (genId && types.length > 0) {
       const genConfig = GENERATIONS.find((g) => g.id === genId);
       if (genConfig) {
@@ -667,7 +670,6 @@ export async function getFilteredPokemonList({
       }
     }
 
-    // Sort ascending by Pokédex ID
     candidateIds.sort((a, b) => a - b);
 
     const totalCount = candidateIds.length;
@@ -759,12 +761,10 @@ export function formatPokemonDisplayName(name: string): string {
   if (!name) return "";
   const lower = name.toLowerCase();
 
-  // 1. Direct match with special names dictionary
   if (POKEMON_NAME_MAP[lower]) {
     return POKEMON_NAME_MAP[lower];
   }
 
-  // 2. Regional variants (e.g., "mr-mime-galar" -> "Mr. Mime (Galar)")
   const REGIONAL_SUFFIXES = ["-alola", "-galar", "-hisui", "-paldea"];
   for (const suffix of REGIONAL_SUFFIXES) {
     if (lower.endsWith(suffix)) {
@@ -778,7 +778,6 @@ export function formatPokemonDisplayName(name: string): string {
     }
   }
 
-  // 3. Default title casing separated by spaces
   return name
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

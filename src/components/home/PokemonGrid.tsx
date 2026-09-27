@@ -3,13 +3,12 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { PokemonSummary, formatPokemonDisplayName } from "@/lib/pokeapi";
 import { TYPE_COLORS } from "@/constants/typeColors";
 import { motion, type Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-// --- Animation Variants ---
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -35,9 +34,19 @@ const cardVariants: Variants = {
 
 interface PokemonGridProps {
   initialList: PokemonSummary[];
+  currentPage?: number;
+  totalPages?: number;
+  prevPageHref?: string;
+  nextPageHref?: string;
 }
 
-export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
+export default function PokemonGrid({
+  initialList = [],
+  currentPage = 1,
+  totalPages = 1,
+  prevPageHref,
+  nextPageHref,
+}: PokemonGridProps) {
   const router = useRouter();
 
   const [query, setQuery] = useState("");
@@ -45,11 +54,12 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isDebouncing, setIsDebouncing] = useState(false);
   const [totalFound, setTotalFound] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const cleanQuery = useMemo(() => query.trim().toLowerCase(), [query]);
   const isSearching = cleanQuery.length > 0;
 
-  // Lógica de búsqueda con Debounce (300ms)
   useEffect(() => {
     if (!cleanQuery) return;
 
@@ -59,17 +69,19 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
 
       try {
         const res = await fetch(
-          `/api/search?q=${encodeURIComponent(cleanQuery)}`,
+          `/api/search?q=${encodeURIComponent(cleanQuery)}&offset=0`,
         );
         if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
 
         setSearchResults(data.results || []);
         setTotalFound(data.totalMatches || 0);
+        setHasMore(data.hasMore || false);
       } catch (error) {
         console.error("Error searching Pokémon:", error);
         setSearchResults([]);
         setTotalFound(0);
+        setHasMore(false);
       } finally {
         setIsLoading(false);
       }
@@ -80,7 +92,6 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
     };
   }, [cleanQuery]);
 
-  // Manejo de cambios en el input
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setQuery(val);
@@ -92,6 +103,7 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
       setIsLoading(false);
       setSearchResults([]);
       setTotalFound(0);
+      setHasMore(false);
     }
   };
 
@@ -99,6 +111,7 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
     setQuery("");
     setSearchResults([]);
     setTotalFound(0);
+    setHasMore(false);
     setIsLoading(false);
     setIsDebouncing(false);
   };
@@ -106,6 +119,26 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
   const handleClearAll = () => {
     handleClearQuery();
     router.push("/");
+  };
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+
+    try {
+      const res = await fetch(
+        `/api/search?q=${encodeURIComponent(cleanQuery)}&offset=${searchResults.length}`,
+      );
+      if (!res.ok) throw new Error("Load more failed");
+      const data = await res.json();
+
+      setSearchResults((prev) => [...prev, ...(data.results || [])]);
+      setHasMore(data.hasMore || false);
+    } catch (error) {
+      console.error("Error loading more Pokémon:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
   const displayedList = isSearching ? searchResults : initialList;
@@ -146,11 +179,11 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
         {isSearching
           ? isSearchPending
             ? "Searching entire Pokédex..."
-            : `Found ${totalFound} Pokémon (showing first ${displayedList.length})`
+            : `Found ${totalFound} Pokémon (showing ${displayedList.length} of ${totalFound})`
           : `Showing ${initialList.length} Pokémon on this page`}
       </p>
 
-      {/* Grid de resultados o estado vacío */}
+      {/* Grid de resultados */}
       {displayedList.length > 0 ? (
         <motion.div
           key="pokemon-results-grid"
@@ -230,6 +263,68 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
             )}
           </div>
         )
+      )}
+
+      {/* Botón Load More (exclusivo para la búsqueda cuando hay más resultados) */}
+      {isSearching && hasMore && (
+        <div className="flex justify-center pt-4 pb-2">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white transition-all disabled:opacity-50 cursor-pointer shadow-lg shadow-black/20"
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Loading more...</span>
+              </>
+            ) : (
+              <span>
+                Load more ({searchResults.length} of {totalFound})
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Paginación regular: solo visible si NO hay búsqueda activa */}
+      {!isSearching && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-6 border-t border-zinc-800/80">
+          {prevPageHref ? (
+            <Link
+              href={prevPageHref}
+              className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Link>
+          ) : (
+            <span className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-900 text-zinc-700 cursor-not-allowed">
+              <ChevronLeft className="w-4 h-4" />
+            </span>
+          )}
+
+          <div className="flex items-center gap-1 font-mono text-sm px-4">
+            <span className="text-white font-bold">{currentPage}</span>
+            <span className="text-zinc-500">/</span>
+            <span className="text-zinc-400">{totalPages}</span>
+          </div>
+
+          {nextPageHref ? (
+            <Link
+              href={nextPageHref}
+              className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors"
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <span className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-900 text-zinc-700 cursor-not-allowed">
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

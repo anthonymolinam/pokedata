@@ -1,135 +1,91 @@
 import { NextResponse } from "next/server";
 import { getAllPokemonIndex, searchPokemonGlobal } from "@/lib/pokeapi";
 
-// Normalizes text: removes hyphens, periods, extra spaces, and accents
-function normalizeString(str: string): string {
-  return str
+const MULTILINGUAL_ALIASES: Record<string, string> = {
+  // Nombres especiales
+  "codigo cero": "type-null",
+  "codigo-cero": "type-null",
+
+  // Paradojas Pasado (Gen 9)
+  colmilargo: "great-tusk",
+  colagrito: "scream-tail",
+  furioseta: "brute-bonnet",
+  melenaleteo: "flutter-mane",
+  reptalada: "slither-wing",
+  peliarena: "sandy-shocks",
+  bramaluna: "roaring-moon",
+  ondulagua: "walking-wake",
+  flamalariete: "gouging-fire",
+  electrofuror: "raging-bolt",
+
+  // Paradojas Futuro (Gen 9)
+  ferrodada: "iron-treads",
+  ferrosaco: "iron-bundle",
+  ferropalmas: "iron-hands",
+  ferrocuello: "iron-jugulis",
+  ferropolilla: "iron-moth",
+  ferropuas: "iron-thorns",
+  ferropaladin: "iron-valiant",
+  ferroverdor: "iron-leaves",
+  ferromole: "iron-boulder",
+  ferrotesta: "iron-crown",
+};
+
+function normalizeQuery(text: string): string {
+  return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove accents
-    .replace(/[^a-z0-9]/g, ""); // leave only continuous alphanumeric characters
-}
-
-// Optimized Levenshtein distance for typo tolerance
-function levenshteinDistance(a: string, b: string): number {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-
-  const matrix: number[][] = [];
-
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1, // insertion
-          matrix[i - 1][j] + 1, // deletion
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
-}
-
-// Calculates match score (higher score = better match)
-function calculateMatchScore(queryNorm: string, targetName: string): number {
-  const targetNorm = normalizeString(targetName);
-
-  // 1. Exact or identical match without symbols (e.g. "mrmime" === "mrmime")
-  if (queryNorm === targetNorm) return 1000;
-
-  // 2. Starts with search (e.g. "pika" -> "pikachu")
-  if (targetNorm.startsWith(queryNorm))
-    return 500 - (targetNorm.length - queryNorm.length);
-
-  // 3. Contains the full substring (e.g. "mime" -> "mrmime", "mimejr")
-  if (targetNorm.includes(queryNorm))
-    return 300 - (targetNorm.length - queryNorm.length);
-
-  // 4. Fuzzy matching for typos ("pikashu", "charizad")
-  // Only apply fuzzy if the search has at least 3 characters
-  if (queryNorm.length >= 3) {
-    const dist = levenshteinDistance(queryNorm, targetNorm);
-
-    // Allow 1 error in medium words, up to 2 errors in long words
-    const maxAllowedErrors = queryNorm.length > 5 ? 2 : 1;
-
-    if (dist <= maxAllowedErrors) {
-      return 100 - dist * 20;
-    }
-
-    // Check if it fuzzy matches any subword (e.g. "jr" or "mime")
-    const parts = targetName.split("-").map(normalizeString);
-    for (const part of parts) {
-      if (part.length >= 3) {
-        const partDist = levenshteinDistance(queryNorm, part);
-        if (partDist <= 1) {
-          return 80 - partDist * 10;
-        }
-      }
-    }
-  }
-
-  return -1; // No match
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const q = searchParams.get("q") || "";
-  const rawQuery = q.trim();
+  const rawQuery = searchParams.get("q") || "";
+  const offset = Math.max(0, Number(searchParams.get("offset")) || 0);
+  const limit = 24;
 
-  if (!rawQuery) {
-    return NextResponse.json({ results: [], totalMatches: 0 });
+  const cleanQuery = normalizeQuery(rawQuery);
+
+  if (!cleanQuery) {
+    return NextResponse.json({ results: [], totalMatches: 0, hasMore: false });
   }
 
   const allPokemon = await getAllPokemonIndex();
-  const queryNorm = normalizeString(rawQuery);
+  const isNumeric = /^\d+$/.test(cleanQuery);
 
-  // Check if search is a number (Pokédex ID)
-  const isNumeric = /^\d+$/.test(rawQuery.replace(/^#/, ""));
-  const numericId = isNumeric ? parseInt(rawQuery.replace(/^#/, ""), 10) : null;
+  let matches: { id: number; name: string }[] = [];
 
-  let rankedMatches: { id: number; name: string; score: number }[] = [];
-
-  if (numericId !== null) {
-    // If searching for a numeric ID, find exact and partial ID matches
-    rankedMatches = allPokemon
-      .filter((p) => String(p.id).includes(String(numericId)))
-      .map((p) => ({
-        id: p.id,
-        name: p.name,
-        score: p.id === numericId ? 2000 : 1000 - Math.abs(p.id - numericId),
-      }));
+  if (isNumeric) {
+    matches = allPokemon.filter((poke) => poke.id === Number(cleanQuery));
   } else {
-    // Intelligent text search
-    for (const p of allPokemon) {
-      const score = calculateMatchScore(queryNorm, p.name);
-      if (score > 0) {
-        rankedMatches.push({ id: p.id, name: p.name, score });
+    const matchedCanonicalNames = new Set<string>();
+
+    for (const [spanishAlias, englishName] of Object.entries(
+      MULTILINGUAL_ALIASES,
+    )) {
+      if (spanishAlias.includes(cleanQuery)) {
+        matchedCanonicalNames.add(englishName);
       }
     }
+
+    matches = allPokemon.filter((poke) => {
+      const pokeName = normalizeQuery(poke.name);
+      return (
+        pokeName.includes(cleanQuery) || matchedCanonicalNames.has(pokeName)
+      );
+    });
   }
 
-  // Sort by relevance (highest score first)
-  rankedMatches.sort((a, b) => b.score - a.score);
-
-  // Get visual details of the best results (max 24 for speed)
-  const topMatches = rankedMatches.slice(0, 24);
-  const results = await searchPokemonGlobal(topMatches);
+  const { results, hasMore } = await searchPokemonGlobal(
+    matches,
+    offset,
+    limit,
+  );
 
   return NextResponse.json({
     results,
-    totalMatches: rankedMatches.length,
+    totalMatches: matches.length,
+    hasMore,
   });
 }
