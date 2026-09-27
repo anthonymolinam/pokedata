@@ -13,6 +13,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const commitSha = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA;
+  const shortSha = commitSha ? commitSha.slice(0, 7) : "dev";
+  const repoUrl = "https://github.com/anthonymolinam/pokedata";
+  const commitUrl = commitSha ? `${repoUrl}/commit/${commitSha}` : repoUrl;
+
   return (
     <html lang="en" className="dark">
       <body className="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col">
@@ -69,11 +74,29 @@ export default function RootLayout({
                 any of these entities.
               </p>
             </div>
-            <div className="sm:text-right shrink-0">
+            <div className="sm:text-right shrink-0 space-y-1">
               <p className="font-mono text-zinc-600">Data powered by PokéAPI</p>
-              <p className="text-[11px] text-zinc-600">
-                Code released under the MIT License
-              </p>
+              <div className="flex items-center gap-2 sm:justify-end text-[11px] text-zinc-500">
+                <a
+                  href={repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-zinc-300 underline transition-colors"
+                >
+                  GitHub Repository
+                </a>
+                <span>•</span>
+                <a
+                  href={commitUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 hover:text-white transition-colors inline-flex items-center gap-1"
+                  title="View commit on GitHub"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  {shortSha}
+                </a>
+              </div>
             </div>
           </div>
         </footer>
