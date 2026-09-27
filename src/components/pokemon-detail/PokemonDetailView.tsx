@@ -163,6 +163,7 @@ export default function PokemonDetailView({
 
       {/* Weaknesses and resistances table */}
       <TypeWeaknesses effectiveness={activeWeaknesses} />
+
       {/* Evolution Chain with correct order and variants */}
       <EvolutionTree
         currentPokemonName={
