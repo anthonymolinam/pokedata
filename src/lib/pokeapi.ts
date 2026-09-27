@@ -286,7 +286,7 @@ export async function getPokemonDetail(
         ),
       );
     }
-  } catch {
+  } catch (err) {
     console.error("Error fetching varieties:", err);
   }
 
