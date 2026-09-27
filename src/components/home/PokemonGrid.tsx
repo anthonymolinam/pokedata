@@ -115,7 +115,7 @@ export default function PokemonGrid({ initialList = [] }: PokemonGridProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search entire Pokédex (e.g. Lucario, 448)..."
-          className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
+          className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-10 py-2.5 text-base sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
         />
 
         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
