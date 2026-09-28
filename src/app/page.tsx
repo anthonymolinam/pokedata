@@ -17,7 +17,6 @@ export default async function HomePage({ searchParams }: PageProps) {
   const activeTypes = typesParam ? typesParam.split(",").filter(Boolean) : [];
   const hasFilters = activeTypes.length > 0 || genParam !== null;
 
-  // Load data: filtered when active filters exist, or standard paginated list
   const { pokemon, totalPages, totalCount } = hasFilters
     ? await getFilteredPokemonList({
         types: activeTypes,
@@ -31,7 +30,6 @@ export default async function HomePage({ searchParams }: PageProps) {
     ? GENERATIONS.find((g) => g.id === genParam)
     : null;
 
-  // Build pagination URLs preserving active query filters
   const makePageUrl = (pageNum: number) => {
     const params = new URLSearchParams();
     params.set("page", String(pageNum));
@@ -67,10 +65,8 @@ export default async function HomePage({ searchParams }: PageProps) {
         </p>
       </section>
 
-      {/* Filter toggle button and collapsible options panel */}
       <PokemonFiltersBar />
 
-      {/* Pokémon grid managing both results and conditional pagination */}
       <PokemonGrid
         key={`${genParam || "all"}-${typesParam || "all"}-${currentPage}`}
         initialList={pokemon}

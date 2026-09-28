@@ -165,6 +165,27 @@ async function pokeFetch<T>(
   return res.json();
 }
 
+// Limpiador para devolver la especie raíz en formas por defecto
+const STRIP_DEFAULT_FORM_SUFFIXES = [
+  "-zero",
+  "-disguised",
+  "-shield",
+  "-solo",
+  "-red-meteor",
+  "-full-belly",
+  "-standard",
+];
+
+export function getCleanSpeciesSlug(name: string): string {
+  const lower = name.toLowerCase();
+  for (const suffix of STRIP_DEFAULT_FORM_SUFFIXES) {
+    if (lower.endsWith(suffix)) {
+      return lower.slice(0, -suffix.length);
+    }
+  }
+  return lower;
+}
+
 // 1. Paginated Pokémon list for home grid
 export async function getPaginatedPokemonList(
   page: number = 1,
@@ -184,9 +205,12 @@ export async function getPaginatedPokemonList(
   const details: PokemonSummary[] = await Promise.all(
     data.results.map(async (item) => {
       const pokeData = await pokeFetch<ApiPokemonResponse>(item.url);
+      const canonicalName =
+        pokeData.species?.name || getCleanSpeciesSlug(pokeData.name);
+
       return {
         id: pokeData.id,
-        name: pokeData.name,
+        name: canonicalName,
         image:
           pokeData.sprites.other?.["official-artwork"]?.front_default ??
           pokeData.sprites.front_default ??
@@ -305,7 +329,8 @@ export async function getPokemonDetail(
     }
   }
 
-  const speciesIdentifier = data.species?.name || queryName.split("-")[0];
+  const speciesIdentifier =
+    data.species?.name || getCleanSpeciesSlug(data.name);
 
   let varieties: PokemonVariety[] = [];
   try {
@@ -351,7 +376,7 @@ export async function getPokemonDetail(
 
   return {
     id: data.id,
-    name: data.name,
+    name: speciesIdentifier,
     image:
       data.sprites.other?.["official-artwork"]?.front_default ??
       data.sprites.front_default ??
@@ -489,10 +514,14 @@ export async function searchPokemonGlobal(
 
   const results = await Promise.all(
     slice.map(async (item) => {
-      const data = await pokeFetch<ApiPokemonResponse>(`pokemon/${item.id}`);
+      const lookup = DEFAULT_FORM_FALLBACKS[item.name] || item.id;
+      const data = await pokeFetch<ApiPokemonResponse>(`pokemon/${lookup}`);
+      const canonicalName =
+        item.name || data.species?.name || getCleanSpeciesSlug(data.name);
+
       return {
         id: data.id,
-        name: data.name,
+        name: canonicalName,
         image:
           data.sprites.other?.["official-artwork"]?.front_default ??
           data.sprites.front_default ??
@@ -553,7 +582,7 @@ export async function getAdjacentPokemon(currentId: number): Promise<{
       );
       return {
         id: data.id,
-        name: data.name,
+        name: data.species?.name || getCleanSpeciesSlug(data.name),
         image:
           data.sprites.other?.["official-artwork"]?.front_default ??
           data.sprites.front_default ??
@@ -605,7 +634,7 @@ export async function getPokemonListByType(
           );
           return {
             id: pData.id,
-            name: pData.name,
+            name: pData.species?.name || getCleanSpeciesSlug(pData.name),
             image:
               pData.sprites.other?.["official-artwork"]?.front_default ??
               pData.sprites.front_default ??
@@ -662,7 +691,7 @@ export async function getPokemonListByGen(
         const pokeData = await pokeFetch<ApiPokemonResponse>(item.url);
         return {
           id: pokeData.id,
-          name: pokeData.name,
+          name: pokeData.species?.name || getCleanSpeciesSlug(pokeData.name),
           image:
             pokeData.sprites.other?.["official-artwork"]?.front_default ??
             pokeData.sprites.front_default ??
@@ -751,7 +780,7 @@ export async function getFilteredPokemonList({
           const pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${id}`);
           return {
             id: pData.id,
-            name: pData.name,
+            name: pData.species?.name || getCleanSpeciesSlug(pData.name),
             image:
               pData.sprites.other?.["official-artwork"]?.front_default ??
               pData.sprites.front_default ??
