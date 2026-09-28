@@ -87,8 +87,8 @@ src/
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/your-pokedex.git
-   cd your-pokedex
+   git clone https://github.com/anthonymolinam/pokedata.git
+   cd pokedata
    ```
 
 2. Install dependencies:
