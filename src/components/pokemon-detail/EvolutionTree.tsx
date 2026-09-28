@@ -69,7 +69,6 @@ function formatItemName(rawItem: string): string {
     return EVOLUTION_ITEMS_EN[normalizedKey];
   }
 
-  // Capitalization in case it's not found in the list
   return rawItem
     .replace(/-/g, " ")
     .split(" ")
@@ -138,24 +137,62 @@ function formatEvolutionPokemonName(name: string): string {
     }
   }
 
+  // Si es una forma base conocida (ej. palafin-zero), mostramos solo el nombre base
+  const DEFAULT_FORM_SUFFIXES = [
+    "-zero",
+    "-disguised",
+    "-shield",
+    "-solo",
+    "-red-meteor",
+  ];
+  for (const suffix of DEFAULT_FORM_SUFFIXES) {
+    if (lower.endsWith(suffix)) {
+      const base = lower.slice(0, -suffix.length);
+      return formatEvolutionPokemonName(base);
+    }
+  }
+
   return name
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
 
-// 3. Safe link resolution
-function getEvolutionHref(pokemonName: string): string {
-  const REGIONAL_SUFFIXES = ["-alola", "-galar", "-hisui", "-paldea"];
-  const lowerName = pokemonName.toLowerCase();
+// 3. Safe link resolution prioritizing clean canonical URLs
+function getEvolutionHref(node: EvolutionStage): string {
+  // A. Si el nodo ya incluye la especie canónica (ej. "palafin"), enlazamos directo
+  if (node.speciesName) {
+    return `/pokemon/${node.speciesName.toLowerCase()}`;
+  }
 
+  const pokemonName = node.name.toLowerCase();
+
+  // B. Variantes regionales que sí requieren query param
+  const REGIONAL_SUFFIXES = ["-alola", "-galar", "-hisui", "-paldea"];
   const matchedSuffix = REGIONAL_SUFFIXES.find((suffix) =>
-    lowerName.endsWith(suffix),
+    pokemonName.endsWith(suffix),
   );
 
   if (matchedSuffix) {
     const baseSpecies = pokemonName.slice(0, -matchedSuffix.length);
     return `/pokemon/${baseSpecies}?variant=${pokemonName}`;
+  }
+
+  // C. Formas base por defecto en PokéAPI que NO deben llevar ?variant
+  const DEFAULT_FORM_SUFFIXES = [
+    "-zero",
+    "-disguised",
+    "-shield",
+    "-solo",
+    "-red-meteor",
+    "-full-belly",
+    "-standard",
+  ];
+  for (const suffix of DEFAULT_FORM_SUFFIXES) {
+    if (pokemonName.endsWith(suffix)) {
+      const baseSpecies = pokemonName.slice(0, -suffix.length);
+      return `/pokemon/${baseSpecies}`;
+    }
   }
 
   return `/pokemon/${pokemonName}`;
@@ -229,7 +266,7 @@ function EvolutionArrowWithDetails({
   }
 
   return (
-    <div className="flex flex-col items-center gap-1.5 min-w-[120px]">
+    <div className="flex flex-col items-center gap-1.5 min-w-30">
       <ArrowRight className="w-5 h-5 text-zinc-600 rotate-90 md:rotate-0" />
 
       <div className="flex flex-col gap-1 w-full items-center">
@@ -253,10 +290,13 @@ function EvolutionBranch({
   node: EvolutionStage;
   currentPokemonName: string;
 }) {
+  const currentLower = currentPokemonName.toLowerCase();
   const isCurrent =
-    node.name.toLowerCase() === currentPokemonName.toLowerCase();
+    node.name.toLowerCase() === currentLower ||
+    (node.speciesName && node.speciesName.toLowerCase() === currentLower) ||
+    node.name.toLowerCase().startsWith(`${currentLower}-`);
 
-  const targetHref = getEvolutionHref(node.name);
+  const targetHref = getEvolutionHref(node);
 
   return (
     <div className="flex flex-col md:flex-row items-center gap-6">
@@ -282,7 +322,7 @@ function EvolutionBranch({
           />
         </div>
         <span className="font-bold text-xs text-zinc-200 mb-1 text-center">
-          {formatEvolutionPokemonName(node.name)}
+          {formatEvolutionPokemonName(node.speciesName || node.name)}
         </span>
         <div className="flex gap-1">
           {node.types.map((t) => (
@@ -315,9 +355,9 @@ function EvolutionBranch({
           ))}
         </div>
       )}
-      </div>
-      );
-      }
+    </div>
+  );
+}
 
 export default function EvolutionTree({
   currentPokemonName,

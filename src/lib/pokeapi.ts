@@ -31,6 +31,7 @@ interface ApiPokemonResponse {
   name: string;
   height: number;
   weight: number;
+  species?: ApiNamedResource;
   types: ApiPokemonType[];
   stats: ApiPokemonStat[];
   abilities: ApiPokemonAbility[];
@@ -107,6 +108,7 @@ export interface PokemonDetail extends PokemonSummary {
 export interface EvolutionStage {
   id: number;
   name: string;
+  speciesName: string;
   image: string;
   types: string[];
   triggerDetails?: {
@@ -204,14 +206,23 @@ export async function getPaginatedPokemonList(
 
 // 2. Standardized form / variety labeling in English
 const VARIETY_SUFFIX_MAP: Record<string, string> = {
+  // Regional
   alola: "Alola",
   galar: "Galar",
   hisui: "Hisui",
   paldea: "Paldea",
+  "galar-zen": "Galar (Zen Mode)",
+  "paldea-combat": "Paldea (Combat Breed)",
+  "paldea-blaze": "Paldea (Blaze Breed)",
+  "paldea-aqua": "Paldea (Aqua Breed)",
+
+  // Megas / Gigantamax
   mega: "Mega",
   "mega-x": "Mega X",
   "mega-y": "Mega Y",
   gmax: "Gigantamax",
+
+  // Battle Formes
   origin: "Origin Forme",
   therian: "Therian Forme",
   incarnate: "Incarnate Forme",
@@ -221,10 +232,20 @@ const VARIETY_SUFFIX_MAP: Record<string, string> = {
   attack: "Attack Forme",
   defense: "Defense Forme",
   speed: "Speed Forme",
-  "galar-zen": "Galar (Zen Mode)",
-  "paldea-combat": "Paldea (Combat Breed)",
-  "paldea-blaze": "Paldea (Blaze Breed)",
-  "paldea-aqua": "Paldea (Aqua Breed)",
+
+  // Special Gen 7, 8, 9 forms
+  zero: "Zero Form",
+  hero: "Hero Form",
+  "red-meteor": "Meteor Form (Red)",
+  meteor: "Meteor Form",
+  disguised: "Disguised Form",
+  busted: "Busted Form",
+  solo: "Solo Form",
+  school: "School Form",
+  "full-belly": "Full Belly Mode",
+  hangry: "Hangry Mode",
+  ice: "Ice Face",
+  noice: "Noice Face",
 };
 
 function formatVarietyLabel(name: string, baseName: string): string {
@@ -240,17 +261,56 @@ function formatVarietyLabel(name: string, baseName: string): string {
     .join(" ");
 }
 
+// Fallbacks para especies cuya forma base requiere un sufijo en /pokemon/
+const DEFAULT_FORM_FALLBACKS: Record<string, string> = {
+  palafin: "palafin-zero",
+  minior: "minior-red-meteor",
+  mimikyu: "mimikyu-disguised",
+  aegislash: "aegislash-shield",
+  wishiwashi: "wishiwashi-solo",
+  morpeko: "morpeko-full-belly",
+  eiscue: "eiscue-ice",
+  darmanitan: "darmanitan-standard",
+  "darmanitan-galar": "darmanitan-galar-standard",
+};
+
 export async function getPokemonDetail(
   nameOrId: string,
 ): Promise<PokemonDetail> {
-  const data = await pokeFetch<ApiPokemonResponse>(
-    `pokemon/${encodeURIComponent(nameOrId.toLowerCase())}`,
-  );
+  const queryName = nameOrId.toLowerCase().trim();
+  const effectiveLookup = DEFAULT_FORM_FALLBACKS[queryName] || queryName;
+
+  let data: ApiPokemonResponse;
+
+  try {
+    data = await pokeFetch<ApiPokemonResponse>(
+      `pokemon/${encodeURIComponent(effectiveLookup)}`,
+    );
+  } catch (error) {
+    try {
+      const speciesFallback = await pokeFetch<ApiPokemonSpeciesResponse>(
+        `pokemon-species/${encodeURIComponent(queryName)}`,
+      );
+      const defaultVariety =
+        speciesFallback.varieties?.find((v) => v.is_default) ||
+        speciesFallback.varieties?.[0];
+
+      if (defaultVariety) {
+        data = await pokeFetch<ApiPokemonResponse>(defaultVariety.pokemon.url);
+      } else {
+        throw error;
+      }
+    } catch {
+      throw error;
+    }
+  }
+
+  const speciesIdentifier = data.species?.name || queryName.split("-")[0];
 
   let varieties: PokemonVariety[] = [];
   try {
     const speciesData = await pokeFetch<ApiPokemonSpeciesResponse>(
-      `pokemon-species/${encodeURIComponent(data.name)}`,
+      `pokemon-species/${encodeURIComponent(speciesIdentifier)}`,
     );
 
     if (speciesData.varieties && speciesData.varieties.length > 1) {
@@ -263,7 +323,7 @@ export async function getPokemonDetail(
             const vData = await pokeFetch<ApiPokemonResponse>(v.pokemon.url);
             return {
               name: vData.name,
-              label: formatVarietyLabel(vData.name, data.name),
+              label: formatVarietyLabel(vData.name, speciesIdentifier),
               isDefault: v.is_default,
               types: vData.types.map((t) => t.type.name),
               image:
@@ -330,9 +390,15 @@ export async function getEvolutionChain(
     const formatNode = async (
       node: ApiEvolutionNode,
     ): Promise<EvolutionStage> => {
-      const pData = await pokeFetch<ApiPokemonResponse>(
-        `pokemon/${node.species.name}`,
-      );
+      const speciesName = node.species.name.toLowerCase();
+      const lookupName = DEFAULT_FORM_FALLBACKS[speciesName] || speciesName;
+
+      let pData: ApiPokemonResponse;
+      try {
+        pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${lookupName}`);
+      } catch {
+        pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${speciesName}`);
+      }
 
       let triggerDetails;
       if (node.evolution_details && node.evolution_details.length > 0) {
@@ -340,7 +406,6 @@ export async function getEvolutionChain(
 
         let otherCondition: string | undefined = undefined;
         const triggerName = d.trigger?.name;
-        const speciesName = node.species.name.toLowerCase();
 
         const SPECIAL_CONDITIONS: Record<string, string> = {
           annihilape: "Use Rage Fist 20 times",
@@ -348,6 +413,7 @@ export async function getEvolutionChain(
           kingambit: "Defeat 3 Bisharp holding Leader's Crest",
           overqwil: "Use Barb Barrage in Strong Style 20 times",
           basculegion: "Receive 294+ recoil damage",
+          palafin: "Union Circle level-up (Lv. 38+)",
         };
 
         if (SPECIAL_CONDITIONS[speciesName]) {
@@ -379,6 +445,7 @@ export async function getEvolutionChain(
       return {
         id: pData.id,
         name: pData.name,
+        speciesName: node.species.name,
         image:
           pData.sprites.other?.["official-artwork"]?.front_default ??
           pData.sprites.front_default ??
@@ -711,7 +778,6 @@ export async function getFilteredPokemonList({
 
 // 11. Canonical Pokémon name formatting
 const POKEMON_NAME_MAP: Record<string, string> = {
-  // Official hyphenated species
   "ho-oh": "Ho-Oh",
   "jangmo-o": "Jangmo-o",
   "hakamo-o": "Hakamo-o",
@@ -721,20 +787,14 @@ const POKEMON_NAME_MAP: Record<string, string> = {
   "chien-pao": "Chien-Pao",
   "ting-lu": "Ting-Lu",
   "chi-yu": "Chi-Yu",
-
-  // Specific official punctuation
   "mr-mime": "Mr. Mime",
   "mime-jr": "Mime Jr.",
   "mr-rime": "Mr. Rime",
   "type-null": "Type: Null",
-
-  // Tapus
   "tapu-koko": "Tapu Koko",
   "tapu-lele": "Tapu Lele",
   "tapu-bulu": "Tapu Bulu",
   "tapu-fini": "Tapu Fini",
-
-  // Paradox Pokémon
   "great-tusk": "Great Tusk",
   "scream-tail": "Scream Tail",
   "brute-bonnet": "Brute Bonnet",
