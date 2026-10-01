@@ -101,6 +101,55 @@ const EVOLUTION_ITEMS_ES: Record<string, string> = {
   peatblock: "Bloque de Turba",
 };
 
+// 3. Fallbacks de condiciones especiales de especies (Gen 8/9 y Leyendas Arceus)
+const SPECIAL_EVOLUTION_OVERRIDES: Record<string, { es: string; en: string }> =
+  {
+    pawmot: {
+      es: "1000 pasos en modo 'Enviar Pokémon'",
+      en: "Walk 1,000 steps in 'Let's Go'",
+    },
+    brambleghast: {
+      es: "1000 pasos en modo 'Enviar Pokémon'",
+      en: "Walk 1,000 steps in 'Let's Go'",
+    },
+    rabsca: {
+      es: "1000 pasos en modo 'Enviar Pokémon'",
+      en: "Walk 1,000 steps in 'Let's Go'",
+    },
+    gholdengo: {
+      es: "Subir de nivel con 999 Monedas de Gimmighoul",
+      en: "Level up with 999 Gimmighoul Coins",
+    },
+    maushold: {
+      es: "Nivel 25 (en combate)",
+      en: "Level 25 (in battle)",
+    },
+    "urshifu-single-strike": {
+      es: "Torre de las Sombras",
+      en: "Tower of Darkness",
+    },
+    "urshifu-rapid-strike": {
+      es: "Torre de las Aguas",
+      en: "Tower of Waters",
+    },
+    urshifu: {
+      es: "Torre de las Sombras / Aguas",
+      en: "Tower of Darkness / Waters",
+    },
+    basculegion: {
+      es: "Recibir 294+ daño de retroceso sin debilitarse",
+      en: "Lose 294+ HP from recoil without fainting",
+    },
+    overqwil: {
+      es: "Usar Mil Púas Tóxicas en estilo fuerte 20 veces",
+      en: "Use Barb Barrage in Strong Style 20 times",
+    },
+    wyrdeer: {
+      es: "Usar Escudo Psíquico en estilo ágil 20 veces",
+      en: "Use Psyshield Bash in Agile Style 20 times",
+    },
+  };
+
 const TYPE_TRANSLATIONS_ES: Record<string, string> = {
   normal: "Normal",
   fire: "Fuego",
@@ -272,134 +321,250 @@ function getEvolutionHref(node: EvolutionStage, locale: string): string {
   return `/${locale}/pokemon/${resolveSlug(pokemonName)}`;
 }
 
+function formatSpecialCondition(
+  rawCondition: string,
+  minLevel: number | null | undefined,
+  isEs: boolean,
+): { label: string; absorbsLevel: boolean } {
+  const lower = rawCondition.toLowerCase();
+
+  // 1. Finizen -> Palafin (Círculo Unión)
+  if (lower.includes("union circle")) {
+    const lvl = minLevel || 38;
+    return {
+      label: isEs
+        ? `Nivel ${lvl}+ en Círculo Unión`
+        : `Level ${lvl}+ in Union Circle`,
+      absorbsLevel: true,
+    };
+  }
+
+  // 2. Inkay -> Malamar (Girar consola)
+  if (lower.includes("upside") || lower.includes("turn")) {
+    const lvl = minLevel || 30;
+    return {
+      label: isEs
+        ? `Nivel ${lvl}+ consola invertida`
+        : `Level ${lvl}+ upside down`,
+      absorbsLevel: true,
+    };
+  }
+
+  // 3. Pawmo, Bramblin, Rellor (1000 pasos en Let's Go)
+  if (
+    lower.includes("1000 steps") ||
+    lower.includes("walk 1000") ||
+    lower.includes("let's go")
+  ) {
+    return {
+      label: isEs
+        ? "1000 pasos en modo 'Enviar Pokémon'"
+        : "1000 steps in 'Let's Go'",
+      absorbsLevel: true,
+    };
+  }
+
+  // 4. Primeape -> Annihilape (Puño Furia)
+  if (lower.includes("rage fist") || lower.includes("20 times")) {
+    return {
+      label: isEs ? "Usar Puño Furia 20 veces" : "Use Rage Fist 20 times",
+      absorbsLevel: true,
+    };
+  }
+
+  // 5. Bisharp -> Kingambit (3 Bisharp con Distintivo de Líder)
+  if (lower.includes("defeat 3") || lower.includes("leader")) {
+    return {
+      label: isEs
+        ? "Derrotar a 3 Bisharp equipando Distintivo de Líder"
+        : "Defeat 3 Bisharp holding Leader's Crest",
+      absorbsLevel: true,
+    };
+  }
+
+  // 6. Girar (Milcery -> Alcremie)
+  if (lower.includes("spin")) {
+    return {
+      label: isEs ? "Girar sobre sí mismo" : "Spin around",
+      absorbsLevel: false,
+    };
+  }
+
+  // 7. Daño recibido (Yamask Galariano -> Runerigus)
+  if (lower.includes("damage") || lower.includes("49")) {
+    return {
+      label: isEs
+        ? "Recibir 49+ de daño bajo el arco"
+        : "Take 49+ damage under stone arch",
+      absorbsLevel: true,
+    };
+  }
+
+  return { label: rawCondition, absorbsLevel: false };
+}
+
 function EvolutionArrowWithDetails({
   details,
   locale,
+  targetPokemonName,
 }: {
   details?: EvolutionStage["triggerDetails"];
   locale: string;
+  targetPokemonName?: string;
 }) {
   if (!details) return null;
   const isEs = locale === "es";
 
   const requirements: string[] = [];
 
-  // A. Métodos principales
-  if (details.trigger === "trade") {
-    if (details.heldItem) {
-      const itemName = formatItemName(details.heldItem, isEs);
-      requirements.push(
-        isEs
-          ? `Intercambio equipando ${itemName}`
-          : `Trade holding ${itemName}`,
-      );
-    } else {
-      requirements.push(isEs ? "Intercambio" : "Trade");
-    }
-  } else if (details.trigger === "use-item" && details.item) {
-    const itemName = formatItemName(details.item, isEs);
-    requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
-  }
-
-  // B. Subida de nivel, amistad y requisitos con horario integrado
-  const timeSuffix = details.timeOfDay
-    ? ` (${isEs ? (details.timeOfDay === "day" ? "Día" : "Noche") : details.timeOfDay === "day" ? "Day" : "Night"})`
-    : "";
-
-  let hasHandledTime = false;
-
-  if (details.minLevel) {
-    requirements.push(
-      `${isEs ? `Nivel ${details.minLevel}` : `Level ${details.minLevel}`}${timeSuffix}`,
-    );
-    if (details.timeOfDay) hasHandledTime = true;
-  } else if (details.happiness) {
-    requirements.push(
-      `${isEs ? `Amistad ≥ ${details.happiness}` : `Friendship ≥ ${details.happiness}`}${timeSuffix}`,
-    );
-    if (details.timeOfDay) hasHandledTime = true;
-  }
-
-  if (details.heldItem && details.trigger !== "trade") {
-    const itemName = formatItemName(details.heldItem, isEs);
-    requirements.push(
-      `${isEs ? `Equipar ${itemName}` : `Hold ${itemName}`}${!hasHandledTime ? timeSuffix : ""}`,
-    );
-    if (details.timeOfDay) hasHandledTime = true;
-  }
-
-  if (details.timeOfDay && !hasHandledTime) {
+  // 0. Si el Pokémon de destino tiene condición fija en el mapa de overrides
+  const targetKey = targetPokemonName?.toLowerCase() || "";
+  if (SPECIAL_EVOLUTION_OVERRIDES[targetKey]) {
     requirements.push(
       isEs
-        ? details.timeOfDay === "day"
-          ? "De día"
-          : "De noche"
-        : details.timeOfDay === "day"
-          ? "During day"
-          : "During night",
+        ? SPECIAL_EVOLUTION_OVERRIDES[targetKey].es
+        : SPECIAL_EVOLUTION_OVERRIDES[targetKey].en,
     );
   }
 
-  // C. Movimientos y condiciones especiales
-  if (details.knownMove) {
-    const moveFormatted = details.knownMove
-      .replace(/-/g, " ")
-      .split(" ")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
-    requirements.push(
-      isEs ? `Aprender ${moveFormatted}` : `Learn ${moveFormatted}`,
+  // A. Analizar condiciones especiales primero para saber si absorben el nivel
+  let specialConditionLabel: string | null = null;
+  let levelAbsorbed = false;
+
+  if (requirements.length === 0 && details.otherCondition) {
+    const parsed = formatSpecialCondition(
+      details.otherCondition,
+      details.minLevel,
+      isEs,
     );
+    specialConditionLabel = parsed.label;
+    levelAbsorbed = parsed.absorbsLevel;
   }
 
-  if (details.otherCondition) {
-    requirements.push(details.otherCondition);
+  // B. Métodos principales: Trade / Use-Item (si no se cubrió en overrides)
+  if (requirements.length === 0) {
+    if (details.trigger === "trade") {
+      if (details.heldItem) {
+        const itemName = formatItemName(details.heldItem, isEs);
+        requirements.push(
+          isEs
+            ? `Intercambio equipando ${itemName}`
+            : `Trade holding ${itemName}`,
+        );
+      } else {
+        requirements.push(isEs ? "Intercambio" : "Trade");
+      }
+    } else if (details.trigger === "use-item" && details.item) {
+      const itemName = formatItemName(details.item, isEs);
+      requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
+    }
+
+    // C. Nivel y Horario (Día / Noche)
+    const timeSuffix = details.timeOfDay
+      ? ` (${isEs ? (details.timeOfDay === "day" ? "Día" : "Noche") : details.timeOfDay === "day" ? "Day" : "Night"})`
+      : "";
+
+    let hasHandledTime = false;
+
+    if (specialConditionLabel) {
+      requirements.push(specialConditionLabel);
+    }
+
+    if (details.minLevel && !levelAbsorbed) {
+      requirements.push(
+        `${isEs ? `Nivel ${details.minLevel}` : `Level ${details.minLevel}`}${timeSuffix}`,
+      );
+      if (details.timeOfDay) hasHandledTime = true;
+    } else if (details.happiness) {
+      requirements.push(
+        `${isEs ? `Amistad ≥ ${details.happiness}` : `Friendship ≥ ${details.happiness}`}${timeSuffix}`,
+      );
+      if (details.timeOfDay) hasHandledTime = true;
+    }
+
+    // D. Objeto equipado sin intercambio (ej. Sneasel, Gligar)
+    if (details.heldItem && details.trigger !== "trade") {
+      const itemName = formatItemName(details.heldItem, isEs);
+      requirements.push(
+        `${isEs ? `Equipar ${itemName}` : `Hold ${itemName}`}${!hasHandledTime ? timeSuffix : ""}`,
+      );
+      if (details.timeOfDay) hasHandledTime = true;
+    }
+
+    if (details.timeOfDay && !hasHandledTime && requirements.length === 0) {
+      requirements.push(
+        isEs
+          ? details.timeOfDay === "day"
+            ? "De día"
+            : "De noche"
+          : details.timeOfDay === "day"
+            ? "During day"
+            : "During night",
+      );
+    }
+
+    // E. Movimiento conocido
+    if (details.knownMove) {
+      const moveFormatted = details.knownMove
+        .replace(/-/g, " ")
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+      requirements.push(
+        isEs ? `Aprender ${moveFormatted}` : `Learn ${moveFormatted}`,
+      );
+    }
+
+    // F. Género y otros requisitos de campo
+    if (details.gender === 1) requirements.push(isEs ? "(Hembra)" : "(Female)");
+    if (details.gender === 2) requirements.push(isEs ? "(Macho)" : "(Male)");
+
+    if (details.partySpecies) {
+      const partyName = formatEvolutionPokemonName(
+        details.partySpecies,
+        locale,
+      );
+      requirements.push(
+        isEs ? `Con ${partyName} en equipo` : `With ${partyName} in party`,
+      );
+    }
+
+    if (details.needsOverworldRain) {
+      requirements.push(isEs ? "Durante la lluvia" : "During Rain");
+    }
+
+    if (details.relativeStats === 1)
+      requirements.push(isEs ? "Ataque > Defensa" : "Attack > Defense");
+    if (details.relativeStats === -1)
+      requirements.push(isEs ? "Ataque < Defensa" : "Attack < Defense");
+    if (details.relativeStats === 0)
+      requirements.push(isEs ? "Ataque = Defensa" : "Attack = Defense");
+
+    // Fallback de objeto si no se añadió antes
+    if (requirements.length === 0 && details.item) {
+      const itemName = formatItemName(details.item, isEs);
+      requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
+    }
   }
 
-  if (details.gender === 1) requirements.push(isEs ? "(Hembra)" : "(Female)");
-  if (details.gender === 2) requirements.push(isEs ? "(Macho)" : "(Male)");
-
-  if (details.partySpecies) {
-    const partyName = formatEvolutionPokemonName(details.partySpecies, locale);
-    requirements.push(
-      isEs ? `Con ${partyName} en equipo` : `With ${partyName} in party`,
-    );
-  }
-  if (details.needsOverworldRain) {
-    requirements.push(isEs ? "Durante la lluvia" : "During Rain");
-  }
-
-  if (details.relativeStats === 1)
-    requirements.push(isEs ? "Ataque > Defensa" : "Attack > Defense");
-  if (details.relativeStats === -1)
-    requirements.push(isEs ? "Ataque < Defensa" : "Attack < Defense");
-  if (details.relativeStats === 0)
-    requirements.push(isEs ? "Ataque = Defensa" : "Attack = Defense");
-
-  // Fallbacks
-  if (requirements.length === 0 && details.item) {
-    const itemName = formatItemName(details.item, isEs);
-    requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
-  }
+  // Fallback genérico final
   if (requirements.length === 0) {
     requirements.push(isEs ? "Evolución especial" : "Special Evolution");
   }
 
   return (
     <div className="flex flex-col items-center justify-center gap-1.5 w-44 shrink-0">
-      {/* Requisitos arriba */}
       <div className="flex flex-col gap-1 w-full items-center justify-center">
         {requirements.map((req, index) => (
           <span
             key={`${req}-${index}`}
-            className="w-full max-w-36.25 px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-center text-[10px] font-semibold text-amber-300 leading-snug whitespace-normal text-balance"
+            className="w-full max-w-38.75 px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-center text-[10px] font-semibold text-amber-300 leading-snug whitespace-normal text-balance"
           >
             {req}
           </span>
         ))}
       </div>
 
-      {/* Flecha debajo centrada */}
       <ArrowRight className="w-5 h-5 text-zinc-500 rotate-90 md:rotate-0 shrink-0" />
     </div>
   );
@@ -449,7 +614,7 @@ function EvolutionBranch({
         <span className="font-bold text-xs text-zinc-200 mb-1 text-center">
           {formatEvolutionPokemonName(node.speciesName || node.name, locale)}
         </span>
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap justify-center">
           {node.types.map((t) => {
             const rawType = t.toLowerCase();
             const displayType =
@@ -460,7 +625,7 @@ function EvolutionBranch({
             return (
               <span
                 key={t}
-                className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
+                className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${
                   TYPE_COLORS[rawType] || "bg-zinc-700 text-white"
                 }`}
               >
@@ -482,6 +647,7 @@ function EvolutionBranch({
               <EvolutionArrowWithDetails
                 details={child.triggerDetails}
                 locale={locale}
+                targetPokemonName={child.speciesName || child.name}
               />
               <EvolutionBranch
                 node={child}

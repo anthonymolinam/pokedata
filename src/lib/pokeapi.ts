@@ -76,6 +76,7 @@ interface ApiEvolutionNode {
     relative_physical_stats?: number;
     party_species?: ApiNamedResource;
     needs_overworld_rain?: boolean;
+    other_condition?: string;
   }[];
   evolves_to: ApiEvolutionNode[];
 }
@@ -174,6 +175,8 @@ const STRIP_DEFAULT_FORM_SUFFIXES = [
   "-red-meteor",
   "-full-belly",
   "-standard",
+  "-family-of-four",
+  "-two-segment",
 ];
 
 export function getCleanSpeciesSlug(name: string): string {
@@ -270,6 +273,10 @@ const VARIETY_SUFFIX_MAP: Record<string, string> = {
   hangry: "Hangry Mode",
   ice: "Ice Face",
   noice: "Noice Face",
+  "family-of-four": "Family of Four",
+  "family-of-three": "Family of Three",
+  "two-segment": "Two-Segment Form",
+  "three-segment": "Three-Segment Form",
 };
 
 function formatVarietyLabel(name: string, baseName: string): string {
@@ -287,6 +294,8 @@ function formatVarietyLabel(name: string, baseName: string): string {
 
 // Fallbacks para especies cuya forma base requiere un sufijo en /pokemon/
 const DEFAULT_FORM_FALLBACKS: Record<string, string> = {
+  maushold: "maushold-family-of-four",
+  dudunsparce: "dudunsparce-two-segment",
   palafin: "palafin-zero",
   minior: "minior-red-meteor",
   mimikyu: "mimikyu-disguised",
@@ -418,11 +427,30 @@ export async function getEvolutionChain(
       const speciesName = node.species.name.toLowerCase();
       const lookupName = DEFAULT_FORM_FALLBACKS[speciesName] || speciesName;
 
-      let pData: ApiPokemonResponse;
+      let pData: ApiPokemonResponse | null = null;
       try {
         pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${lookupName}`);
       } catch {
-        pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${speciesName}`);
+        try {
+          pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${speciesName}`);
+        } catch {
+          // Fallback resiliente: obtener la variedad por defecto de la especie
+          try {
+            const sData = await pokeFetch<ApiPokemonSpeciesResponse>(
+              `pokemon-species/${speciesName}`,
+            );
+            const defaultVariety =
+              sData.varieties?.find((v) => v.is_default) ||
+              sData.varieties?.[0];
+            if (defaultVariety) {
+              pData = await pokeFetch<ApiPokemonResponse>(
+                defaultVariety.pokemon.url,
+              );
+            }
+          } catch {
+            pData = null;
+          }
+        }
       }
 
       let triggerDetails;
@@ -439,10 +467,13 @@ export async function getEvolutionChain(
           overqwil: "Use Barb Barrage in Strong Style 20 times",
           basculegion: "Receive 294+ recoil damage",
           palafin: "Union Circle level-up (Lv. 38+)",
+          maushold: "Level 25 (in battle)",
         };
 
         if (SPECIAL_CONDITIONS[speciesName]) {
           otherCondition = SPECIAL_CONDITIONS[speciesName];
+        } else if (d.other_condition) {
+          otherCondition = d.other_condition;
         } else if (triggerName === "other") {
           otherCondition = "Special method";
         }
@@ -468,14 +499,14 @@ export async function getEvolutionChain(
       );
 
       return {
-        id: pData.id,
-        name: pData.name,
+        id: pData?.id ?? 0,
+        name: pData?.name ?? speciesName,
         speciesName: node.species.name,
         image:
-          pData.sprites.other?.["official-artwork"]?.front_default ??
-          pData.sprites.front_default ??
+          pData?.sprites.other?.["official-artwork"]?.front_default ??
+          pData?.sprites.front_default ??
           "/placeholder.png",
-        types: pData.types.map((t) => t.type.name),
+        types: pData?.types.map((t) => t.type.name) ?? ["normal"],
         triggerDetails,
         evolvesTo,
       };
