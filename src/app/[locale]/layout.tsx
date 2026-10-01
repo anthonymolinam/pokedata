@@ -55,12 +55,6 @@ export default async function RootLayout({
             <div className="flex items-center gap-3 sm:gap-4 shrink-0">
               <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-medium">
                 <Link
-                  href={`/${locale}`}
-                  className="text-zinc-400 hover:text-white transition-colors"
-                >
-                  {dict.nav.pokedex}
-                </Link>
-                <Link
                   href={getLocalizedPath(locale, "types")}
                   className="text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
                 >

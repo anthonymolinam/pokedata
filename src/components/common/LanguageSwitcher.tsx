@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Locale } from "@/proxy";
 import { ROUTE_MAP, REVERSE_ROUTE_MAP } from "@/constants/routes";
 import {
@@ -15,6 +15,7 @@ export default function LanguageSwitcher({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleToggle = (targetLocale: Locale) => {
     if (targetLocale === currentLocale) return;
@@ -49,7 +50,10 @@ export default function LanguageSwitcher({
       }
     }
 
-    const newPath = `/${segments.join("/")}`;
+    const basePath = `/${segments.join("/")}`;
+    const queryString = searchParams.toString();
+    const newPath = queryString ? `${basePath}?${queryString}` : basePath;
+
     router.push(newPath);
   };
 
