@@ -1,12 +1,22 @@
 "use client";
+
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Search, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatPokemonDisplayName, PokemonSummary } from "@/lib/pokeapi";
+import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 
-export default function GlobalSearchBar() {
+interface GlobalSearchBarProps {
+  locale?: string;
+  placeholder?: string;
+}
+
+export default function GlobalSearchBar({
+  locale = "es",
+  placeholder = "Search Pokémon...",
+}: GlobalSearchBarProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PokemonSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -18,13 +28,14 @@ export default function GlobalSearchBar() {
   const resultsListRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Detectar plataforma para el shortcut
+  // Detección segura en cliente de Mac sin useEffect síncrono
   const isMac = useSyncExternalStore(
-    () => () => {}, // Subscribe vacío (la plataforma no cambia en caliente)
-    () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent), // Valor en cliente
-    () => false, // Valor por defecto en servidor (SSR)
+    () => () => {},
+    () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent),
+    () => false,
   );
-  // Shortcut global Ctrl+K / Cmd+K
+
+  // Atajo global Ctrl+K / Cmd+K
   useEffect(() => {
     function handleGlobalKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -55,7 +66,7 @@ export default function GlobalSearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Scroll automático en navegación con flechas
+  // Auto-scroll al navegar con flechas
   useEffect(() => {
     if (selectedIndex >= 0 && resultsListRef.current) {
       const activeEl = resultsListRef.current.children[
@@ -67,7 +78,7 @@ export default function GlobalSearchBar() {
     }
   }, [selectedIndex]);
 
-  // Debounce de búsqueda asíncrona (sin setStates sincrónicos en el cuerpo del efecto)
+  // Debounce de búsqueda asíncrona
   useEffect(() => {
     const trimmed = query.trim();
     if (!trimmed) {
@@ -118,7 +129,15 @@ export default function GlobalSearchBar() {
     setIsOpen(false);
     setQuery("");
     setResults([]);
-    router.push(`/pokemon/${pokemonName.toLowerCase()}`);
+
+    const cleanName = pokemonName.toLowerCase();
+    // Si estamos navegando en español y existe un slug traducido, lo priorizamos en la URL
+    const slug =
+      locale === "es" && CANONICAL_TO_SPANISH[cleanName]
+        ? CANONICAL_TO_SPANISH[cleanName]
+        : cleanName;
+
+    router.push(`/${locale}/pokemon/${slug}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -153,7 +172,7 @@ export default function GlobalSearchBar() {
           onChange={handleInputChange}
           onFocus={() => query.trim() && results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search Pokémon..."
+          placeholder={placeholder}
           className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-9 pr-14 py-1.5 text-base sm:text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-rose-500/70 focus:ring-1 focus:ring-rose-500/50 transition-all"
         />
 

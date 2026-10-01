@@ -1,22 +1,39 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AdjacentPokemon, formatPokemonDisplayName } from "@/lib/pokeapi";
+import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 
 interface PokemonNavigationProps {
   prev: AdjacentPokemon | null;
   next: AdjacentPokemon | null;
+  locale?: string;
 }
 
 export default function PokemonNavigation({
   prev,
   next,
+  locale = "es",
 }: PokemonNavigationProps) {
   const router = useRouter();
+  const [, startTransition] = useTransition();
+
+  const getPokemonUrl = (pokemonName: string) => {
+    const cleanName = pokemonName.toLowerCase();
+    const slug =
+      locale === "es" && CANONICAL_TO_SPANISH[cleanName]
+        ? CANONICAL_TO_SPANISH[cleanName]
+        : cleanName;
+
+    return `/${locale}/pokemon/${slug}`;
+  };
+
+  const prevUrl = prev ? getPokemonUrl(prev.name) : null;
+  const nextUrl = next ? getPokemonUrl(next.name) : null;
 
   // Keyboard navigation shortcuts with arrow keys
   useEffect(() => {
@@ -26,23 +43,27 @@ export default function PokemonNavigation({
         return;
       }
 
-      if (e.key === "ArrowLeft" && prev) {
-        router.push(`/pokemon/${prev.name}`);
-      } else if (e.key === "ArrowRight" && next) {
-        router.push(`/pokemon/${next.name}`);
+      if (e.key === "ArrowLeft" && prevUrl) {
+        startTransition(() => {
+          router.push(prevUrl);
+        });
+      } else if (e.key === "ArrowRight" && nextUrl) {
+        startTransition(() => {
+          router.push(nextUrl);
+        });
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [prev, next, router]);
+  }, [prevUrl, nextUrl, router]);
 
   return (
     <div className="flex items-center justify-between gap-3 w-full">
       {/* Previous Button */}
-      {prev ? (
+      {prev && prevUrl ? (
         <Link
-          href={`/pokemon/${prev.name}`}
+          href={prevUrl}
           className="group flex items-center gap-3 bg-zinc-900/40 hover:bg-zinc-900 border border-zinc-800/80 hover:border-zinc-700 px-3.5 py-2 rounded-2xl transition-all duration-200"
           title={`Go to ${formatPokemonDisplayName(prev.name)} (Left Arrow)`}
         >
@@ -71,16 +92,16 @@ export default function PokemonNavigation({
 
       {/* Return to Pokédex list */}
       <Link
-        href="/"
+        href={`/${locale}`}
         className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors px-3 py-1.5 rounded-xl hover:bg-zinc-900/60 border border-transparent hover:border-zinc-800"
       >
         Pokédex
       </Link>
 
       {/* Next Button */}
-      {next ? (
+      {next && nextUrl ? (
         <Link
-          href={`/pokemon/${next.name}`}
+          href={nextUrl}
           className="group flex items-center gap-3 bg-zinc-900/40 hover:bg-zinc-900 border border-zinc-800/80 hover:border-zinc-700 px-3.5 py-2 rounded-2xl transition-all duration-200 text-right"
           title={`Go to ${formatPokemonDisplayName(next.name)} (Right Arrow)`}
         >

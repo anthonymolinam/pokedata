@@ -3,14 +3,42 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { SlidersHorizontal, ChevronDown, Check, X } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, X } from "lucide-react";
 import { GENERATIONS } from "@/constants/generations";
 import { POKEMON_TYPES } from "@/constants/typeChart";
 import { TYPE_COLORS } from "@/constants/typeColors";
 
-export default function PokemonFiltersBar() {
+interface PokemonFiltersBarProps {
+  locale?: string;
+}
+
+const TYPE_TRANSLATIONS_ES: Record<string, string> = {
+  normal: "Normal",
+  fire: "Fuego",
+  water: "Agua",
+  grass: "Planta",
+  electric: "Eléctrico",
+  ice: "Hielo",
+  fighting: "Lucha",
+  poison: "Veneno",
+  ground: "Tierra",
+  flying: "Volador",
+  psychic: "Psíquico",
+  bug: "Bicho",
+  rock: "Roca",
+  ghost: "Fantasma",
+  dragon: "Dragón",
+  steel: "Acero",
+  dark: "Siniestro",
+  fairy: "Hada",
+};
+
+export default function PokemonFiltersBar({
+  locale = "es",
+}: PokemonFiltersBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isEs = locale === "es";
 
   const urlTypes = searchParams.get("types")
     ? searchParams.get("types")!.split(",").filter(Boolean)
@@ -44,14 +72,14 @@ export default function PokemonFiltersBar() {
       params.set("gen", String(selectedGen));
     }
     params.set("page", "1");
-    router.push(`/?${params.toString()}`);
+    router.push(`/${locale}?${params.toString()}`);
     setIsOpen(false);
   };
 
   const handleClear = () => {
     setSelectedGen(null);
     setSelectedTypes([]);
-    router.push("/");
+    router.push(`/${locale}`);
     setIsOpen(false);
   };
 
@@ -68,11 +96,11 @@ export default function PokemonFiltersBar() {
         <div className="flex items-center gap-3">
           <SlidersHorizontal className="w-4 h-4 text-rose-500" />
           <span className="text-sm font-bold text-zinc-200">
-            Advanced Filters
+            {isEs ? "Filtros Avanzados" : "Advanced Filters"}
           </span>
           {activeFiltersCount > 0 && (
             <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-[11px] font-bold px-2 py-0.5 rounded-full">
-              {activeFiltersCount} active
+              {activeFiltersCount} {isEs ? "activos" : "active"}
             </span>
           )}
         </div>
@@ -99,19 +127,19 @@ export default function PokemonFiltersBar() {
               {/* 1. Region / Generation selector */}
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                  Region / Generation:
+                  {isEs ? "Región / Generación:" : "Region / Generation:"}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
                     onClick={() => setSelectedGen(null)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
                       selectedGen === null
-                        ? "bg-rose-500 text-white shadow-md shadow-rose-500/20"
-                        : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+                        ? "bg-rose-500 border-transparent text-white shadow-md shadow-rose-500/20"
+                        : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
                     }`}
                   >
-                    All
+                    {isEs ? "Todas" : "All"}
                   </button>
                   {GENERATIONS.map((gen) => {
                     const isSelected = selectedGen === gen.id;
@@ -122,10 +150,10 @@ export default function PokemonFiltersBar() {
                         onClick={() =>
                           setSelectedGen(isSelected ? null : gen.id)
                         }
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
                           isSelected
-                            ? "bg-rose-500 text-white shadow-md shadow-rose-500/20 scale-105"
-                            : "bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+                            ? "bg-rose-500 border-transparent text-white shadow-md shadow-rose-500/20"
+                            : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
                         }`}
                       >
                         {gen.name}{" "}
@@ -142,10 +170,12 @@ export default function PokemonFiltersBar() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                    Elemental Types:
+                    {isEs ? "Tipos Elementales:" : "Elemental Types:"}
                   </span>
                   <span className="text-[11px] text-zinc-500">
-                    Selected ({selectedTypes.length}/2)
+                    {isEs
+                      ? `Seleccionados (${selectedTypes.length}/2)`
+                      : `Selected (${selectedTypes.length}/2)`}
                   </span>
                 </div>
 
@@ -153,7 +183,12 @@ export default function PokemonFiltersBar() {
                   {POKEMON_TYPES.map((type) => {
                     const isSelected = selectedTypes.includes(type);
                     const badgeBg =
-                      TYPE_COLORS[type] || "bg-zinc-800 text-white";
+                      TYPE_COLORS[type.toLowerCase()] ||
+                      "bg-zinc-800 text-white";
+                    const displayType =
+                      isEs && TYPE_TRANSLATIONS_ES[type.toLowerCase()]
+                        ? TYPE_TRANSLATIONS_ES[type.toLowerCase()]
+                        : type;
 
                     return (
                       <button
@@ -162,11 +197,11 @@ export default function PokemonFiltersBar() {
                         onClick={() => toggleType(type)}
                         className={`text-[11px] uppercase font-bold px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer ${badgeBg} ${
                           isSelected
-                            ? "opacity-100 ring-2 ring-white/90 shadow-lg shadow-white/20 brightness-125 z-10"
+                            ? "opacity-100 ring-2 ring-white/90 shadow-lg shadow-white/20 brightness-110 z-10"
                             : "opacity-40 hover:opacity-80 hover:brightness-105"
                         }`}
                       >
-                        {type}
+                        {displayType}
                       </button>
                     );
                   })}
@@ -181,14 +216,14 @@ export default function PokemonFiltersBar() {
                   className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white px-3 py-2 rounded-xl transition-colors cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
-                  Reset
+                  {isEs ? "Restablecer" : "Reset"}
                 </button>
                 <button
                   type="button"
                   onClick={handleApply}
-                  className="bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  className="bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-rose-500/25 transition-colors cursor-pointer"
                 >
-                  Apply Filters
+                  {isEs ? "Aplicar Filtros" : "Apply Filters"}
                 </button>
               </div>
             </div>

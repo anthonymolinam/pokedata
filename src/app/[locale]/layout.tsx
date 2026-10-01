@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import "./globals.css";
+import "../globals.css";
 import GlobalSearchBar from "@/components/common/GlobalSearchBar";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import { getDictionary } from "@/constants/translations";
+import { getLocalizedPath } from "@/constants/routes";
+import { Locale } from "@/middleware";
 
 export const metadata: Metadata = {
   title: "PokéData | Pokémon Encyclopedia",
@@ -9,24 +13,29 @@ export const metadata: Metadata = {
     "Comprehensive Pokémon database featuring combat statistics, type matchups, and evolution paths powered by PokéAPI.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: Locale }>;
 }) {
+  const { locale } = await params;
+  const dict = getDictionary(locale);
+
   const commitSha = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA;
   const shortSha = commitSha ? commitSha.slice(0, 7) : "dev";
   const repoUrl = "https://github.com/anthonymolinam/pokedata";
   const commitUrl = commitSha ? `${repoUrl}/commit/${commitSha}` : repoUrl;
 
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark">
       <body className="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col">
         <header className="border-b border-zinc-800/80 backdrop-blur-md sticky top-0 z-50 bg-zinc-950/70">
           <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
             {/* Logo: en móvil solo muestra el icono o texto compacto */}
             <Link
-              href="/"
+              href={`/${locale}`}
               className="flex items-center gap-2 font-black text-xl tracking-tight text-white hover:opacity-90 transition-opacity shrink-0"
             >
               <span className="w-4 h-4 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50" />
@@ -35,24 +44,31 @@ export default function RootLayout({
 
             {/* Buscador expandido en móvil, contenido en desktop */}
             <div className="flex-1 max-w-sm">
-              <GlobalSearchBar />
+              <GlobalSearchBar
+                locale={locale}
+                placeholder={dict.nav.searchPlaceholder}
+              />
             </div>
 
-            {/* Enlaces de navegación */}
-            <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-medium shrink-0">
-              <Link
-                href="/"
-                className="text-zinc-400 hover:text-white transition-colors"
-              >
-                Pokédex
-              </Link>
-              <Link
-                href="/types"
-                className="text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
-              >
-                Type Chart
-              </Link>
-            </nav>
+            {/* Enlaces de navegación + Selector de idioma */}
+            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+              <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-medium">
+                <Link
+                  href={`/${locale}`}
+                  className="text-zinc-400 hover:text-white transition-colors"
+                >
+                  {dict.nav.pokedex}
+                </Link>
+                <Link
+                  href={getLocalizedPath(locale, "types")}
+                  className="text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
+                >
+                  {dict.nav.typeChart}
+                </Link>
+              </nav>
+
+              <LanguageSwitcher currentLocale={locale} />
+            </div>
           </div>
         </header>
 

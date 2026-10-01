@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Home, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
+  const pathname = usePathname();
+  const isEs = pathname.startsWith("/es");
+  const homePath = isEs ? "/es" : "/en";
+
   return (
-    <div className="flex-1 min-h-[calc(100dvh-140px)] flex flex-col items-center justify-center text-center px-4 py-8">
+    <div className="flex-1 min-h-[calc(100dvh-180px)] flex flex-col items-center justify-center text-center px-4 py-8">
       <div className="relative flex flex-col items-center max-w-lg my-auto">
         <div className="absolute -top-12 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
 
@@ -36,22 +41,23 @@ export default function NotFound() {
             SIGNAL_LOST_ERROR
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Psyduck is confused!
+            {isEs ? "¡Psyduck está confuso!" : "Psyduck is confused!"}
           </h1>
           <p className="text-zinc-400 text-sm max-w-sm mx-auto leading-relaxed">
-            The Pokémon or page you are looking for does not exist in the
-            PokéData database or vanished into the tall grass.
+            {isEs
+              ? "El Pokémon o la página que buscas no existe en PokéData o se perdió entre la hierba alta."
+              : "The Pokémon or page you are looking for does not exist in the PokéData database or vanished into the tall grass."}
           </p>
         </div>
 
         {/* Navigation Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/"
+            href={homePath}
             className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
           >
             <Home className="w-4 h-4" />
-            Back to Pokédex
+            {isEs ? "Volver a la Pokédex" : "Back to Pokédex"}
           </Link>
           <button
             type="button"
@@ -59,7 +65,7 @@ export default function NotFound() {
             className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            Go Back
+            {isEs ? "Atrás" : "Go Back"}
           </button>
         </div>
       </div>

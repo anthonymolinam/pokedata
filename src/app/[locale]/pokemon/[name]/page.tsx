@@ -6,10 +6,14 @@ import {
   getAdjacentPokemon,
   formatPokemonDisplayName,
 } from "@/lib/pokeapi";
+import {
+  resolveCanonicalPokemonName,
+  CANONICAL_TO_SPANISH,
+} from "@/constants/pokemonAliases";
 import PokemonDetailView from "@/components/pokemon-detail/PokemonDetailView";
 
 interface PageProps {
-  params: Promise<{ name: string }>;
+  params: Promise<{ locale: string; name: string }>;
   searchParams: Promise<{ variant?: string }>;
 }
 
@@ -17,9 +21,13 @@ export async function generateMetadata({
   params,
   searchParams,
 }: PageProps): Promise<Metadata> {
-  const { name } = await params;
+  const { locale, name } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
-  const activePokemonName = resolvedSearchParams?.variant || name;
+  const activePokemonName = resolveCanonicalPokemonName(
+    resolvedSearchParams?.variant || name,
+  );
+
+  const isEs = locale === "es";
 
   try {
     const pokemon = await getPokemonDetail(activePokemonName);
@@ -30,7 +38,9 @@ export async function generateMetadata({
       .join(" / ");
 
     const pageTitle = `${formattedName} | PokéData`;
-    const description = `Base stats, type matchups, abilities, and evolution chain for ${formattedName} (Type ${typesFormatted}) on PokéData.`;
+    const description = isEs
+      ? `Estadísticas base, tabla de tipos, habilidades y línea evolutiva de ${formattedName} (Tipo ${typesFormatted}) en PokéData.`
+      : `Base stats, type matchups, abilities, and evolution chain for ${formattedName} (Type ${typesFormatted}) on PokéData.`;
 
     const imageUrl =
       pokemon.image ||
@@ -60,24 +70,32 @@ export async function generateMetadata({
       },
     };
   } catch {
-    const fallbackName = name.charAt(0).toUpperCase() + name.slice(1);
+    const fallbackFormatted = formatPokemonDisplayName(activePokemonName);
     return {
-      title: `${fallbackName} | PokéData`,
-      description: `Pokémon details, stats, and evolution for ${fallbackName}.`,
+      title: `${fallbackFormatted} | PokéData`,
+      description: isEs
+        ? `Detalles, estadísticas y evoluciones de ${fallbackFormatted}.`
+        : `Pokémon details, stats, and evolution for ${fallbackFormatted}.`,
     };
   }
 }
 
 export default async function PokemonPage({ params, searchParams }: PageProps) {
-  const { name } = await params;
+  const { locale, name } = await params;
   const { variant } = await searchParams;
+
+  // Resuelve alias como "colmilargo" -> "great-tusk"
+  const canonicalName = resolveCanonicalPokemonName(name);
+  const canonicalVariant = variant
+    ? resolveCanonicalPokemonName(variant)
+    : undefined;
 
   const BASE_URL = "https://pokeapi.co/api/v2";
 
-  // 1. Redirect regional variants or secondary forms to the base species route
+  // 1. Redireccionar variantes regionales o formas secundarias a la especie base
   try {
     const rawRes = await fetch(
-      `${BASE_URL}/pokemon/${encodeURIComponent(name.toLowerCase())}`,
+      `${BASE_URL}/pokemon/${encodeURIComponent(canonicalName.toLowerCase())}`,
     );
     if (rawRes.ok) {
       const rawData = await rawRes.json();
@@ -85,37 +103,46 @@ export default async function PokemonPage({ params, searchParams }: PageProps) {
 
       if (
         baseSpeciesName &&
-        baseSpeciesName.toLowerCase() !== name.toLowerCase()
+        baseSpeciesName.toLowerCase() !== canonicalName.toLowerCase()
       ) {
-        redirect(`/pokemon/${baseSpeciesName}?variant=${name.toLowerCase()}`);
+        // En español, si la especie base tiene alias propio, usamos su slug localizado
+        const localizedBaseName =
+          locale === "es" && CANONICAL_TO_SPANISH[baseSpeciesName.toLowerCase()]
+            ? CANONICAL_TO_SPANISH[baseSpeciesName.toLowerCase()]
+            : baseSpeciesName.toLowerCase();
+
+        redirect(
+          `/${locale}/pokemon/${localizedBaseName}?variant=${canonicalName.toLowerCase()}`,
+        );
       }
     }
   } catch (err) {
     if ((err as Error).message === "NEXT_REDIRECT") throw err;
   }
 
-  // 2. Fetch base species detail data
+  // 2. Cargar datos de la especie base
   let pokemon;
   try {
-    pokemon = await getPokemonDetail(name);
+    pokemon = await getPokemonDetail(canonicalName);
   } catch (error) {
     console.error("Error fetching Pokémon details:", error);
     notFound();
   }
 
-  // Parallel loading of evolution chain and adjacent pagination items
+  // Carga protegida en paralelo de evoluciones y adyacentes
   const [evolutionChain, adjacent] = await Promise.all([
-    getEvolutionChain(name),
-    getAdjacentPokemon(pokemon.id),
+    getEvolutionChain(canonicalName).catch(() => null),
+    getAdjacentPokemon(pokemon.id).catch(() => ({ prev: null, next: null })),
   ]);
 
   return (
     <PokemonDetailView
       pokemon={pokemon}
       evolutionChain={evolutionChain}
-      initialVariantName={variant}
+      initialVariantName={canonicalVariant || variant}
       prevPokemon={adjacent.prev}
       nextPokemon={adjacent.next}
+      locale={locale}
     />
   );
 }

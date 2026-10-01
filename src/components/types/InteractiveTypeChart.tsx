@@ -1,34 +1,116 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { useState, useRef, useCallback } from "react";
+import { motion, type Variants } from "framer-motion";
 import { POKEMON_TYPES, PokemonType, TYPE_CHART } from "@/constants/typeChart";
 import { TYPE_COLORS } from "@/constants/typeColors";
 
 const containerVariants: Variants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 0, y: 8 },
   visible: {
     opacity: 1,
+    y: 0,
     transition: {
       duration: 0.25,
-      ease: "easeOut",
+      ease: [0.25, 0.1, 0.25, 1],
     },
   },
 };
 
-export default function InteractiveTypeChart() {
+interface InteractiveTypeChartProps {
+  locale?: string;
+}
+
+const TYPE_TRANSLATIONS_ES: Record<string, string> = {
+  normal: "Normal",
+  fire: "Fuego",
+  water: "Agua",
+  grass: "Planta",
+  electric: "Eléctrico",
+  ice: "Hielo",
+  fighting: "Lucha",
+  poison: "Veneno",
+  ground: "Tierra",
+  flying: "Volador",
+  psychic: "Psíquico",
+  bug: "Bicho",
+  rock: "Roca",
+  ghost: "Fantasma",
+  dragon: "Dragón",
+  steel: "Acero",
+  dark: "Siniestro",
+  fairy: "Hada",
+};
+
+const TYPE_ABBR_ES: Record<string, string> = {
+  normal: "NOR",
+  fire: "FUE",
+  water: "AGU",
+  grass: "PLA",
+  electric: "ELE",
+  ice: "HIE",
+  fighting: "LUC",
+  poison: "VEN",
+  ground: "TIE",
+  flying: "VOL",
+  psychic: "PSI",
+  bug: "BIC",
+  rock: "ROC",
+  ghost: "FAN",
+  dragon: "DRA",
+  steel: "ACE",
+  dark: "SIN",
+  fairy: "HAD",
+};
+
+export default function InteractiveTypeChart({
+  locale = "es",
+}: InteractiveTypeChartProps) {
+  const isEs = locale === "es";
+
   const [selectedType, setSelectedType] = useState<PokemonType | null>(null);
   const [hoveredCell, setHoveredCell] = useState<{
     atk: PokemonType;
     def: PokemonType;
   } | null>(null);
 
-  const renderCellBadge = (val: number, isDimmed: boolean) => {
+  const rafRef = useRef<number | null>(null);
+
+  const handleCellHover = useCallback((atk: PokemonType, def: PokemonType) => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      setHoveredCell({ atk, def });
+    });
+  }, []);
+
+  const handleCellLeave = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      setHoveredCell(null);
+    });
+  }, []);
+
+  const getTypeName = (type: string) => {
+    return isEs && TYPE_TRANSLATIONS_ES[type.toLowerCase()]
+      ? TYPE_TRANSLATIONS_ES[type.toLowerCase()]
+      : type;
+  };
+
+  const getTypeAbbr = (type: string) => {
+    if (isEs && TYPE_ABBR_ES[type.toLowerCase()]) {
+      return TYPE_ABBR_ES[type.toLowerCase()];
+    }
+    return type.slice(0, 3).toUpperCase();
+  };
+
+  const renderBadge = (val: number, isDimmed: boolean) => {
     if (val === 2) {
       return (
         <span
-          className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[11px] border border-emerald-500/40 transition-opacity ${
-            isDimmed ? "opacity-20" : "opacity-100"
+          className={`inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-400 font-black text-xs border border-emerald-500/30 transition-opacity duration-300 ease-in-out ${
+            isDimmed
+              ? "opacity-15"
+              : "opacity-100 shadow-xs shadow-emerald-500/10"
           }`}
         >
           2×
@@ -38,8 +120,10 @@ export default function InteractiveTypeChart() {
     if (val === 0.5) {
       return (
         <span
-          className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-amber-500/20 text-amber-400 font-extrabold text-[10px] border border-amber-500/40 transition-opacity ${
-            isDimmed ? "opacity-20" : "opacity-100"
+          className={`inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/15 text-amber-400 font-extrabold text-[11px] border border-amber-500/30 transition-opacity duration-300 ease-in-out ${
+            isDimmed
+              ? "opacity-15"
+              : "opacity-100 shadow-xs shadow-amber-500/10"
           }`}
         >
           ½
@@ -49,8 +133,8 @@ export default function InteractiveTypeChart() {
     if (val === 0) {
       return (
         <span
-          className={`inline-flex items-center justify-center w-6 h-6 rounded-md bg-zinc-800 text-zinc-500 font-extrabold text-[11px] border border-zinc-700 transition-opacity ${
-            isDimmed ? "opacity-15" : "opacity-100"
+          className={`inline-flex items-center justify-center w-7 h-7 rounded-lg bg-zinc-800/80 text-zinc-400 font-black text-xs border border-zinc-700/60 transition-opacity duration-300 ease-in-out ${
+            isDimmed ? "opacity-10" : "opacity-100"
           }`}
         >
           0
@@ -59,11 +143,11 @@ export default function InteractiveTypeChart() {
     }
     return (
       <span
-        className={`text-zinc-600 text-xs transition-opacity leading-none select-none ${
-          isDimmed ? "opacity-15" : "opacity-100"
+        className={`text-zinc-600 text-xs font-mono select-none transition-opacity duration-300 ease-in-out ${
+          isDimmed ? "opacity-10" : "opacity-35"
         }`}
       >
-        ·
+        —
       </span>
     );
   };
@@ -73,161 +157,94 @@ export default function InteractiveTypeChart() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="flex-1 flex flex-col justify-start gap-3 min-h-0"
+      className="flex-1 flex flex-col justify-start min-h-0"
     >
-      {/* 1. Type Selector & Matchup Summary */}
-      <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-3.5 space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-zinc-300">Inspect Type:</span>
-          {selectedType && (
-            <button
-              onClick={() => setSelectedType(null)}
-              className="text-xs text-rose-400 hover:text-rose-300 underline font-medium cursor-pointer"
-            >
-              Clear filter ({selectedType})
-            </button>
-          )}
-        </div>
+      <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-3 flex flex-col justify-start shadow-xl shadow-black/20">
+        {/* Barra superior de estado */}
+        <div className="h-8 flex items-center justify-between text-xs text-zinc-400 pb-2 border-b border-zinc-800/80 mb-2 px-1">
+          <div className="flex items-center gap-2 font-mono text-[11px] select-none text-zinc-400">
+            <span className="font-semibold text-zinc-300">
+              {isEs ? "Fila" : "Row"}
+            </span>
+            <span className="text-zinc-600">=</span>
+            <span>{isEs ? "Atacante" : "Attacker"}</span>
+            <span className="text-zinc-700">|</span>
+            <span className="font-semibold text-zinc-300">
+              {isEs ? "Columna" : "Column"}
+            </span>
+            <span className="text-zinc-600">=</span>
+            <span>{isEs ? "Defensor" : "Defender"}</span>
+          </div>
 
-        {/* Type pills */}
-        <div className="flex flex-wrap gap-1.5">
-          {POKEMON_TYPES.map((t) => {
-            const isSelected = selectedType === t;
-            return (
-              <button
-                key={t}
-                onClick={() => setSelectedType(isSelected ? null : t)}
-                className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  TYPE_COLORS[t] || "bg-zinc-700 text-white"
-                } ${
-                  isSelected
-                    ? "ring-2 ring-white scale-105 opacity-100 shadow-md brightness-125 z-10"
-                    : selectedType
-                      ? "opacity-35 hover:opacity-90"
-                      : "opacity-80 hover:opacity-100"
-                }`}
-              >
-                {t}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Offensive / Defensive Summary */}
-        <AnimatePresence>
-          {selectedType && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="pt-2.5 border-t border-zinc-800/70 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {/* Offensive */}
-                <div className="bg-zinc-950/50 p-2.5 rounded-xl border border-zinc-800/40 flex items-center gap-2.5 overflow-hidden">
-                  <span className="text-emerald-400 font-bold uppercase whitespace-nowrap text-[11px] shrink-0">
-                    Attacking (2×):
-                  </span>
-                  <div className="flex flex-wrap gap-1 items-center">
-                    {POKEMON_TYPES.filter(
-                      (def) => TYPE_CHART[selectedType][def] === 2,
-                    ).map((def) => (
-                      <span
-                        key={def}
-                        className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold leading-tight ${TYPE_COLORS[def]}`}
-                      >
-                        {def}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Defensive */}
-                <div className="bg-zinc-950/50 p-2.5 rounded-xl border border-zinc-800/40 flex items-center gap-2.5 overflow-hidden">
-                  <span className="text-rose-400 font-bold uppercase whitespace-nowrap text-[11px] shrink-0">
-                    Weak to (2×):
-                  </span>
-                  <div className="flex flex-wrap gap-1 items-center">
-                    {POKEMON_TYPES.filter(
-                      (atk) => TYPE_CHART[atk][selectedType] === 2,
-                    ).map((atk) => (
-                      <span
-                        key={atk}
-                        className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold leading-tight ${TYPE_COLORS[atk]}`}
-                      >
-                        {atk}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* 2. 18x18 Matchup Matrix */}
-      <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-3 flex flex-col justify-start">
-        {/* Header bar with fixed height to prevent layout shifts */}
-        <div className="h-7 flex items-center justify-between text-xs text-zinc-400 pb-2 border-b border-zinc-800/60 mb-1">
-          <span className="font-mono text-[11px] select-none whitespace-nowrap">
-            Row = Attacker | Column = Defender
-          </span>
-
-          <div className="h-6 flex items-center justify-end min-w-[210px]">
+          <div className="h-7 flex items-center justify-end min-w-55">
             {hoveredCell ? (
-              <div className="text-xs font-mono bg-zinc-950 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-zinc-300 flex items-center gap-1">
-                <span className="capitalize">{hoveredCell.atk}</span>
-                <span className="text-zinc-600">→</span>
-                <span className="capitalize">{hoveredCell.def}</span>
+              <div className="text-xs font-mono bg-zinc-950 px-3 py-1 rounded-xl border border-zinc-800 text-zinc-200 flex items-center gap-1.5 shadow-sm">
+                <span className="font-bold text-zinc-100">
+                  {getTypeName(hoveredCell.atk)}
+                </span>
+                <span className="text-zinc-500">→</span>
+                <span className="font-bold text-zinc-100">
+                  {getTypeName(hoveredCell.def)}
+                </span>
                 <span className="text-zinc-600">:</span>
-                <strong className="text-rose-400 text-sm font-bold">
+                <strong
+                  className={`text-xs font-extrabold ${
+                    TYPE_CHART[hoveredCell.atk][hoveredCell.def] === 2
+                      ? "text-emerald-400"
+                      : TYPE_CHART[hoveredCell.atk][hoveredCell.def] === 0.5
+                        ? "text-amber-400"
+                        : TYPE_CHART[hoveredCell.atk][hoveredCell.def] === 0
+                          ? "text-zinc-400"
+                          : "text-zinc-300"
+                  }`}
+                >
                   {TYPE_CHART[hoveredCell.atk][hoveredCell.def]}×
                 </strong>
               </div>
             ) : (
               <span className="text-[11px] text-zinc-500 whitespace-nowrap hidden sm:inline select-none">
-                Hover over a cell to view damage
+                {isEs
+                  ? "Haz clic en un tipo o pasa el cursor"
+                  : "Click a type or hover a cell"}
               </span>
             )}
           </div>
         </div>
 
-        {/* Matrix table */}
-        <div className="overflow-x-auto pb-1">
-          <table className="border-collapse text-center w-full min-w-[700px]">
+        {/* Tabla */}
+        <div className="overflow-x-auto rounded-xl border border-zinc-800/80 bg-zinc-950">
+          <table className="border-collapse text-center w-full min-w-195">
             <thead>
-              <tr>
-                <th className="p-1.5 text-[10px] uppercase tracking-wider text-zinc-500 font-bold text-left sticky left-0 top-0 bg-zinc-900 z-30 min-w-[85px]">
-                  ATK \ DEF
+              <tr className="border-b border-zinc-800/80">
+                <th className="p-2 text-[10px] uppercase font-mono font-bold text-zinc-400 text-center sticky left-0 top-0 bg-zinc-950 z-30 w-27.5 min-w-27.5 border-r border-zinc-800/80">
+                  {isEs ? "ATQ \\ DEF" : "ATK \\ DEF"}
                 </th>
                 {POKEMON_TYPES.map((def) => {
-                  const isColActive = selectedType === def;
-                  const isColDimmed = selectedType !== null && !isColActive;
+                  const isColFiltered = selectedType === def;
+                  const isDimmed = selectedType !== null && !isColFiltered;
 
                   return (
                     <th
                       key={def}
-                      className="p-1 sticky top-0 bg-zinc-900 z-20 min-w-[32px]"
+                      className="p-1.5 sticky top-0 z-20 bg-zinc-950 border-r border-zinc-800/40 last:border-r-0"
                     >
                       <button
                         type="button"
                         onClick={() =>
                           setSelectedType(selectedType === def ? null : def)
                         }
-                        title={def}
-                        className={`inline-block w-6 h-6 leading-6 rounded-md text-[9px] uppercase font-black cursor-pointer transition-all ${
+                        title={getTypeName(def)}
+                        className={`w-7 h-7 flex items-center justify-center mx-auto rounded-lg text-[9px] uppercase font-black cursor-pointer transition-all duration-300 ease-in-out ${
                           TYPE_COLORS[def]
                         } ${
-                          isColActive
-                            ? "ring-2 ring-white scale-110 opacity-100 shadow-lg z-10"
-                            : isColDimmed
+                          isColFiltered
+                            ? "ring-2 ring-white opacity-100 shadow-md z-10"
+                            : isDimmed
                               ? "opacity-25"
                               : "opacity-85 hover:opacity-100"
                         }`}
                       >
-                        {def.slice(0, 3)}
+                        {getTypeAbbr(def)}
                       </button>
                     </th>
                   );
@@ -236,55 +253,56 @@ export default function InteractiveTypeChart() {
             </thead>
             <tbody>
               {POKEMON_TYPES.map((atk) => {
-                const isRowActive = selectedType === atk;
-                const isRowDimmed = selectedType !== null && !isRowActive;
+                const isRowFiltered = selectedType === atk;
+                const isDimmed = selectedType !== null && !isRowFiltered;
 
                 return (
                   <tr
                     key={atk}
-                    className={`border-t border-zinc-800/40 transition-colors ${
-                      isRowActive ? "bg-zinc-800/40" : "hover:bg-zinc-800/20"
+                    className={`group/row border-b border-zinc-800/40 last:border-b-0 transition-colors duration-100 hover:bg-zinc-900/60 ${
+                      isRowFiltered ? "bg-zinc-900/40" : ""
                     }`}
                   >
-                    <td className="p-1 text-left sticky left-0 bg-zinc-900 z-10">
+                    {/* Botón tipo atacante (Sticky Left) */}
+                    <td className="p-1.5 text-left sticky left-0 bg-zinc-950 z-10 border-r border-zinc-800/80 group-hover/row:bg-zinc-900/90 transition-colors duration-100">
                       <button
                         type="button"
                         onClick={() =>
                           setSelectedType(selectedType === atk ? null : atk)
                         }
-                        className={`inline-block w-full text-left px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider cursor-pointer transition-all truncate ${
+                        className={`w-full text-center py-1 rounded-lg text-[10px] uppercase font-bold tracking-wider cursor-pointer transition-all duration-300 ease-in-out truncate ${
                           TYPE_COLORS[atk]
                         } ${
-                          isRowActive
-                            ? "ring-1 ring-white opacity-100 shadow-md"
-                            : isRowDimmed
+                          isRowFiltered
+                            ? "ring-1.5 ring-white opacity-100 shadow-md"
+                            : isDimmed
                               ? "opacity-25"
                               : "opacity-85 hover:opacity-100"
                         }`}
                       >
-                        {atk}
+                        {getTypeName(atk)}
                       </button>
                     </td>
 
+                    {/* Celdas con valores */}
                     {POKEMON_TYPES.map((def) => {
                       const val = TYPE_CHART[atk][def];
-                      const isColActive = selectedType === def;
                       const isCellActive =
-                        selectedType === null || isRowActive || isColActive;
-                      const isDimmed = !isCellActive;
+                        selectedType === null ||
+                        selectedType === atk ||
+                        selectedType === def;
+                      const isCellDimmed = !isCellActive;
 
                       return (
                         <td
                           key={def}
-                          onMouseEnter={() => setHoveredCell({ atk, def })}
-                          onMouseLeave={() => setHoveredCell(null)}
-                          className={`p-1 transition-colors ${
-                            isColActive && !isRowActive ? "bg-zinc-800/20" : ""
-                          } ${
-                            isRowActive && isColActive ? "bg-zinc-700/40" : ""
-                          }`}
+                          onMouseEnter={() => handleCellHover(atk, def)}
+                          onMouseLeave={handleCellLeave}
+                          className="p-1 border-r border-zinc-800/30 last:border-r-0 hover:bg-zinc-800/80 hover:ring-1 hover:ring-inset hover:ring-white/40 cursor-default transition-colors duration-75"
                         >
-                          {renderCellBadge(val, isDimmed)}
+                          <div className="flex items-center justify-center">
+                            {renderBadge(val, isCellDimmed)}
+                          </div>
                         </td>
                       );
                     })}

@@ -4,11 +4,15 @@ import PokemonGrid from "@/components/home/PokemonGrid";
 import PokemonFiltersBar from "@/components/home/PokemonFiltersBar";
 
 interface PageProps {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ page?: string; types?: string; gen?: string }>;
 }
 
-export default async function HomePage({ searchParams }: PageProps) {
+export default async function HomePage({ params, searchParams }: PageProps) {
+  const { locale } = await params;
   const resolvedParams = await searchParams;
+  const isEs = locale === "es";
+
   const currentPage = Math.max(1, Number(resolvedParams?.page) || 1);
   const typesParam = resolvedParams?.types || null;
   const genParam = resolvedParams?.gen ? Number(resolvedParams.gen) : null;
@@ -31,23 +35,33 @@ export default async function HomePage({ searchParams }: PageProps) {
     : null;
 
   const makePageUrl = (pageNum: number) => {
-    const params = new URLSearchParams();
-    params.set("page", String(pageNum));
-    if (typesParam) params.set("types", typesParam);
-    if (genParam) params.set("gen", String(genParam));
-    return `/?${params.toString()}`;
+    const queryParams = new URLSearchParams();
+    queryParams.set("page", String(pageNum));
+    if (typesParam) queryParams.set("types", typesParam);
+    if (genParam) queryParams.set("gen", String(genParam));
+    return `/${locale}?${queryParams.toString()}`;
   };
 
   return (
     <div className="space-y-6">
       <section className="space-y-1">
         <h1 className="text-3xl font-extrabold tracking-tight text-white">
-          National Pokédex
+          {isEs ? "Pokédex Nacional" : "National Pokédex"}
         </h1>
         <p className="text-zinc-400 text-sm">
           {hasFilters ? (
             <>
-              Showing {totalCount} result{totalCount === 1 ? "" : "s"} for:{" "}
+              {isEs ? (
+                <>
+                  Mostrando {totalCount} resultado{totalCount === 1 ? "" : "s"}{" "}
+                  para:{" "}
+                </>
+              ) : (
+                <>
+                  Showing {totalCount} result{totalCount === 1 ? "" : "s"}{" "}
+                  for:{" "}
+                </>
+              )}
               {currentGenData && (
                 <span className="text-white font-semibold mr-1">
                   {currentGenData.name} ({currentGenData.region})
@@ -59,13 +73,15 @@ export default async function HomePage({ searchParams }: PageProps) {
                 </span>
               )}
             </>
+          ) : isEs ? (
+            `Explorando ${totalCount} Pokémon oficiales.`
           ) : (
             `Exploring ${totalCount} official Pokémon.`
           )}
         </p>
       </section>
 
-      <PokemonFiltersBar />
+      <PokemonFiltersBar locale={locale} />
 
       <PokemonGrid
         key={`${genParam || "all"}-${typesParam || "all"}-${currentPage}`}
@@ -78,6 +94,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         nextPageHref={
           currentPage < totalPages ? makePageUrl(currentPage + 1) : undefined
         }
+        locale={locale}
       />
     </div>
   );

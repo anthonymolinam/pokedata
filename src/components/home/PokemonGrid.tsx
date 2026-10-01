@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Search, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { PokemonSummary, formatPokemonDisplayName } from "@/lib/pokeapi";
 import { TYPE_COLORS } from "@/constants/typeColors";
+import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { motion, type Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -38,6 +39,7 @@ interface PokemonGridProps {
   totalPages?: number;
   prevPageHref?: string;
   nextPageHref?: string;
+  locale?: string;
 }
 
 export default function PokemonGrid({
@@ -46,8 +48,10 @@ export default function PokemonGrid({
   totalPages = 1,
   prevPageHref,
   nextPageHref,
+  locale = "es",
 }: PokemonGridProps) {
   const router = useRouter();
+  const isEs = locale === "es";
 
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PokemonSummary[]>([]);
@@ -59,6 +63,16 @@ export default function PokemonGrid({
 
   const cleanQuery = useMemo(() => query.trim().toLowerCase(), [query]);
   const isSearching = cleanQuery.length > 0;
+
+  const getPokemonUrl = (name: string) => {
+    const cleanName = name.toLowerCase();
+    const slug =
+      isEs && CANONICAL_TO_SPANISH[cleanName]
+        ? CANONICAL_TO_SPANISH[cleanName]
+        : cleanName;
+
+    return `/${locale}/pokemon/${slug}`;
+  };
 
   useEffect(() => {
     if (!cleanQuery) return;
@@ -118,7 +132,7 @@ export default function PokemonGrid({
 
   const handleClearAll = () => {
     handleClearQuery();
-    router.push("/");
+    router.push(`/${locale}`);
   };
 
   const handleLoadMore = async () => {
@@ -153,7 +167,11 @@ export default function PokemonGrid({
           type="text"
           value={query}
           onChange={handleInputChange}
-          placeholder="Search entire Pokédex (e.g. Lucario, 448)..."
+          placeholder={
+            isEs
+              ? "Buscar en la Pokédex (ej. Lucario, 448)..."
+              : "Search entire Pokédex (e.g. Lucario, 448)..."
+          }
           className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-10 py-2.5 text-base sm:text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
         />
 
@@ -178,9 +196,15 @@ export default function PokemonGrid({
       <p className="text-xs text-zinc-500 font-mono">
         {isSearching
           ? isSearchPending
-            ? "Searching entire Pokédex..."
-            : `Found ${totalFound} Pokémon (showing ${displayedList.length} of ${totalFound})`
-          : `Showing ${initialList.length} Pokémon on this page`}
+            ? isEs
+              ? "Buscando en toda la Pokédex..."
+              : "Searching entire Pokédex..."
+            : isEs
+              ? `Se encontraron ${totalFound} Pokémon (mostrando ${displayedList.length} de ${totalFound})`
+              : `Found ${totalFound} Pokémon (showing ${displayedList.length} of ${totalFound})`
+          : isEs
+            ? `Mostrando ${initialList.length} Pokémon en esta página`
+            : `Showing ${initialList.length} Pokémon on this page`}
       </p>
 
       {/* Grid de resultados */}
@@ -195,7 +219,7 @@ export default function PokemonGrid({
           {displayedList.map((pokemon, index) => (
             <motion.div key={pokemon.id} variants={cardVariants}>
               <Link
-                href={`/pokemon/${pokemon.name}`}
+                href={getPokemonUrl(pokemon.name)}
                 className="group bg-zinc-900/50 border border-zinc-800/70 hover:border-zinc-600/80 rounded-2xl p-4 flex flex-col items-center transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40 h-full"
               >
                 <span className="self-end text-xs font-mono text-zinc-500 group-hover:text-zinc-400">
@@ -219,7 +243,8 @@ export default function PokemonGrid({
                     <span
                       key={type}
                       className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
-                        TYPE_COLORS[type] || "bg-zinc-700 text-white"
+                        TYPE_COLORS[type.toLowerCase()] ||
+                        "bg-zinc-700 text-white"
                       }`}
                     >
                       {type}
@@ -236,28 +261,31 @@ export default function PokemonGrid({
             {isSearching ? (
               <>
                 <p className="text-zinc-400 text-sm">
-                  No Pokémon found matching &quot;{query}&quot; in the National
-                  Pokédex.
+                  {isEs
+                    ? `No se encontraron Pokémon para "${query}" en la Pokédex Nacional.`
+                    : `No Pokémon found matching "${query}" in the National Pokédex.`}
                 </p>
                 <button
                   type="button"
                   onClick={handleClearQuery}
                   className="mt-3 text-xs text-rose-400 hover:text-rose-300 underline font-medium cursor-pointer"
                 >
-                  Clear search query
+                  {isEs ? "Limpiar búsqueda" : "Clear search query"}
                 </button>
               </>
             ) : (
               <>
                 <p className="text-zinc-400 text-sm">
-                  No Pokémon found matching the selected filter criteria.
+                  {isEs
+                    ? "No se encontraron Pokémon con los filtros seleccionados."
+                    : "No Pokémon found matching the selected filter criteria."}
                 </p>
                 <button
                   type="button"
                   onClick={handleClearAll}
                   className="mt-3 text-xs text-rose-400 hover:text-rose-300 underline font-medium cursor-pointer"
                 >
-                  Reset advanced filters
+                  {isEs ? "Restablecer filtros" : "Reset advanced filters"}
                 </button>
               </>
             )}
@@ -265,7 +293,7 @@ export default function PokemonGrid({
         )
       )}
 
-      {/* Botón Load More (exclusivo para la búsqueda cuando hay más resultados) */}
+      {/* Botón Load More */}
       {isSearching && hasMore && (
         <div className="flex justify-center pt-4 pb-2">
           <button
@@ -277,18 +305,20 @@ export default function PokemonGrid({
             {isLoadingMore ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Loading more...</span>
+                <span>{isEs ? "Cargando más..." : "Loading more..."}</span>
               </>
             ) : (
               <span>
-                Load more ({searchResults.length} of {totalFound})
+                {isEs
+                  ? `Cargar más (${searchResults.length} de ${totalFound})`
+                  : `Load more (${searchResults.length} of ${totalFound})`}
               </span>
             )}
           </button>
         </div>
       )}
 
-      {/* Paginación regular: solo visible si NO hay búsqueda activa */}
+      {/* Paginación regular */}
       {!isSearching && totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-6 border-t border-zinc-800/80">
           {prevPageHref ? (

@@ -1,21 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { EvolutionStage } from "@/lib/pokeapi";
 import { TYPE_COLORS } from "@/constants/typeColors";
+import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 
 interface EvolutionTreeProps {
   currentPokemonName: string;
   chain: EvolutionStage | null;
+  locale?: string;
 }
 
-// 1. Dictionary of official evolution items in English (Bulbapedia / Serebii standard)
+// 1. Diccionario de objetos evolutivos en inglés
 const EVOLUTION_ITEMS_EN: Record<string, string> = {
-  // Porygon family (with official hyphenation)
   upgrade: "Up-Grade",
   dubiousdisc: "Dubious Disc",
-
-  // Trade with held item
   metalcoat: "Metal Coat",
   kingsrock: "King's Rock",
   dragonscale: "Dragon Scale",
@@ -28,8 +29,6 @@ const EVOLUTION_ITEMS_EN: Record<string, string> = {
   prismscale: "Prism Scale",
   whippeddream: "Whipped Dream",
   sachet: "Sachet",
-
-  // Evolution Stones
   firestone: "Fire Stone",
   waterstone: "Water Stone",
   thunderstone: "Thunder Stone",
@@ -40,8 +39,6 @@ const EVOLUTION_ITEMS_EN: Record<string, string> = {
   duskstone: "Dusk Stone",
   dawnstone: "Dawn Stone",
   icestone: "Ice Stone",
-
-  // Special Items
   ovalstone: "Oval Stone",
   razorclaw: "Razor Claw",
   razorfang: "Razor Fang",
@@ -60,10 +57,78 @@ const EVOLUTION_ITEMS_EN: Record<string, string> = {
   peatblock: "Peat Block",
 };
 
-// Clean and format any item name in standard English
-function formatItemName(rawItem: string): string {
+// 2. Diccionario de objetos evolutivos en español
+const EVOLUTION_ITEMS_ES: Record<string, string> = {
+  upgrade: "Mejora",
+  dubiousdisc: "Disco Extraño",
+  metalcoat: "Revestimiento Metálico",
+  kingsrock: "Roca del Rey",
+  dragonscale: "Escama Dragón",
+  deepseatooth: "Diente Marino",
+  deepseascale: "Escama Marina",
+  protector: "Protector",
+  electirizer: "Electrizador",
+  magmarizer: "Magmatizador",
+  reapercloth: "Tela Terrible",
+  prismscale: "Escama Bella",
+  whippeddream: "Dulce de Nata",
+  sachet: "Saquito Fragante",
+  firestone: "Piedra Fuego",
+  waterstone: "Piedra Agua",
+  thunderstone: "Piedra Trueno",
+  leafstone: "Piedra Hoja",
+  moonstone: "Piedra Lunar",
+  sunstone: "Piedra Solar",
+  shinystone: "Piedra Día",
+  duskstone: "Piedra Noche",
+  dawnstone: "Piedra Alba",
+  icestone: "Piedra Hielo",
+  ovalstone: "Piedra Oval",
+  razorclaw: "Garra Afilada",
+  razorfang: "Colmillo Agudo",
+  sweetapple: "Manzana Dulce",
+  tartapple: "Manzana Ácida",
+  syrupyapple: "Manzana Melosa",
+  crackedpot: "Tetera Agrietada",
+  chippedpot: "Tetera Rota",
+  unremarkableteacup: "Cuenco Mediocre",
+  masterpieceteacup: "Cuenco Exquisito",
+  auspiciousarmor: "Armadura Auspiciosa",
+  maliciousarmor: "Armadura Maldita",
+  scrollofdarkness: "Manuscrito Sombrío",
+  scrollofwaters: "Manuscrito Aguas",
+  blackaugurite: "Mineral Negro",
+  peatblock: "Bloque de Turba",
+};
+
+const TYPE_TRANSLATIONS_ES: Record<string, string> = {
+  normal: "Normal",
+  fire: "Fuego",
+  water: "Agua",
+  grass: "Planta",
+  electric: "Eléctrico",
+  ice: "Hielo",
+  fighting: "Lucha",
+  poison: "Veneno",
+  ground: "Tierra",
+  flying: "Volador",
+  psychic: "Psíquico",
+  bug: "Bicho",
+  rock: "Roca",
+  ghost: "Fantasma",
+  dragon: "Dragón",
+  steel: "Acero",
+  dark: "Siniestro",
+  fairy: "Hada",
+};
+
+function formatItemName(rawItem: string, isEs: boolean): string {
   if (!rawItem) return "";
   const normalizedKey = rawItem.toLowerCase().replace(/[\s_-]+/g, "");
+
+  if (isEs && EVOLUTION_ITEMS_ES[normalizedKey]) {
+    return EVOLUTION_ITEMS_ES[normalizedKey];
+  }
 
   if (EVOLUTION_ITEMS_EN[normalizedKey]) {
     return EVOLUTION_ITEMS_EN[normalizedKey];
@@ -76,7 +141,6 @@ function formatItemName(rawItem: string): string {
     .join(" ");
 }
 
-// 2. Special official names with hyphens or punctuation
 const POKEMON_SPECIAL_NAMES: Record<string, string> = {
   "ho-oh": "Ho-Oh",
   "jangmo-o": "Jangmo-o",
@@ -117,9 +181,17 @@ const POKEMON_SPECIAL_NAMES: Record<string, string> = {
   "iron-crown": "Iron Crown",
 };
 
-function formatEvolutionPokemonName(name: string): string {
+function formatEvolutionPokemonName(name: string, locale: string): string {
   if (!name) return "";
   const lower = name.toLowerCase();
+
+  if (locale === "es" && CANONICAL_TO_SPANISH[lower]) {
+    const esName = CANONICAL_TO_SPANISH[lower];
+    return esName
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
 
   if (POKEMON_SPECIAL_NAMES[lower]) {
     return POKEMON_SPECIAL_NAMES[lower];
@@ -131,13 +203,12 @@ function formatEvolutionPokemonName(name: string): string {
       const base = lower.slice(0, -suffix.length);
       const region = suffix.replace("-", "");
       const formattedBase =
-        POKEMON_SPECIAL_NAMES[base] || formatEvolutionPokemonName(base);
+        POKEMON_SPECIAL_NAMES[base] || formatEvolutionPokemonName(base, locale);
       const formattedRegion = region.charAt(0).toUpperCase() + region.slice(1);
       return `${formattedBase} (${formattedRegion})`;
     }
   }
 
-  // Si es una forma base conocida (ej. palafin-zero), mostramos solo el nombre base
   const DEFAULT_FORM_SUFFIXES = [
     "-zero",
     "-disguised",
@@ -148,7 +219,7 @@ function formatEvolutionPokemonName(name: string): string {
   for (const suffix of DEFAULT_FORM_SUFFIXES) {
     if (lower.endsWith(suffix)) {
       const base = lower.slice(0, -suffix.length);
-      return formatEvolutionPokemonName(base);
+      return formatEvolutionPokemonName(base, locale);
     }
   }
 
@@ -158,16 +229,20 @@ function formatEvolutionPokemonName(name: string): string {
     .join(" ");
 }
 
-// 3. Safe link resolution prioritizing clean canonical URLs
-function getEvolutionHref(node: EvolutionStage): string {
-  // A. Si el nodo ya incluye la especie canónica (ej. "palafin"), enlazamos directo
+function getEvolutionHref(node: EvolutionStage, locale: string): string {
+  const resolveSlug = (rawName: string) => {
+    const clean = rawName.toLowerCase();
+    return locale === "es" && CANONICAL_TO_SPANISH[clean]
+      ? CANONICAL_TO_SPANISH[clean]
+      : clean;
+  };
+
   if (node.speciesName) {
-    return `/pokemon/${node.speciesName.toLowerCase()}`;
+    return `/${locale}/pokemon/${resolveSlug(node.speciesName)}`;
   }
 
   const pokemonName = node.name.toLowerCase();
 
-  // B. Variantes regionales que sí requieren query param
   const REGIONAL_SUFFIXES = ["-alola", "-galar", "-hisui", "-paldea"];
   const matchedSuffix = REGIONAL_SUFFIXES.find((suffix) =>
     pokemonName.endsWith(suffix),
@@ -175,10 +250,9 @@ function getEvolutionHref(node: EvolutionStage): string {
 
   if (matchedSuffix) {
     const baseSpecies = pokemonName.slice(0, -matchedSuffix.length);
-    return `/pokemon/${baseSpecies}?variant=${pokemonName}`;
+    return `/${locale}/pokemon/${resolveSlug(baseSpecies)}?variant=${pokemonName}`;
   }
 
-  // C. Formas base por defecto en PokéAPI que NO deben llevar ?variant
   const DEFAULT_FORM_SUFFIXES = [
     "-zero",
     "-disguised",
@@ -191,49 +265,70 @@ function getEvolutionHref(node: EvolutionStage): string {
   for (const suffix of DEFAULT_FORM_SUFFIXES) {
     if (pokemonName.endsWith(suffix)) {
       const baseSpecies = pokemonName.slice(0, -suffix.length);
-      return `/pokemon/${baseSpecies}`;
+      return `/${locale}/pokemon/${resolveSlug(baseSpecies)}`;
     }
   }
 
-  return `/pokemon/${pokemonName}`;
+  return `/${locale}/pokemon/${resolveSlug(pokemonName)}`;
 }
 
-// 4. Official English evolution requirements formatter
 function EvolutionArrowWithDetails({
   details,
+  locale,
 }: {
   details?: EvolutionStage["triggerDetails"];
+  locale: string;
 }) {
   if (!details) return null;
+  const isEs = locale === "es";
 
   const requirements: string[] = [];
 
-  // A. Main methods
+  // A. Métodos principales
   if (details.trigger === "trade") {
-    requirements.push(
-      details.heldItem
-        ? `Trade holding ${formatItemName(details.heldItem)}`
-        : "Trade",
-    );
+    if (details.heldItem) {
+      const itemName = formatItemName(details.heldItem, isEs);
+      requirements.push(
+        isEs
+          ? `Intercambio equipando ${itemName}`
+          : `Trade holding ${itemName}`,
+      );
+    } else {
+      requirements.push(isEs ? "Intercambio" : "Trade");
+    }
   } else if (details.trigger === "use-item" && details.item) {
-    requirements.push(`Use ${formatItemName(details.item)}`);
+    const itemName = formatItemName(details.item, isEs);
+    requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
   }
 
-  // B. Level up and conditions
-  if (details.minLevel) requirements.push(`Level ${details.minLevel}`);
-  if (details.happiness) requirements.push(`Friendship ≥ ${details.happiness}`);
+  // B. Subida de nivel y requisitos
+  if (details.minLevel) {
+    requirements.push(
+      isEs ? `Nivel ${details.minLevel}` : `Level ${details.minLevel}`,
+    );
+  }
+  if (details.happiness) {
+    requirements.push(
+      isEs
+        ? `Amistad ≥ ${details.happiness}`
+        : `Friendship ≥ ${details.happiness}`,
+    );
+  }
   if (details.heldItem && details.trigger !== "trade") {
-    requirements.push(`Hold ${formatItemName(details.heldItem)}`);
+    const itemName = formatItemName(details.heldItem, isEs);
+    requirements.push(isEs ? `Equipar ${itemName}` : `Hold ${itemName}`);
   }
 
-  // C. Moves and special conditions
+  // C. Movimientos y condiciones especiales
   if (details.knownMove) {
     const moveFormatted = details.knownMove
       .replace(/-/g, " ")
       .split(" ")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
-    requirements.push(`Learn ${moveFormatted}`);
+    requirements.push(
+      isEs ? `Aprender ${moveFormatted}` : `Learn ${moveFormatted}`,
+    );
   }
 
   if (details.otherCondition) {
@@ -241,44 +336,58 @@ function EvolutionArrowWithDetails({
   }
 
   if (details.timeOfDay) {
-    const timeEn = details.timeOfDay === "day" ? "Day" : "Night";
-    requirements.push(`(${timeEn})`);
+    if (isEs) {
+      requirements.push(details.timeOfDay === "day" ? "(Día)" : "(Noche)");
+    } else {
+      requirements.push(details.timeOfDay === "day" ? "(Day)" : "(Night)");
+    }
   }
 
-  if (details.gender === 1) requirements.push("(Female)");
-  if (details.gender === 2) requirements.push("(Male)");
+  if (details.gender === 1) requirements.push(isEs ? "(Hembra)" : "(Female)");
+  if (details.gender === 2) requirements.push(isEs ? "(Macho)" : "(Male)");
+
   if (details.partySpecies) {
-    const partyName = formatEvolutionPokemonName(details.partySpecies);
-    requirements.push(`With ${partyName} in party`);
+    const partyName = formatEvolutionPokemonName(details.partySpecies, locale);
+    requirements.push(
+      isEs ? `Con ${partyName} en equipo` : `With ${partyName} in party`,
+    );
   }
-  if (details.needsOverworldRain) requirements.push("During Rain");
+  if (details.needsOverworldRain) {
+    requirements.push(isEs ? "Durante la lluvia" : "During Rain");
+  }
 
-  if (details.relativeStats === 1) requirements.push("Attack > Defense");
-  if (details.relativeStats === -1) requirements.push("Attack < Defense");
-  if (details.relativeStats === 0) requirements.push("Attack = Defense");
+  if (details.relativeStats === 1)
+    requirements.push(isEs ? "Ataque > Defensa" : "Attack > Defense");
+  if (details.relativeStats === -1)
+    requirements.push(isEs ? "Ataque < Defensa" : "Attack < Defense");
+  if (details.relativeStats === 0)
+    requirements.push(isEs ? "Ataque = Defensa" : "Attack = Defense");
 
   // Fallbacks
   if (requirements.length === 0 && details.item) {
-    requirements.push(`Use ${formatItemName(details.item)}`);
+    const itemName = formatItemName(details.item, isEs);
+    requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
   }
   if (requirements.length === 0) {
-    requirements.push("Special Evolution");
+    requirements.push(isEs ? "Evolución especial" : "Special Evolution");
   }
 
   return (
-    <div className="flex flex-col items-center gap-1.5 min-w-30">
-      <ArrowRight className="w-5 h-5 text-zinc-600 rotate-90 md:rotate-0" />
-
-      <div className="flex flex-col gap-1 w-full items-center">
+    <div className="flex flex-col items-center justify-center gap-1.5 w-52 shrink-0">
+      {/* 1. Requisitos arriba con ancho simétrico */}
+      <div className="flex flex-col gap-1 w-full items-center justify-center">
         {requirements.map((req, index) => (
           <span
             key={`${req}-${index}`}
-            className="px-2.5 py-0.5 bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-center text-[10px] font-semibold text-amber-300 whitespace-nowrap"
+            className="w-full max-w-52.5 px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-center text-[10px] font-semibold text-amber-300 leading-snug whitespace-normal"
           >
             {req}
           </span>
         ))}
       </div>
+
+      {/* 2. Flecha debajo centrada */}
+      <ArrowRight className="w-5 h-5 text-zinc-500 rotate-90 md:rotate-0 shrink-0" />
     </div>
   );
 }
@@ -286,21 +395,24 @@ function EvolutionArrowWithDetails({
 function EvolutionBranch({
   node,
   currentPokemonName,
+  locale,
 }: {
   node: EvolutionStage;
   currentPokemonName: string;
+  locale: string;
 }) {
+  const isEs = locale === "es";
   const currentLower = currentPokemonName.toLowerCase();
   const isCurrent =
     node.name.toLowerCase() === currentLower ||
     (node.speciesName && node.speciesName.toLowerCase() === currentLower) ||
     node.name.toLowerCase().startsWith(`${currentLower}-`);
 
-  const targetHref = getEvolutionHref(node);
+  const targetHref = getEvolutionHref(node, locale);
 
   return (
     <div className="flex flex-col md:flex-row items-center gap-6">
-      {/* Pokémon Card */}
+      {/* Tarjeta del Pokémon */}
       <Link
         href={targetHref}
         className={`group flex flex-col items-center p-3 rounded-2xl border transition-all ${
@@ -322,34 +434,46 @@ function EvolutionBranch({
           />
         </div>
         <span className="font-bold text-xs text-zinc-200 mb-1 text-center">
-          {formatEvolutionPokemonName(node.speciesName || node.name)}
+          {formatEvolutionPokemonName(node.speciesName || node.name, locale)}
         </span>
         <div className="flex gap-1">
-          {node.types.map((t) => (
-            <span
-              key={t}
-              className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
-                TYPE_COLORS[t] || "bg-zinc-700 text-white"
-              }`}
-            >
-              {t}
-            </span>
-          ))}
+          {node.types.map((t) => {
+            const rawType = t.toLowerCase();
+            const displayType =
+              isEs && TYPE_TRANSLATIONS_ES[rawType]
+                ? TYPE_TRANSLATIONS_ES[rawType]
+                : t;
+
+            return (
+              <span
+                key={t}
+                className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
+                  TYPE_COLORS[rawType] || "bg-zinc-700 text-white"
+                }`}
+              >
+                {displayType}
+              </span>
+            );
+          })}
         </div>
       </Link>
 
-      {/* Evolution arrows and branches */}
+      {/* Flechas y ramas evolutivas */}
       {node.evolvesTo.length > 0 && (
-        <div className="flex flex-col gap-6 items-center">
+        <div className="flex flex-col gap-6 items-center justify-center">
           {node.evolvesTo.map((child) => (
             <div
               key={child.id}
-              className="flex flex-col md:flex-row items-center gap-4"
+              className="flex flex-col md:flex-row items-center justify-start gap-4 w-full"
             >
-              <EvolutionArrowWithDetails details={child.triggerDetails} />
+              <EvolutionArrowWithDetails
+                details={child.triggerDetails}
+                locale={locale}
+              />
               <EvolutionBranch
                 node={child}
                 currentPokemonName={currentPokemonName}
+                locale={locale}
               />
             </div>
           ))}
@@ -362,15 +486,20 @@ function EvolutionBranch({
 export default function EvolutionTree({
   currentPokemonName,
   chain,
+  locale = "es",
 }: EvolutionTreeProps) {
+  const isEs = locale === "es";
+
   if (!chain || chain.evolvesTo.length === 0) {
     return (
       <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-2">
         <h3 className="text-base font-bold text-white tracking-tight">
-          Evolution Chain
+          {isEs ? "Cadena Evolutiva" : "Evolution Chain"}
         </h3>
         <p className="text-xs text-zinc-400">
-          This Pokémon does not have any known evolutions.
+          {isEs
+            ? "Este Pokémon no tiene evoluciones conocidas."
+            : "This Pokémon does not have any known evolutions."}
         </p>
       </div>
     );
@@ -380,10 +509,12 @@ export default function EvolutionTree({
     <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
       <div>
         <h3 className="text-base font-bold text-white tracking-tight">
-          Evolution Chain
+          {isEs ? "Cadena Evolutiva" : "Evolution Chain"}
         </h3>
         <p className="text-xs text-zinc-400">
-          Methods and conditions for evolution.
+          {isEs
+            ? "Métodos y condiciones para evolucionar."
+            : "Methods and conditions for evolution."}
         </p>
       </div>
 
@@ -392,6 +523,7 @@ export default function EvolutionTree({
           <EvolutionBranch
             node={chain}
             currentPokemonName={currentPokemonName}
+            locale={locale}
           />
         </div>
       </div>

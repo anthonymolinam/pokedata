@@ -22,6 +22,7 @@ interface PokemonDetailViewProps {
   initialVariantName?: string;
   prevPokemon: AdjacentPokemon | null;
   nextPokemon: AdjacentPokemon | null;
+  locale?: string;
 }
 
 export default function PokemonDetailView({
@@ -30,6 +31,7 @@ export default function PokemonDetailView({
   initialVariantName,
   prevPokemon,
   nextPokemon,
+  locale = "es",
 }: PokemonDetailViewProps) {
   // Initialize with the variant specified in initialVariantName if it exists
   const [selectedVariant, setSelectedVariant] = useState<PokemonVariety | null>(
@@ -152,17 +154,22 @@ export default function PokemonDetailView({
   return (
     <PokemonDetailContainer>
       {/* Previous / Next navigation bar with keyboard shortcuts */}
-      <PokemonNavigation prev={prevPokemon} next={nextPokemon} />
+      <PokemonNavigation
+        prev={prevPokemon}
+        next={nextPokemon}
+        locale={locale}
+      />
 
       {/* Interactive Hero */}
       <PokemonHeroSection
         pokemon={pokemon}
         selectedVariant={selectedVariant}
         onVariantChange={handleVariantChange}
+        locale={locale}
       />
 
       {/* Weaknesses and resistances table */}
-      <TypeWeaknesses effectiveness={activeWeaknesses} />
+      <TypeWeaknesses effectiveness={activeWeaknesses} locale={locale} />
 
       {/* Evolution Chain with correct order and variants */}
       <EvolutionTree
@@ -170,6 +177,7 @@ export default function PokemonDetailView({
           selectedVariant ? selectedVariant.name : pokemon.name
         }
         chain={customChain}
+        locale={locale}
       />
     </PokemonDetailContainer>
   );
