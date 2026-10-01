@@ -33,6 +33,27 @@ const cardVariants: Variants = {
   },
 };
 
+const TYPE_TRANSLATIONS_ES: Record<string, string> = {
+  normal: "Normal",
+  fire: "Fuego",
+  water: "Agua",
+  grass: "Planta",
+  electric: "Eléctrico",
+  ice: "Hielo",
+  fighting: "Lucha",
+  poison: "Veneno",
+  ground: "Tierra",
+  flying: "Volador",
+  psychic: "Psíquico",
+  bug: "Bicho",
+  rock: "Roca",
+  ghost: "Fantasma",
+  dragon: "Dragón",
+  steel: "Acero",
+  dark: "Siniestro",
+  fairy: "Hada",
+};
+
 interface PokemonGridProps {
   initialList: PokemonSummary[];
   currentPage?: number;
@@ -239,17 +260,24 @@ export default function PokemonGrid({
                   {formatPokemonDisplayName(pokemon.name)}
                 </h2>
                 <div className="flex gap-1 flex-wrap justify-center mt-auto">
-                  {pokemon.types.map((type) => (
-                    <span
-                      key={type}
-                      className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
-                        TYPE_COLORS[type.toLowerCase()] ||
-                        "bg-zinc-700 text-white"
-                      }`}
-                    >
-                      {type}
-                    </span>
-                  ))}
+                  {pokemon.types.map((type) => {
+                    const rawType = type.toLowerCase();
+                    const displayType =
+                      isEs && TYPE_TRANSLATIONS_ES[rawType]
+                        ? TYPE_TRANSLATIONS_ES[rawType]
+                        : type;
+
+                    return (
+                      <span
+                        key={type}
+                        className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+                          TYPE_COLORS[rawType] || "bg-zinc-700 text-white"
+                        }`}
+                      >
+                        {displayType}
+                      </span>
+                    );
+                  })}
                 </div>
               </Link>
             </motion.div>

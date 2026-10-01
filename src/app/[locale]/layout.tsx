@@ -5,7 +5,7 @@ import GlobalSearchBar from "@/components/common/GlobalSearchBar";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { getDictionary } from "@/constants/translations";
 import { getLocalizedPath } from "@/constants/routes";
-import { Locale } from "@/middleware";
+import { Locale } from "@/proxy";
 
 export const metadata: Metadata = {
   title: "PokéData | Pokémon Encyclopedia",

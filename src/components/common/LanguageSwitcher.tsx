@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Locale } from "@/middleware";
+import { Locale } from "@/proxy";
 import { ROUTE_MAP, REVERSE_ROUTE_MAP } from "@/constants/routes";
 import {
   MULTILINGUAL_ALIASES,

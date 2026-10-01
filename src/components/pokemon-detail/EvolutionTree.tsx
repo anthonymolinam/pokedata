@@ -373,20 +373,20 @@ function EvolutionArrowWithDetails({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1.5 w-52 shrink-0">
-      {/* 1. Requisitos arriba con ancho simétrico */}
+    <div className="flex flex-col items-center justify-center gap-1.5 w-44 shrink-0">
+      {/* Requisitos arriba */}
       <div className="flex flex-col gap-1 w-full items-center justify-center">
         {requirements.map((req, index) => (
           <span
             key={`${req}-${index}`}
-            className="w-full max-w-52.5 px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-center text-[10px] font-semibold text-amber-300 leading-snug whitespace-normal"
+            className="w-full max-w-36.25 px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-center text-[10px] font-semibold text-amber-300 leading-snug whitespace-normal text-balance"
           >
             {req}
           </span>
         ))}
       </div>
 
-      {/* 2. Flecha debajo centrada */}
+      {/* Flecha debajo centrada */}
       <ArrowRight className="w-5 h-5 text-zinc-500 rotate-90 md:rotate-0 shrink-0" />
     </div>
   );
