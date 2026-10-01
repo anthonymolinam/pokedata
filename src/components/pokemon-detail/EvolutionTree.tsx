@@ -301,22 +301,43 @@ function EvolutionArrowWithDetails({
     requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
   }
 
-  // B. Subida de nivel y requisitos
+  // B. Subida de nivel, amistad y requisitos con horario integrado
+  const timeSuffix = details.timeOfDay
+    ? ` (${isEs ? (details.timeOfDay === "day" ? "Día" : "Noche") : details.timeOfDay === "day" ? "Day" : "Night"})`
+    : "";
+
+  let hasHandledTime = false;
+
   if (details.minLevel) {
     requirements.push(
-      isEs ? `Nivel ${details.minLevel}` : `Level ${details.minLevel}`,
+      `${isEs ? `Nivel ${details.minLevel}` : `Level ${details.minLevel}`}${timeSuffix}`,
     );
-  }
-  if (details.happiness) {
+    if (details.timeOfDay) hasHandledTime = true;
+  } else if (details.happiness) {
     requirements.push(
-      isEs
-        ? `Amistad ≥ ${details.happiness}`
-        : `Friendship ≥ ${details.happiness}`,
+      `${isEs ? `Amistad ≥ ${details.happiness}` : `Friendship ≥ ${details.happiness}`}${timeSuffix}`,
     );
+    if (details.timeOfDay) hasHandledTime = true;
   }
+
   if (details.heldItem && details.trigger !== "trade") {
     const itemName = formatItemName(details.heldItem, isEs);
-    requirements.push(isEs ? `Equipar ${itemName}` : `Hold ${itemName}`);
+    requirements.push(
+      `${isEs ? `Equipar ${itemName}` : `Hold ${itemName}`}${!hasHandledTime ? timeSuffix : ""}`,
+    );
+    if (details.timeOfDay) hasHandledTime = true;
+  }
+
+  if (details.timeOfDay && !hasHandledTime) {
+    requirements.push(
+      isEs
+        ? details.timeOfDay === "day"
+          ? "De día"
+          : "De noche"
+        : details.timeOfDay === "day"
+          ? "During day"
+          : "During night",
+    );
   }
 
   // C. Movimientos y condiciones especiales
@@ -333,14 +354,6 @@ function EvolutionArrowWithDetails({
 
   if (details.otherCondition) {
     requirements.push(details.otherCondition);
-  }
-
-  if (details.timeOfDay) {
-    if (isEs) {
-      requirements.push(details.timeOfDay === "day" ? "(Día)" : "(Noche)");
-    } else {
-      requirements.push(details.timeOfDay === "day" ? "(Day)" : "(Night)");
-    }
   }
 
   if (details.gender === 1) requirements.push(isEs ? "(Hembra)" : "(Female)");
