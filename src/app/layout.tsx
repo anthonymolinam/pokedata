@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import GlobalSearchBar from "@/components/common/GlobalSearchBar";
 
 export const metadata: Metadata = {
   title: "PokéData | Pokémon Encyclopedia",
@@ -22,15 +23,23 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col">
         <header className="border-b border-zinc-800/80 backdrop-blur-md sticky top-0 z-50 bg-zinc-950/70">
-          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+            {/* Logo: en móvil solo muestra el icono o texto compacto */}
             <Link
               href="/"
-              className="flex items-center gap-2 font-black text-xl tracking-tight text-white hover:opacity-90 transition-opacity"
+              className="flex items-center gap-2 font-black text-xl tracking-tight text-white hover:opacity-90 transition-opacity shrink-0"
             >
               <span className="w-4 h-4 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50" />
-              PokéData
+              <span className="hidden sm:inline">PokéData</span>
             </Link>
-            <nav className="flex items-center gap-6 text-sm font-medium">
+
+            {/* Buscador expandido en móvil, contenido en desktop */}
+            <div className="flex-1 max-w-sm">
+              <GlobalSearchBar />
+            </div>
+
+            {/* Enlaces de navegación */}
+            <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-medium shrink-0">
               <Link
                 href="/"
                 className="text-zinc-400 hover:text-white transition-colors"
@@ -39,7 +48,7 @@ export default function RootLayout({
               </Link>
               <Link
                 href="/types"
-                className="text-zinc-400 hover:text-white transition-colors"
+                className="text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
               >
                 Type Chart
               </Link>
