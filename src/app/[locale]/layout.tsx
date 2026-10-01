@@ -18,9 +18,10 @@ export default async function RootLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  const { locale: rawLocale } = await params;
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
   const dict = getDictionary(locale);
 
   const commitSha = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA;
