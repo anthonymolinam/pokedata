@@ -28,43 +28,123 @@ export async function generateMetadata({
   );
 
   const isEs = locale === "es";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata-pied.vercel.app";
 
   try {
     const pokemon = await getPokemonDetail(activePokemonName);
 
-    const formattedName = formatPokemonDisplayName(pokemon.name);
+    // 1. Resolver nombre visual traducido
+    const canonicalLower = pokemon.name.toLowerCase();
+    const localizedName =
+      isEs && CANONICAL_TO_SPANISH[canonicalLower]
+        ? CANONICAL_TO_SPANISH[canonicalLower]
+            .split("-")
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ")
+        : formatPokemonDisplayName(pokemon.name);
+
+    // 2. Mapeo localizado de tipos para la descripción
+    const TYPE_NAMES_ES: Record<string, string> = {
+      normal: "Normal",
+      fire: "Fuego",
+      water: "Agua",
+      grass: "Planta",
+      electric: "Eléctrico",
+      ice: "Hielo",
+      fighting: "Lucha",
+      poison: "Veneno",
+      ground: "Tierra",
+      flying: "Volador",
+      psychic: "Psíquico",
+      bug: "Bicho",
+      rock: "Roca",
+      ghost: "Fantasma",
+      dragon: "Dragón",
+      steel: "Acero",
+      dark: "Siniestro",
+      fairy: "Hada",
+    };
+
     const typesFormatted = pokemon.types
-      .map((t) => t.toUpperCase())
+      .map((t) =>
+        (isEs ? TYPE_NAMES_ES[t.toLowerCase()] || t : t).toUpperCase(),
+      )
       .join(" / ");
 
-    const pageTitle = `${formattedName} | PokéData`;
+    // 3. Título limpio con absolute
+    const title = isEs
+      ? `PokéData | ${localizedName} #${String(pokemon.id).padStart(4, "0")} - Estadísticas y Tipos`
+      : `PokéData | ${localizedName} #${String(pokemon.id).padStart(4, "0")} - Stats & Matchups`;
+
     const description = isEs
-      ? `Estadísticas base, tabla de tipos, habilidades y línea evolutiva de ${formattedName} (Tipo ${typesFormatted}) en PokéData.`
-      : `Base stats, type matchups, abilities, and evolution chain for ${formattedName} (Type ${typesFormatted}) on PokéData.`;
+      ? `Datos completos de ${localizedName} (#${String(pokemon.id).padStart(4, "0")}) en PokéData: estadísticas base, tabla de debilidades de tipo ${typesFormatted}, habilidades y evoluciones.`
+      : `Complete data for ${localizedName} (#${String(pokemon.id).padStart(4, "0")}) on PokéData: base stats, weakness chart for type ${typesFormatted}, abilities, and evoluciones.`;
 
     const imageUrl =
       pokemon.image ||
       `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
 
+    // 4. Slugs limpios sin depender de pokemon.species
+    const baseCanonicalSlug = resolveCanonicalPokemonName(pokemon.name);
+    const esSlug =
+      CANONICAL_TO_SPANISH[baseCanonicalSlug.toLowerCase()] ||
+      baseCanonicalSlug.toLowerCase();
+    const enSlug = baseCanonicalSlug.toLowerCase();
+
+    const currentPath = `${baseUrl}/${locale}/pokemon/${name}${
+      resolvedSearchParams?.variant
+        ? `?variant=${resolvedSearchParams.variant}`
+        : ""
+    }`;
+
     return {
-      title: pageTitle,
+      title: {
+        absolute: title,
+      },
       description,
+      keywords: isEs
+        ? [
+            localizedName.toLowerCase(),
+            `estadisticas de ${localizedName.toLowerCase()}`,
+            `debilidades de ${localizedName.toLowerCase()}`,
+            `evolucion ${localizedName.toLowerCase()}`,
+            "pokedex",
+            "pokedata",
+          ]
+        : [
+            localizedName.toLowerCase(),
+            `${localizedName.toLowerCase()} base stats`,
+            `${localizedName.toLowerCase()} weaknesses`,
+            `${localizedName.toLowerCase()} evolution`,
+            "pokedex",
+            "pokedata",
+          ],
+      alternates: {
+        canonical: currentPath,
+        languages: {
+          es: `${baseUrl}/es/pokemon/${encodeURIComponent(esSlug)}`,
+          en: `${baseUrl}/en/pokemon/${encodeURIComponent(enSlug)}`,
+        },
+      },
       openGraph: {
-        title: pageTitle,
+        title,
         description,
+        url: currentPath,
+        siteName: "PokéData",
         type: "website",
         images: [
           {
             url: imageUrl,
             width: 475,
             height: 475,
-            alt: formattedName,
+            alt: localizedName,
           },
         ],
       },
       twitter: {
         card: "summary",
-        title: pageTitle,
+        title,
         description,
         images: [imageUrl],
       },
@@ -72,10 +152,12 @@ export async function generateMetadata({
   } catch {
     const fallbackFormatted = formatPokemonDisplayName(activePokemonName);
     return {
-      title: `${fallbackFormatted} | PokéData`,
+      title: {
+        absolute: `PokéData | ${fallbackFormatted}`,
+      },
       description: isEs
-        ? `Detalles, estadísticas y evoluciones de ${fallbackFormatted}.`
-        : `Pokémon details, stats, and evolution for ${fallbackFormatted}.`,
+        ? `Detalles, estadísticas y evoluciones de ${fallbackFormatted} en PokéData.`
+        : `Pokémon details, stats, and evolution for ${fallbackFormatted} on PokéData.`,
     };
   }
 }
