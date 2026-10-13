@@ -40,17 +40,25 @@ export default function proxy(request: NextRequest) {
   // 3. Si entran a la ruta técnica interna (ej. /es/types), redirigir con URL canónica traducida (/es/tabla-de-tipos)
   if (currentSlug && REVERSE_ROUTE_MAP[currentLocale]?.[currentSlug]) {
     const localizedSlug = REVERSE_ROUTE_MAP[currentLocale][currentSlug];
-    return NextResponse.redirect(
-      new URL(`/${currentLocale}/${localizedSlug}`, request.url),
-    );
+
+    // Evitar bucle infinito si la ruta canónica tiene el mismo nombre que la interna
+    if (localizedSlug !== currentSlug) {
+      return NextResponse.redirect(
+        new URL(`/${currentLocale}/${localizedSlug}`, request.url),
+      );
+    }
   }
 
   // 4. Si entran a la URL traducida (ej. /es/tabla-de-tipos), reescribir internamente a la carpeta física (/es/types)
   if (currentSlug && ROUTE_MAP[currentLocale]?.[currentSlug]) {
     const internalFolder = ROUTE_MAP[currentLocale][currentSlug];
-    const url = request.nextUrl.clone();
-    url.pathname = `/${currentLocale}/${internalFolder}`;
-    return NextResponse.rewrite(url);
+
+    // Evitar rewrite innecesario si ya coincide
+    if (internalFolder !== currentSlug) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${currentLocale}/${internalFolder}`;
+      return NextResponse.rewrite(url);
+    }
   }
 
   return NextResponse.next();

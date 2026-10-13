@@ -1,18 +1,22 @@
 export const ROUTE_MAP: Record<string, Record<string, string>> = {
   es: {
     "tabla-de-tipos": "types",
+    comparador: "compare",
   },
   en: {
     "type-chart": "types",
+    compare: "compare",
   },
 };
 
 export const REVERSE_ROUTE_MAP: Record<string, Record<string, string>> = {
   es: {
     types: "tabla-de-tipos",
+    compare: "comparador",
   },
   en: {
     types: "type-chart",
+    compare: "compare",
   },
 };
 

@@ -5,6 +5,7 @@ export const translations = {
     nav: {
       pokedex: "Pokédex",
       typeChart: "Type Chart",
+      compare: "Compare",
       searchPlaceholder: "Search Pokémon...",
     },
     common: {
@@ -26,11 +27,24 @@ export const translations = {
       speed: "Speed",
       total: "Total",
     },
+    compare: {
+      title: "Pokémon Comparator",
+      subtitle: "Compare base stats, types, and matchups head-to-head.",
+      selectTitle: "Select Pokémon",
+      selectPlaceholder: "Type a name or number (#006, Great Tusk)...",
+      selectEmpty: "Start typing to search for a Pokémon.",
+      selectPrompt1: "Select Pokémon 1",
+      selectPrompt2: "Select Pokémon 2",
+      activeBadge: "Active",
+      swapTooltip: "Swap sides",
+      maxRef: "Max 255",
+    },
   },
   es: {
     nav: {
       pokedex: "Pokédex",
       typeChart: "Tabla de Tipos",
+      compare: "Comparador",
       searchPlaceholder: "Buscar Pokémon...",
     },
     common: {
@@ -51,6 +65,18 @@ export const translations = {
       specialDefense: "Def. Esp",
       speed: "Velocidad",
       total: "Total",
+    },
+    compare: {
+      title: "Comparador de Pokémon",
+      subtitle: "Compara estadísticas base, tipos y ventajas frente a frente.",
+      selectTitle: "Seleccionar Pokémon",
+      selectPlaceholder: "Escribe un nombre o número (#006, Colmilargo)...",
+      selectEmpty: "Escribe en el buscador para ver sugerencias.",
+      selectPrompt1: "Seleccionar Pokémon 1",
+      selectPrompt2: "Seleccionar Pokémon 2",
+      activeBadge: "Activo",
+      swapTooltip: "Invertir posiciones",
+      maxRef: "Máx 255",
     },
   },
 } as const;
