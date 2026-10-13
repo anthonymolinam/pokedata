@@ -21,7 +21,9 @@ export async function generateMetadata({
   const locale: Locale = rawLocale === "en" ? "en" : "es";
   const isEs = locale === "es";
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata.app";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://https://pokedata-pied.vercel.app";
 
   const titleDefault = isEs
     ? "PokéData | Base de Datos, Tabla de Tipos y Comparador Pokémon"
