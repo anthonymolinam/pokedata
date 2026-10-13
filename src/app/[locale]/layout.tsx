@@ -7,19 +7,95 @@ import { getDictionary } from "@/constants/translations";
 import { getLocalizedPath } from "@/constants/routes";
 import { Locale } from "@/proxy";
 
-export const metadata: Metadata = {
-  title: "PokéData | Pokémon Encyclopedia",
-  description:
-    "Comprehensive Pokémon database featuring combat statistics, type matchups, and evolution paths powered by PokéAPI.",
-};
-
-export default async function RootLayout({
-  children,
-  params,
-}: {
+interface LayoutProps {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
-}) {
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale: rawLocale } = await params;
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
+  const isEs = locale === "es";
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata.app";
+
+  const titleDefault = isEs
+    ? "PokéData | Base de Datos, Tabla de Tipos y Comparador Pokémon"
+    : "PokéData | Pokémon Database, Type Chart & Stats Comparator";
+
+  const description = isEs
+    ? "Enciclopedia Pokémon moderna con datos de combate en tiempo real: calculadora y tabla de efectividad de tipos, estadísticas base, comparador Pokémon y evoluciones con PokéAPI."
+    : "Modern Pokémon database featuring combat statistics, interactive type chart matchups, head-to-head Pokémon comparator, and evolution lines powered by PokéAPI.";
+
+  return {
+    metadataBase: new URL(baseUrl),
+    title: {
+      default: titleDefault,
+      template: "%s | PokéData",
+    },
+    description,
+    applicationName: "PokéData",
+    authors: [
+      { name: "Anthony Molina", url: "https://github.com/anthonymolinam" },
+    ],
+    creator: "Anthony Molina",
+    keywords: isEs
+      ? [
+          "PokéData",
+          "pokemon database español",
+          "pokedex interactiva",
+          "comparador pokemon",
+          "tabla de tipos pokemon",
+          "estadisticas base pokemon",
+          "pokeapi",
+        ]
+      : [
+          "PokéData",
+          "pokemon encyclopedia",
+          "pokemon comparator",
+          "type chart pokemon",
+          "base stats comparison",
+          "pokeapi",
+        ],
+    alternates: {
+      canonical: `/${locale}`,
+      languages: {
+        es: "/es",
+        en: "/en",
+      },
+    },
+    openGraph: {
+      type: "website",
+      locale: isEs ? "es_ES" : "en_US",
+      url: `/${locale}`,
+      siteName: "PokéData",
+      title: titleDefault,
+      description,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titleDefault,
+      description,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+  };
+}
+
+export default async function RootLayout({ children, params }: LayoutProps) {
   const { locale: rawLocale } = await params;
   const locale: Locale = rawLocale === "en" ? "en" : "es";
   const dict = getDictionary(locale);
@@ -34,7 +110,7 @@ export default async function RootLayout({
       <body className="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col">
         <header className="border-b border-zinc-800/80 backdrop-blur-md sticky top-0 z-50 bg-zinc-950/70">
           <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-            {/* Logo: en móvil solo muestra el icono o texto compacto */}
+            {/* Logo */}
             <Link
               href={`/${locale}`}
               className="flex items-center gap-2 font-black text-xl tracking-tight text-white hover:opacity-90 transition-opacity shrink-0"
@@ -43,7 +119,7 @@ export default async function RootLayout({
               <span className="hidden sm:inline">PokéData</span>
             </Link>
 
-            {/* Buscador expandido en móvil, contenido en desktop */}
+            {/* Buscador */}
             <div className="flex-1 max-w-sm">
               <GlobalSearchBar
                 locale={locale}
@@ -51,7 +127,7 @@ export default async function RootLayout({
               />
             </div>
 
-            {/* Enlaces de navegación + Selector de idioma */}
+            {/* Navegación y selector de idioma */}
             <div className="flex items-center gap-3 sm:gap-4 shrink-0">
               <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-medium">
                 <Link
@@ -59,6 +135,14 @@ export default async function RootLayout({
                   className="text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
                 >
                   {dict.nav.typeChart}
+                </Link>
+
+                <Link
+                  href={getLocalizedPath(locale, "compare")}
+                  className="text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
+                >
+                  {dict.nav.compare ||
+                    (locale === "es" ? "Comparador" : "Compare")}
                 </Link>
               </nav>
 
@@ -71,7 +155,7 @@ export default async function RootLayout({
           {children}
         </main>
 
-        {/* Legal Disclaimer / Footer */}
+        {/* Footer */}
         <footer className="border-t border-zinc-900 bg-zinc-950/90 py-8 mt-12 text-xs text-zinc-500">
           <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1.5 max-w-3xl">
