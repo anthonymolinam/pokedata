@@ -74,8 +74,8 @@ export async function generateMetadata({
 
     // 3. Título limpio con absolute
     const title = isEs
-      ? `PokéData | ${localizedName} #${String(pokemon.id).padStart(4, "0")} - Estadísticas y Tipos`
-      : `PokéData | ${localizedName} #${String(pokemon.id).padStart(4, "0")} - Stats & Matchups`;
+      ? `${localizedName} | PokéData`
+      : `${localizedName} | PokéData`;
 
     const description = isEs
       ? `Datos completos de ${localizedName} (#${String(pokemon.id).padStart(4, "0")}) en PokéData: estadísticas base, tabla de debilidades de tipo ${typesFormatted}, habilidades y evoluciones.`
