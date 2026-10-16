@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata.app";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata-pied.vercel.app";
 
   // Páginas estáticas / principales
   const routes = ["", "/types", "/compare"].flatMap((route) => [
