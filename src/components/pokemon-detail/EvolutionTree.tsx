@@ -5,6 +5,7 @@ import { EvolutionStage } from "@/lib/pokeapi";
 import PokemonCard from "@/components/pokemon/PokemonCard";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { getDictionary } from "@/constants/translations";
+import { isPokemonType } from "@/constants/typeColors";
 import { Locale } from "@/proxy";
 
 interface EvolutionTreeProps {
@@ -149,6 +150,19 @@ const SPECIAL_EVOLUTION_OVERRIDES: Record<string, { es: string; en: string }> =
       en: "Use Psyshield Bash in Agile Style 20 times",
     },
   };
+
+// Rocas junto a las que se evoluciona subiendo de nivel
+const SPECIAL_ROCKS: Record<string, { es: string; en: string }> = {
+  leafeon: { es: "Roca Musgo", en: "Moss Rock" },
+  glaceon: { es: "Roca Hielo", en: "Ice Rock" },
+};
+
+// «mt-coronet» → «Mt Coronet»
+const titleCase = (slug: string) =>
+  slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 
 function formatItemName(rawItem: string, isEs: boolean): string {
   if (!rawItem) return "";
@@ -492,6 +506,21 @@ function evolutionRequirements(
       );
     }
 
+    // E2. Movimiento de un tipo (Sylveon: uno de tipo Hada) y afecto
+    if (details.knownMoveType && isPokemonType(details.knownMoveType)) {
+      const typeName = getDictionary(isEs ? "es" : "en").typeNames[details.knownMoveType];
+      requirements.push(
+        isEs
+          ? `Conocer un movimiento de tipo ${typeName}`
+          : `Know a ${typeName}-type move`,
+      );
+    }
+    if (details.minAffection) {
+      requirements.push(
+        isEs ? `Afecto ≥ ${details.minAffection}` : `Affection ≥ ${details.minAffection}`,
+      );
+    }
+
     // F. Género y otros requisitos de campo
     if (details.gender === 1) requirements.push(isEs ? "(Hembra)" : "(Female)");
     if (details.gender === 2) requirements.push(isEs ? "(Macho)" : "(Male)");
@@ -521,6 +550,31 @@ function evolutionRequirements(
     if (requirements.length === 0 && details.item) {
       const itemName = formatItemName(details.item, isEs);
       requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
+    }
+
+    // Subir de nivel en un lugar concreto, cuando no hay otro requisito
+    if (requirements.length === 0 && details.location) {
+      requirements.push(
+        `${isEs ? "Subir de nivel en" : "Level up at"} ${titleCase(details.location)}`,
+      );
+    }
+  }
+
+  // Leafeon y Glaceon: además de la piedra, en otros juegos suben de nivel
+  // junto a su roca. Se une al primer requisito como alternativa.
+  if (details.nearSpecialRock) {
+    const rock = SPECIAL_ROCKS[targetKey];
+    const alternative = rock
+      ? isEs
+        ? `subir de nivel junto a la ${rock.es}`
+        : `level up near the ${rock.en}`
+      : isEs
+        ? "subir de nivel junto a una roca especial"
+        : "level up near a special rock";
+    if (requirements.length > 0) {
+      requirements[0] = `${requirements[0]} ${isEs ? "o" : "or"} ${alternative}`;
+    } else {
+      requirements.push(alternative.charAt(0).toUpperCase() + alternative.slice(1));
     }
   }
 
@@ -564,7 +618,9 @@ export default function EvolutionTree({
 
       {chain && hasEvolutions ? (
         <div className="mt-6 md:mt-8 overflow-x-auto overscroll-x-contain custom-scrollbar">
-          <div className="flex justify-center min-w-fit">
+          {/* El scroll recorta lo que sale de la caja: el margen interior deja
+              ver entero el aro de selección (3px más 3px de separación) */}
+          <div className="flex justify-center min-w-fit px-2 pb-2">
             <Branch
               node={chain}
               currentLower={currentPokemonName.toLowerCase()}

@@ -235,6 +235,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - El texto queda por encima en el orden de apilado, aunque el artwork no llegue a tocarlo.
 - **Marca de agua:** el número sin almohadilla (`0006`) en Nunito 900 con cifras tabulares, en `field-ink` al 40 % de opacidad y con `aria-hidden`.
   - Va en la fila del nombre, alineado a la derecha y al mismo tamaño que el nombre. Ahí el artwork no entra nunca, así que siempre se lee. Antes iba enorme detrás del artwork, arriba a la derecha, y la figura lo tapaba (en Bulbasaur solo asomaba un «1»).
+  - **En tarjetas estrechas** (menos de 208px de ancho: cadena evolutiva y rejilla de móvil) el número sube **encima del nombre**, en `--step-small`, y el nombre se ajusta solo a su propio largo. Así ningún nombre se corta (Kommo-o, Crabominable, Fletchinder); si aun así no cabe, salta de línea en vez de recortarse con «…».
   - El número real se lee en la etiqueta accesible de la tarjeta («Charizard, n.º 6»).
 - **Etiquetas de tipo:** pastillas blancas al 80 % con el nombre en tinta (regla 4 del §2.3).
 - **Total:** pastilla en `--ink` con «Total 534» en hueso. La palabra «Total» va en 700 y la cifra en 900, con cifras tabulares.
@@ -279,6 +280,8 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - **Escritorio (≥1024px):** la cadena corre de izquierda a derecha con flechas →. Si una etapa se ramifica en cadenas propias (Wurmple → Silcoon → Beautifly / Cascoon → Dustox), cada rama es una fila con su flecha, apiladas a la derecha del origen.
   - **Abanico:** cuatro o más evoluciones finales desde una misma etapa (Eevee) van en un bloque en `--ground` con una sola flecha desde el origen; la condición se pone encima de cada tarjeta. Así ninguna flecha parece salir de una hermana. Cuatro columnas desde 1280px, dos entre 1024 y 1279.
   - **Móvil:** en vertical, con flechas ↓. Las ramas van en dos columnas y el abanico, sin bloque, en una rejilla de dos.
+  - El contenedor de la cadena deja 8px de margen interior para que el aro de selección de la tarjeta actual (3px más 3px de separación) se vea entero y el scroll no lo recorte.
+  - **Requisitos:** de los detalles de PokéAPI (uno por juego) manda el marcado como actual (`is_default`). Si en otros juegos también evoluciona junto a una roca (`near_special_rock`), se añade como alternativa: «Usar Piedra Hoja o subir de nivel junto a la Roca Musgo». Sylveon: «Amistad ≥ 160 · Conocer un movimiento de tipo Hada» (`known_move_type`). Una ubicación sola se muestra como «Subir de nivel en …». «Evolución especial» queda solo para lo que PokéAPI no describe.
 - **Anterior y siguiente:** dos tarjetas grandes al final, cada una en el `field` del Pokémon al que lleva.
 
 ### 4.5 Tabla de tipos

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PokemonSummary, formatPokemonDisplayName } from "@/lib/pokeapi";
@@ -38,8 +39,15 @@ export default function PokemonCard({
 
   const number = String(pokemon.id).padStart(4, "0");
   // El nombre y el número van en una línea: si no caben, bajan de --step-lead
-  // hasta 16px. Los 0.5em de más son el hueco entre los dos
-  const nameSize = `max(1rem, min(var(--step-lead), calc((100cqi - 2 * var(--card-pad)) / ${(Math.max(name.length, 1) + number.length) * 0.6 + 0.5})))`;
+  // hasta 16px. Los 0.5em de más son el hueco entre los dos. En tarjetas
+  // estrechas (cadena evolutiva, rejilla de móvil) el número sube encima y el
+  // nombre se ajusta solo a su propio largo, con algo de margen para las letras
+  // anchas (Crabominable)
+  const inner = "(100cqi - 2 * var(--card-pad))";
+  const nameSize = {
+    "--name-inline": `max(1rem, min(var(--step-lead), calc(${inner} / ${(Math.max(name.length, 1) + number.length) * 0.6 + 0.5})))`,
+    "--name-stacked": `max(0.875rem, min(var(--step-lead), calc(${inner} / ${Math.max(name.length, 1) * 0.68})))`,
+  } as CSSProperties;
 
   return (
     <Link
@@ -77,8 +85,11 @@ export default function PokemonCard({
       {/* Zona reservada: el artwork no entra nunca y el texto va por encima */}
       <div className="relative z-10 flex flex-1 flex-col gap-[max(0.375rem,2.5cqi)] px-(--card-pad) pt-3 pb-(--card-pad) min-h-[84px] md:min-h-24">
         {/* Marca de agua del número en la fila del nombre: el artwork no llega */}
-        <div className="flex items-baseline gap-[0.5em]" style={{ fontSize: nameSize }}>
-          <Heading className="flex-1 min-w-0 truncate font-black leading-[1.05] tracking-[-0.03em]">
+        <div
+          className="flex items-baseline gap-[0.5em] text-(length:--name-inline) @max-[13rem]:flex-col-reverse @max-[13rem]:items-start @max-[13rem]:gap-0.5 @max-[13rem]:text-(length:--name-stacked)"
+          style={nameSize}
+        >
+          <Heading className="flex-1 min-w-0 truncate font-black leading-[1.05] tracking-[-0.03em] @max-[13rem]:w-full @max-[13rem]:overflow-visible @max-[13rem]:whitespace-normal @max-[13rem]:break-words">
             {name}
             <span className="sr-only">
               , {card.number} {pokemon.id}
@@ -86,7 +97,7 @@ export default function PokemonCard({
           </Heading>
           <span
             aria-hidden="true"
-            className="shrink-0 font-black leading-none tracking-[-0.04em] num opacity-40 select-none"
+            className="shrink-0 font-black leading-none tracking-[-0.04em] num opacity-40 select-none @max-[13rem]:text-small"
           >
             {number}
           </span>

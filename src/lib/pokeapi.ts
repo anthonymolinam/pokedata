@@ -81,6 +81,12 @@ interface ApiEvolutionNode {
     party_species?: ApiNamedResource;
     needs_overworld_rain?: boolean;
     other_condition?: string;
+    // El método actual; los demás son de juegos anteriores
+    is_default?: boolean;
+    known_move_type?: ApiNamedResource;
+    min_affection?: number;
+    location?: ApiNamedResource;
+    near_special_rock?: boolean;
   }[];
   evolves_to: ApiEvolutionNode[];
 }
@@ -132,6 +138,12 @@ export interface EvolutionStage {
     partySpecies?: string;
     needsOverworldRain?: boolean;
     otherCondition?: string;
+    knownMoveType?: string;
+    minAffection?: number;
+    location?: string;
+    // En otros juegos también sube de nivel junto a una roca especial (Leafeon
+    // y Glaceon)
+    nearSpecialRock?: boolean;
   };
   evolvesTo: EvolutionStage[];
 }
@@ -471,7 +483,10 @@ export async function getEvolutionChain(
 
       let triggerDetails;
       if (node.evolution_details && node.evolution_details.length > 0) {
-        const d = node.evolution_details[0];
+        // PokéAPI da un detalle por juego: manda el marcado como actual
+        const d =
+          node.evolution_details.find((detail) => detail.is_default) ??
+          node.evolution_details[0];
 
         let otherCondition: string | undefined = undefined;
         const triggerName = d.trigger?.name;
@@ -507,6 +522,12 @@ export async function getEvolutionChain(
           partySpecies: d.party_species?.name ?? undefined,
           needsOverworldRain: d.needs_overworld_rain ?? undefined,
           otherCondition,
+          knownMoveType: d.known_move_type?.name ?? undefined,
+          minAffection: d.min_affection ?? undefined,
+          location: d.location?.name ?? undefined,
+          nearSpecialRock:
+            node.evolution_details.some((detail) => detail.near_special_rock) ||
+            undefined,
         };
       }
 
