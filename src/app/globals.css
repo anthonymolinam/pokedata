@@ -407,6 +407,24 @@ body {
   transform-origin: right;
 }
 
+/* Tabla de tipos (§4.5). ×0: tinta con rayas a 45° en un patrón SVG plano,
+   para que el «sin efecto» no dependa solo del color. */
+.type-zero {
+  background-color: var(--ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2l4-4M0 8l8-8M6 10l4-4' stroke='%235c6070' stroke-width='2.5'/%3E%3C/svg%3E");
+}
+
+/* ×1 en la fila y la columna del tipo elegido: su field mezclado con blanco */
+.type-cross {
+  background-color: color-mix(in srgb, var(--field) 35%, var(--surface));
+}
+
+/* Cabeceras de columna: la pastilla de tipo en vertical, leída de abajo arriba */
+.vertical-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
 /* Capas flotantes (§6): aparecen y suben 8px en 250ms */
 @keyframes layer-in {
   from {
