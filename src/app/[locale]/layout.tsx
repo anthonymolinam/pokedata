@@ -149,7 +149,10 @@ export default async function RootLayout({ children, params }: LayoutProps) {
             }}
           />
 
-          <main className="flex-1 shell py-8">
+          {/* overflow-x-clip: red de seguridad para que la página nunca tenga
+              scroll horizontal (solo lo tienen contenedores como la tabla de
+              tipos). clip no crea contenedor de scroll, así que no rompe sticky */}
+          <main className="flex-1 shell py-8 overflow-x-clip">
             {children}
           </main>
 

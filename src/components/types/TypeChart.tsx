@@ -31,7 +31,6 @@ const toggle = (
 ): TypeSelection | null =>
   selected?.axis === axis && selected.type === type ? null : { axis, type };
 
-// relative: las etiquetas sr-only (absolutas) quedan dentro del scroll de la tabla
 // 32px de alto: las 19 filas y la franja del título caben en 1440×900. El
 // ancho lo reparte la tabla entre las 18 columnas (unos 57px a 1440)
 const CELL = "relative h-8 rounded-md text-center align-middle text-small font-black num";
@@ -140,7 +139,10 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
 
       <div
         {...(selected ? { "data-type": selected.type } : {})}
-        className="mt-1 py-2 overflow-x-auto overscroll-x-contain custom-scrollbar"
+        // relative: es el bloque contenedor de todas las etiquetas sr-only
+        // (absolutas) de la tabla. Sin él, las de las cabeceras se escapan del
+        // scroll y ensanchan la página en móvil
+        className="relative mt-1 py-2 overflow-x-auto overscroll-x-contain custom-scrollbar"
       >
         <table
           aria-describedby="types-caption"

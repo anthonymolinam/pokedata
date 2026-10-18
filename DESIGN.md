@@ -133,6 +133,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Terciario: relleno `--surface` con texto en tinta.
   - Pulsación con `scale(0.96)` y hover con un pequeño rebote.
 - **Área táctil mínima** de 44px en todo.
+- **Sin scroll horizontal de página:** solo lo tienen contenedores concretos (la tabla de tipos, la cadena evolutiva). El `<main>` lleva `overflow-x: clip` como red de seguridad; `clip` no crea contenedor de scroll, así que no rompe los elementos fijos ni `sticky`. Un elemento absoluto dentro de un contenedor con scroll necesita un antepasado posicionado dentro de ese contenedor.
 
 ### 4.1 Cabecera (todas las páginas)
 
@@ -300,7 +301,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - **La tabla ocupa todo el ancho del panel** (`table-fixed`): la columna de atacantes tiene ancho fijo y las 18 columnas se reparten el resto a partes iguales (unos 57px a 1440px). Celdas de 32px de alto con 3px de separación y radio de 6px; las cifras en `--step-small` y 900. En móvil la tabla tiene un ancho mínimo de 800px y se desplaza.
   - **Cabeceras de fila y columna con la misma pastilla:** 32px de alto, `--step-small` en 800 y 8px de relleno. Las de columna llenan su columna y llevan la **abreviatura de tres letras en horizontal** (Nor, Fue, Agu… / Nor, Fir, Wat…), sacada del nombre del tipo en cada idioma; el nombre completo va en `title` y para lectores de pantalla. Las de fila miden 104px y llevan el nombre completo.
   - Celdas: ×2 en `--ink` con «2» en hueso; ×½ en `--step` con «½» en tinta; ×0 en `--ink` con «0» y rayas a 45°; ×1 vacía. El multiplicador nunca depende solo del color.
-- **Móvil:** la matriz va en un contenedor con scroll horizontal y la columna de tipos atacantes fija a la izquierda.
+- **Móvil:** la matriz va en un contenedor con scroll horizontal y la columna de tipos atacantes fija a la izquierda. **Solo ese contenedor se desplaza; la página nunca.** El contenedor es `relative` para que las etiquetas ocultas para lectores de pantalla (absolutas) queden dentro de él: si se escapaban, ensanchaban la página y el menú del header se abría desplazado.
 
 ### 4.6 Comparador
 
