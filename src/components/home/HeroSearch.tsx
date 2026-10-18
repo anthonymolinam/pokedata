@@ -124,7 +124,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
       {gen && <input type="hidden" name="gen" value={gen} />}
       <button
         type="submit"
-        className="shrink-0 h-11 md:h-12 px-5 md:px-6 rounded-pill bg-accent text-white font-extrabold cursor-pointer motion-safe:transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] hover:scale-[1.04] active:scale-[0.96]"
+        className="shrink-0 h-11 md:h-12 px-5 md:px-6 rounded-pill bg-accent text-white font-extrabold cursor-pointer motion-safe:transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:scale-[1.04] active:scale-[0.96]"
       >
         {hero.submit}
       </button>

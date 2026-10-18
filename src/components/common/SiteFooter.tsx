@@ -16,7 +16,7 @@ const REPO_URL = "https://github.com/anthonymolinam/pokedata";
 const footerLink =
   "group inline-flex items-center h-11 rounded-pill text-small underline-offset-4 decoration-2 focus-visible:underline";
 const lift =
-  "inline-block motion-safe:transition-transform motion-safe:duration-150 group-hover:-translate-y-0.5";
+  "inline-block motion-safe:transition-transform motion-safe:duration-150 motion-safe:group-hover:-translate-y-0.5";
 
 export default function SiteFooter({ locale }: { locale: Locale }) {
   const { nav, footer } = getDictionary(locale);

@@ -230,7 +230,7 @@ export default function PokemonFiltersBar({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setDraftGen(selected ? null : gen.id)}
-                    className={`${pill} ${selected ? "bg-ink text-bone" : "bg-step text-ink hover:-translate-y-0.5"}`}
+                    className={`${pill} ${selected ? "bg-ink text-bone" : "bg-step text-ink motion-safe:hover:-translate-y-0.5"}`}
                   >
                     {regionName(gen.id)}
                   </button>

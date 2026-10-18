@@ -128,7 +128,7 @@ function MatchupGroup({ title, basePath, dict, rows }: MatchupGroupProps) {
                       <Link
                         href={hrefFor(basePath, type)}
                         scroll={false}
-                        className={`inline-flex items-center h-9 px-3.5 rounded-pill bg-surface/80 text-ink font-extrabold text-small hover:-translate-y-0.5 ${press}`}
+                        className={`inline-flex items-center h-9 px-3.5 rounded-pill bg-surface/80 text-ink font-extrabold text-small motion-safe:hover:-translate-y-0.5 ${press}`}
                       >
                         {dict.typeNames[type]}
                       </Link>
@@ -161,7 +161,7 @@ function TypeSelector({ dict, basePath, selected }: PartProps) {
                 data-type={type}
                 aria-current={isSelected ? "page" : undefined}
                 className={`flex items-center justify-center gap-1.5 h-14 md:h-18 px-2 rounded-pill bg-field text-field-ink font-extrabold text-small md:text-body focus-visible:outline-ink ${press} ${
-                  isSelected ? "ring-3 ring-ink ring-offset-3 ring-offset-ground" : "hover:-translate-y-0.5"
+                  isSelected ? "ring-3 ring-ink ring-offset-3 ring-offset-ground" : "motion-safe:hover:-translate-y-0.5"
                 }`}
               >
                 {isSelected && <Check aria-hidden="true" strokeWidth={3.5} className="size-4 shrink-0" />}

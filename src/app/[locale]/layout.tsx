@@ -3,6 +3,7 @@ import { Nunito } from "next/font/google";
 import "../globals.css";
 import SiteHeader from "@/components/common/SiteHeader";
 import SiteFooter from "@/components/common/SiteFooter";
+import MotionProvider from "@/components/common/MotionProvider";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 
@@ -129,29 +130,31 @@ export default async function RootLayout({ children, params }: LayoutProps) {
         />
       </head>
       <body className="min-h-svh antialiased flex flex-col">
-        <SiteHeader
-          locale={locale}
-          labels={{
-            pokedex: dict.nav.pokedex,
-            types: dict.nav.types,
-            compare: dict.nav.compare,
-            search: dict.nav.search,
-            searchLabel: dict.nav.searchLabel,
-            openSearch: dict.nav.openSearch,
-            closeSearch: dict.nav.closeSearch,
-            menu: dict.nav.menu,
-            closeMenu: dict.nav.closeMenu,
-            mainNav: dict.nav.mainNav,
-            home: dict.nav.home,
-            language: dict.nav.language,
-          }}
-        />
+        <MotionProvider>
+          <SiteHeader
+            locale={locale}
+            labels={{
+              pokedex: dict.nav.pokedex,
+              types: dict.nav.types,
+              compare: dict.nav.compare,
+              search: dict.nav.search,
+              searchLabel: dict.nav.searchLabel,
+              openSearch: dict.nav.openSearch,
+              closeSearch: dict.nav.closeSearch,
+              menu: dict.nav.menu,
+              closeMenu: dict.nav.closeMenu,
+              mainNav: dict.nav.mainNav,
+              home: dict.nav.home,
+              language: dict.nav.language,
+            }}
+          />
 
-        <main className="flex-1 shell py-8">
-          {children}
-        </main>
+          <main className="flex-1 shell py-8">
+            {children}
+          </main>
 
-        <SiteFooter locale={locale} />
+          <SiteFooter locale={locale} />
+        </MotionProvider>
       </body>
     </html>
   );
