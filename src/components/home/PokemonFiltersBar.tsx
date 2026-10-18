@@ -52,7 +52,8 @@ interface PokemonFiltersBarProps {
 
 // Barra de filtros (§4.3): título y recuento a la izquierda, botón «Filtros»
 // con contador a la derecha, panel con tipos y regiones y una fila de chips
-// removibles. Todo vive en la URL: ?types=fire,flying y ?gen=1.
+// removibles. Todo vive en la URL: ?types=fire,flying y ?gen=1, junto a la
+// búsqueda del hero (?q=), que se conserva.
 export default function PokemonFiltersBar({
   locale,
   title,
@@ -90,6 +91,9 @@ export default function PokemonFiltersBar({
     const params = new URLSearchParams();
     if (types.length > 0) params.set("types", types.join(","));
     if (gen !== null) params.set("gen", String(gen));
+    // La búsqueda del hero se mantiene al cambiar los filtros
+    const search = searchParams.get("q");
+    if (search) params.set("q", search);
     const query = params.toString();
     router.push(`/${locale}${query ? `?${query}` : ""}`, { scroll: false });
   };
@@ -259,7 +263,9 @@ export default function PokemonFiltersBar({
     <div>
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 min-h-13 md:min-h-14">
         <div className="flex flex-wrap items-baseline gap-x-3">
-          <h1 className="text-head font-black">{title}</h1>
+          <h2 id="pokedex-title" className="text-head font-black">
+            {title}
+          </h2>
           <p className="text-body num">{count}</p>
         </div>
 

@@ -3,20 +3,46 @@ import {
   getPaginatedPokemonList,
   getFilteredPokemonList,
   getFilteredPokemonIds,
+  searchPokemonGlobal,
+  searchPokemonMatches,
+  PokemonSummary,
 } from "@/lib/pokeapi";
 import { GENERATIONS } from "@/constants/generations";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
+import HomeHero from "@/components/home/HomeHero";
 import PokemonGrid from "@/components/home/PokemonGrid";
 import PokemonFiltersBar from "@/components/home/PokemonFiltersBar";
 import { PokemonGridSkeleton } from "@/components/pokemon/PokemonCardSkeleton";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ page?: string; types?: string; gen?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    types?: string;
+    gen?: string;
+    q?: string;
+  }>;
 }
 
 const PAGE_SIZE = 24;
+const TOTAL_POKEMON = 1025;
+
+interface Query {
+  types: string[];
+  genId: number | null;
+  q: string;
+}
+
+const hasFilters = ({ types, genId }: Query) => types.length > 0 || genId !== null;
+
+// Búsqueda por nombre o número, dentro de los filtros activos si los hay
+async function getSearchMatches(query: Query) {
+  const matches = await searchPokemonMatches(query.q);
+  if (!hasFilters(query)) return matches;
+  const allowed = new Set(await getFilteredPokemonIds(query));
+  return matches.filter((m) => allowed.has(m.id));
+}
 
 export default async function HomePage({ params, searchParams }: PageProps) {
   const { locale: rawLocale } = await params;
@@ -29,38 +55,44 @@ export default async function HomePage({ params, searchParams }: PageProps) {
   const genParam = GENERATIONS.some((g) => g.id === Number(resolvedParams?.gen))
     ? Number(resolvedParams.gen)
     : null;
-  const filtersKey = `${genParam || "all"}-${typesParam || "all"}`;
+  const query: Query = {
+    types: typesParam ? typesParam.split(",").filter(Boolean) : [],
+    genId: genParam,
+    q: resolvedParams?.q?.trim() ?? "",
+  };
+  const queryKey = `${genParam || "all"}-${typesParam || "all"}-${query.q}`;
 
-  // El recuento y la rejilla se cargan aparte: mientras llega cada página o
-  // filtro se ven las tarjetas fantasma (DESIGN.md §4.8)
+  // El recuento y la rejilla se cargan aparte: mientras llega cada página,
+  // filtro o búsqueda se ven las tarjetas fantasma (DESIGN.md §4.8)
   return (
     <div>
-      <PokemonFiltersBar
-        locale={locale}
-        title={genParam ? filters.regionNames[genParam - 1] : filters.national}
-        count={
-          <Suspense
-            key={filtersKey}
-            fallback={<span className="invisible">1025 Pokémon</span>}
-          >
-            <ResultCount typesParam={typesParam} genParam={genParam} />
-          </Suspense>
-        }
-      />
+      <HomeHero locale={locale} />
 
-      <div className="mt-6">
+      <section
+        id="pokedex"
+        aria-labelledby="pokedex-title"
+        className="mt-6 md:mt-8 scroll-mt-24"
+      >
+        <PokemonFiltersBar
+          locale={locale}
+          title={genParam ? filters.regionNames[genParam - 1] : filters.national}
+          count={
+            <Suspense
+              key={queryKey}
+              fallback={<span className="invisible">1025 Pokémon</span>}
+            >
+              <ResultCount query={query} />
+            </Suspense>
+          }
+        />
+
         <Suspense
-          key={`${filtersKey}-${currentPage}`}
+          key={`${queryKey}-${currentPage}`}
           fallback={<PokemonGridSkeleton />}
         >
-          <HomeResults
-            locale={locale}
-            currentPage={currentPage}
-            typesParam={typesParam}
-            genParam={genParam}
-          />
+          <HomeResults locale={locale} currentPage={currentPage} query={query} />
         </Suspense>
-      </div>
+      </section>
     </div>
   );
 }
@@ -68,32 +100,45 @@ export default async function HomePage({ params, searchParams }: PageProps) {
 async function HomeResults({
   locale,
   currentPage,
-  typesParam,
-  genParam,
+  query,
 }: {
-  locale: string;
+  locale: Locale;
   currentPage: number;
-  typesParam: string | null;
-  genParam: number | null;
+  query: Query;
 }) {
-  const activeTypes = typesParam ? typesParam.split(",").filter(Boolean) : [];
-  const hasFilters = activeTypes.length > 0 || genParam !== null;
+  let pokemon: PokemonSummary[];
+  let totalPages: number;
 
-  const { pokemon, totalPages } = hasFilters
-    ? await getFilteredPokemonList({
-        types: activeTypes,
-        genId: genParam,
-        page: currentPage,
-        pageSize: PAGE_SIZE,
-      })
-    : await getPaginatedPokemonList(currentPage, PAGE_SIZE);
+  if (query.q) {
+    const matches = await getSearchMatches(query);
+    totalPages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
+    const page = Math.min(currentPage, totalPages);
+    ({ results: pokemon } = await searchPokemonGlobal(
+      matches,
+      (page - 1) * PAGE_SIZE,
+      PAGE_SIZE,
+    ));
+  } else if (hasFilters(query)) {
+    ({ pokemon, totalPages } = await getFilteredPokemonList({
+      types: query.types,
+      genId: query.genId,
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+    }));
+  } else {
+    ({ pokemon, totalPages } = await getPaginatedPokemonList(
+      currentPage,
+      PAGE_SIZE,
+    ));
+  }
 
   const makePageUrl = (pageNum: number) => {
     const queryParams = new URLSearchParams();
     queryParams.set("page", String(pageNum));
-    if (typesParam) queryParams.set("types", typesParam);
-    if (genParam) queryParams.set("gen", String(genParam));
-    return `/${locale}?${queryParams.toString()}`;
+    if (query.types.length > 0) queryParams.set("types", query.types.join(","));
+    if (query.genId) queryParams.set("gen", String(query.genId));
+    if (query.q) queryParams.set("q", query.q);
+    return `/${locale}?${queryParams.toString()}#pokedex`;
   };
 
   return (
@@ -110,19 +155,11 @@ async function HomeResults({
   );
 }
 
-// «151 Pokémon»: sin filtros son todos; con filtros, los que los cumplen
-async function ResultCount({
-  typesParam,
-  genParam,
-}: {
-  typesParam: string | null;
-  genParam: number | null;
-}) {
-  const activeTypes = typesParam ? typesParam.split(",").filter(Boolean) : [];
-  const total =
-    activeTypes.length > 0 || genParam !== null
-      ? (await getFilteredPokemonIds({ types: activeTypes, genId: genParam })).length
-      : 1025;
+// «151 Pokémon»: sin filtros ni búsqueda son todos; si no, los que cumplen
+async function ResultCount({ query }: { query: Query }) {
+  let total = TOTAL_POKEMON;
+  if (query.q) total = (await getSearchMatches(query)).length;
+  else if (hasFilters(query)) total = (await getFilteredPokemonIds(query)).length;
 
   return <>{total} Pokémon</>;
 }

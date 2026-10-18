@@ -30,6 +30,43 @@ export interface ArtworkFit {
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
+const ARTWORK_URL =
+  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork";
+
+export function artworkUrl(id: number): string {
+  return `${ARTWORK_URL}/${id}.png`;
+}
+
+interface FigureBox {
+  // Altura y ancho máximos de la figura, en cualquier longitud CSS
+  height: string;
+  maxWidth: string;
+  // Dónde va la figura: su centro horizontal y su pie, o su centro vertical
+  centerX: string;
+  bottom?: string;
+  centerY?: string;
+}
+
+// Coloca el lienzo cuadrado del artwork para que la figura opaca mida `height`
+// (o `maxWidth` si es muy ancha) en el sitio indicado. Devuelve un estilo para
+// un elemento con position: absolute; el tamaño va en la variable --art.
+export function figureStyle(id: number, box: FigureBox): Record<string, string> {
+  const [l, t, r, b] = (BOUNDS[id] ?? FULL_CANVAS).map((v) => v / 10000);
+  const centerX = (l + r) / 2;
+  const top = box.bottom
+    ? `calc(${box.bottom} - var(--art) * ${round(b)})`
+    : `calc(${box.centerY ?? "50%"} - var(--art) * ${round((t + b) / 2)})`;
+
+  return {
+    "--art": `min(${box.height} / ${round(b - t)}, ${box.maxWidth} / ${round(r - l)})`,
+    left: `calc(${box.centerX} - var(--art) * ${round(centerX)})`,
+    top,
+    width: "var(--art)",
+    height: "var(--art)",
+    transformOrigin: `${round(centerX * 100)}% ${round(b * 100)}%`,
+  };
+}
+
 export function getArtworkFit(id: number): ArtworkFit {
   const [l, t, r, b] = (BOUNDS[id] ?? FULL_CANVAS).map((v) => v / 10000);
   const size = Math.min(FIGURE_HEIGHT / (b - t), FIGURE_MAX_WIDTH / (r - l));

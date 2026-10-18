@@ -1,4 +1,8 @@
 import { GENERATIONS } from "@/constants/generations";
+import {
+  MULTILINGUAL_ALIASES,
+  normalizeQuery,
+} from "@/constants/pokemonAliases";
 
 const BASE_URL = "https://pokeapi.co/api/v2";
 const DEFAULT_REVALIDATE = 86400; // 24 hours
@@ -540,6 +544,36 @@ export async function getAllPokemonIndex(): Promise<
     const segments = item.url.split("/").filter(Boolean);
     const id = parseInt(segments[segments.length - 1], 10);
     return { id, name: item.name };
+  });
+}
+
+// 4b. Pokémon whose name (English or Spanish alias) or number matches the query
+export async function searchPokemonMatches(
+  rawQuery: string,
+): Promise<{ id: number; name: string }[]> {
+  const cleanQuery = normalizeQuery(rawQuery);
+  if (!cleanQuery) return [];
+
+  const allPokemon = await getAllPokemonIndex();
+
+  if (/^d+$/.test(cleanQuery)) {
+    return allPokemon.filter((poke) => poke.id === Number(cleanQuery));
+  }
+
+  const matchedCanonicalNames = new Set<string>();
+  for (const [spanishAlias, englishName] of Object.entries(
+    MULTILINGUAL_ALIASES,
+  )) {
+    if (spanishAlias.includes(cleanQuery)) {
+      matchedCanonicalNames.add(englishName);
+    }
+  }
+
+  return allPokemon.filter((poke) => {
+    const pokeName = normalizeQuery(poke.name);
+    return (
+      pokeName.includes(cleanQuery) || matchedCanonicalNames.has(pokeName)
+    );
   });
 }
 

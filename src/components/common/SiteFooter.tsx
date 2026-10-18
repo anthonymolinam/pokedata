@@ -1,5 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import Pokeball from "@/components/common/Pokeball";
+import FooterPeeker from "@/components/common/FooterPeeker";
+import { getDailyPokemon } from "@/lib/daily-server";
+import { formatPokemonDisplayName } from "@/lib/pokeapi";
+import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { getLocalizedPath } from "@/constants/routes";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
@@ -26,10 +32,14 @@ export default function SiteFooter({ locale }: { locale: Locale }) {
   ];
 
   // Pie compacto (DESIGN.md §4.7): campo de tinta a sangre, unos 160px en
-  // escritorio y 96px por encima para el Pokémon del día que se asomará (paso 7)
+  // escritorio y 96px por encima para el Pokémon del día que se asoma
   return (
     <footer data-field="ink" className="mt-24 bg-field text-field-ink">
-      <div className="shell py-8">
+      <div className="shell relative py-8">
+        <Suspense fallback={null}>
+          <DailyPeeker locale={locale} />
+        </Suspense>
+
         <div className="grid gap-y-4 md:grid-cols-3 md:items-center md:gap-x-8">
           <div>
             <p className="flex items-center gap-2 display text-[1.375rem] leading-none">
@@ -87,5 +97,23 @@ export default function SiteFooter({ locale }: { locale: Locale }) {
         </p>
       </div>
     </footer>
+  );
+}
+
+// El primero de los tres Pokémon del día, el mismo en todas las páginas. Se
+// calcula en cada petición para que cambie a las 00:00 UTC aunque la página
+// sea estática.
+async function DailyPeeker({ locale }: { locale: Locale }) {
+  await connection();
+  const [first] = getDailyPokemon();
+  const { hero } = getDictionary(locale);
+  const slug = (locale === "es" && CANONICAL_TO_SPANISH[first.name]) || first.name;
+
+  return (
+    <FooterPeeker
+      id={first.id}
+      href={`/${locale}/pokemon/${slug}`}
+      label={`${hero.footerPeek} ${formatPokemonDisplayName(first.name)}`}
+    />
   );
 }

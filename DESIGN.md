@@ -170,13 +170,14 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Izquierda:** panel blanco con:
   - El titular «¿A quién buscas hoy?» en `--step-hero`, en dos líneas como mucho.
   - Una frase de apoyo en `--step-body`.
-  - El buscador grande: una pastilla de 60px con el botón rojo «Buscar».
+  - El buscador grande: una pastilla de 60px (56px en móvil) con el botón rojo «Buscar».
+  - La búsqueda vive en la URL (`?q=`), junto a los filtros y dentro de ellos: al escribir se actualizan el recuento y la rejilla, y «Buscar» lleva a los resultados. Sin JavaScript, el formulario la envía igual.
 - **Derecha:** el bloque **Pokémon del día**:
   - Arriba, una línea con el título «Pokémon del día» (`--step-lead`, 900) y la fecha («17 de octubre»). A su derecha, el botón del dado.
   - Debajo, **tres columnas** de unos 280px de alto. Cada una se pinta en el `field` de su tipo principal y lleva el artwork grande y recortado, un rebote suave al pasar el ratón y abajo una pastilla blanca con el nombre y el número.
   - **Cada columna es un enlace** (`<a>`) a la ficha de ese Pokémon. Toda la columna es clicable y el nombre accesible es «Ver ficha de Charizard».
 
-**Móvil:** el panel del titular ocupa todo el ancho y las tres columnas quedan debajo, en una fila de 3 de 150px de alto. No hay scroll lateral.
+**Móvil:** el panel del titular ocupa todo el ancho y las tres columnas quedan debajo, en una fila de 3 de 150px de alto. No hay scroll lateral. Para no pasar de 400px, por debajo de 640px se omite la frase de apoyo y el dado mide 44px. En las columnas, el número solo aparece si cabe junto al nombre.
 
 **Reglas del Pokémon del día:**
 - **Igual para todos:** la semilla es la fecha UTC (`AAAA-MM-DD`). Un generador determinista (hash de la fecha + `mulberry32`) recorre los Pokémon del 1 al 1025 (formas por defecto).
@@ -185,7 +186,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **El dado:**
   - Es un botón redondo de 48px en `--surface` con un dado dibujado en SVG y la etiqueta accesible «Barajar otros tres».
   - Al pulsarlo, el dado gira con rebote (500ms) y las tres columnas cambian con un fundido y un pequeño salto, escalonado 60ms.
-  - Baraja en el cliente con la misma regla de tipos distintos. Necesita un índice ligero id → tipos, servido como JSON estático.
+  - Baraja en el cliente con la misma regla de tipos distintos. Necesita un índice ligero id → nombre y tipos (`src/data/pokemon-index.json`, generado con `npm run pokemon-index`), que el cliente descarga la primera vez que se usa el dado.
   - Tras barajar aparece un enlace de texto, «Volver a los de hoy».
   - Lo barajado no se guarda: al recargar vuelven los del día.
 
