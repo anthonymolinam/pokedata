@@ -19,13 +19,14 @@ export const translations = {
       searchPlaceholder: "Search Pokémon...",
     },
     footer: {
-      disclaimer:
-        "PokéData is an unofficial fan-made project created for educational and recreational purposes.",
-      trademark:
-        "Pokémon, character names, trademarks and associated imagery are intellectual property of Nintendo, Creatures Inc. and GAME FREAK Inc. This website is not affiliated with, endorsed or sponsored by any of them.",
-      data: "Data from PokéAPI",
-      repo: "GitHub repository",
-      commitTitle: "View commit on GitHub",
+      tagline: "All 1025 Pokémon, with their official artwork.",
+      nav: "Footer navigation",
+      github: "GitHub",
+      newTab: "(opens in a new tab)",
+      version: "Version",
+      legal:
+        "PokéData is a fan-made project, not affiliated with Nintendo, Game Freak or Creatures. Pokémon and their names are trademarks of their respective owners. Data and images from",
+      pokeapi: "PokéAPI",
     },
     common: {
       forms: "Forms:",
@@ -77,13 +78,14 @@ export const translations = {
       searchPlaceholder: "Buscar Pokémon...",
     },
     footer: {
-      disclaimer:
-        "PokéData es un proyecto no oficial hecho por fans con fines educativos y recreativos.",
-      trademark:
-        "Pokémon, los nombres de personajes, las marcas y las imágenes asociadas son propiedad intelectual de Nintendo, Creatures Inc. y GAME FREAK Inc. Esta web no está afiliada, respaldada ni patrocinada por ninguna de ellas.",
-      data: "Datos de PokéAPI",
-      repo: "Repositorio en GitHub",
-      commitTitle: "Ver el commit en GitHub",
+      tagline: "Los 1025 Pokémon, con su artwork oficial.",
+      nav: "Navegación del pie",
+      github: "GitHub",
+      newTab: "(se abre en una pestaña nueva)",
+      version: "Versión",
+      legal:
+        "PokéData es un proyecto hecho por fans, sin afiliación con Nintendo, Game Freak ni Creatures. Pokémon y sus nombres son marcas de sus respectivos propietarios. Datos e imágenes de",
+      pokeapi: "PokéAPI",
     },
     common: {
       forms: "Formas:",

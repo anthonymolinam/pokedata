@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "../globals.css";
 import SiteHeader from "@/components/common/SiteHeader";
+import SiteFooter from "@/components/common/SiteFooter";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 
@@ -108,11 +109,6 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   const locale: Locale = rawLocale === "en" ? "en" : "es";
   const dict = getDictionary(locale);
 
-  const commitSha = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA;
-  const shortSha = commitSha ? commitSha.slice(0, 7) : "dev";
-  const repoUrl = "https://github.com/anthonymolinam/pokedata";
-  const commitUrl = commitSha ? `${repoUrl}/commit/${commitSha}` : repoUrl;
-
   // Schema.org estructurado para forzar el nombre "PokéData" en Google
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata-pied.vercel.app";
@@ -155,60 +151,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
           {children}
         </main>
 
-        {/* Pie (DESIGN.md §4.6): campo de tinta a sangre, el nombre al ancho
-            completo y debajo el aviso legal y los datos del despliegue */}
-        <footer
-          data-field="ink"
-          className="bg-field text-field-ink mt-18 md:mt-30"
-        >
-          <div className="@container max-w-[1440px] mx-auto px-6 lg:px-8 pt-12 md:pt-20 pb-10 md:pb-12">
-            <p className="display text-[20.2cqi] whitespace-nowrap">
-              PokéData
-            </p>
-
-            <div className="mt-10 md:mt-16 grid gap-8 md:grid-cols-12 text-small">
-              <div className="md:col-span-7 lg:col-span-6 space-y-2 max-w-[65ch]">
-                <p className="font-bold">{dict.footer.disclaimer}</p>
-                <p>{dict.footer.trademark}</p>
-              </div>
-
-              <ul className="md:col-span-4 md:col-start-9 lg:col-span-3 lg:col-start-10 space-y-2 font-bold">
-                <li>
-                  <a
-                    href="https://pokeapi.co"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline-offset-4 decoration-2 hover:underline"
-                  >
-                    {dict.footer.data}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={repoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline-offset-4 decoration-2 hover:underline"
-                  >
-                    {dict.footer.repo}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={commitUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={dict.footer.commitTitle}
-                    className="num inline-flex items-center gap-2 underline-offset-4 decoration-2 hover:underline"
-                  >
-                    <span aria-hidden="true" className="size-2 rounded-full bg-ok" />
-                    {shortSha}
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter locale={locale} />
       </body>
     </html>
   );
