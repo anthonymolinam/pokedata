@@ -425,10 +425,15 @@ body {
 }
 
 /* Fila o columna elegida: el resto de celdas y las otras cabeceras de ese eje
-   se atenúan */
+   se atenúan, sin dejar de leerse */
 .type-matrix [data-dim] {
-  opacity: var(--guide-on, 0.3);
+  opacity: var(--guide-on, 0.5);
   transition: opacity 200ms ease-out;
+}
+
+/* Las cabeceras atenuadas, un poco menos: su nombre tiene que leerse */
+.type-matrix .type-head[data-dim] {
+  opacity: var(--guide-on, 0.65);
 }
 
 .type-head:not(:focus-visible) {

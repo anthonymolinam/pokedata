@@ -32,8 +32,9 @@ const toggle = (
   selected?.axis === axis && selected.type === type ? null : { axis, type };
 
 // relative: las etiquetas sr-only (absolutas) quedan dentro del scroll de la tabla
-// 34×30px: las 19 filas y la franja del título caben en 1440×900
-const CELL = "relative w-[2.125rem] h-[1.875rem] rounded-md text-center align-middle text-small font-black num";
+// 32px de alto: las 19 filas y la franja del título caben en 1440×900. El
+// ancho lo reparte la tabla entre las 18 columnas (unos 57px a 1440)
+const CELL = "relative h-8 rounded-md text-center align-middle text-small font-black num";
 
 // Cómo se ve una celda según la selección: dentro de la fila o columna elegida,
 // atenuada fuera de ella, o normal sin selección
@@ -82,7 +83,8 @@ function Cell({ value, col, state }: CellProps) {
   );
 }
 
-const HEAD = `type-head flex items-center h-[1.875rem] rounded-pill bg-field text-field-ink text-small font-extrabold focus-visible:outline-ink ${press}`;
+// Fila y columna comparten pastilla: misma altura, letra y relleno
+const HEAD = `type-head flex items-center h-8 px-2 rounded-pill bg-field text-field-ink text-small font-extrabold focus-visible:outline-ink ${press}`;
 const HEAD_SELECTED = "ring-3 ring-ink ring-offset-2 ring-offset-surface";
 
 const LEGEND_SWATCH = "grid place-items-center size-6 rounded-md text-small font-black";
@@ -112,7 +114,7 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
     <section
       aria-labelledby="types-title"
       data-field="surface"
-      className="rounded-surface bg-surface text-ink py-5 md:py-6"
+      className="rounded-surface bg-surface text-ink py-5"
     >
       <div className="px-5 md:px-6 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
         <div>
@@ -145,15 +147,18 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
 
       <div
         {...(selected ? { "data-type": selected.type } : {})}
-        className="mt-4 overflow-x-auto overscroll-x-contain custom-scrollbar"
+        className="mt-3 overflow-x-auto overscroll-x-contain custom-scrollbar"
       >
         <table
           aria-describedby="types-caption"
-          className="type-matrix mx-auto border-separate border-spacing-[3px]"
+          className="type-matrix w-full min-w-[50rem] table-fixed border-separate border-spacing-[3px]"
         >
           <thead>
             <tr>
-              <td className="sticky left-0 z-10 bg-surface pl-5 md:pl-6 pr-1">
+              {/* table-fixed: este ancho fija la columna de atacantes (relleno
+                  más la pastilla de 104px) y el resto se reparte a partes
+                  iguales */}
+              <td className="sticky left-0 z-10 w-32 md:w-[8.25rem] bg-surface pl-5 md:pl-6 pr-1">
                 <span className="sr-only">{t.corner}</span>
               </td>
               {POKEMON_TYPES.map((def) => (
@@ -167,7 +172,7 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
                     title={typeNames[def]}
                     aria-current={isSelected("def", def) ? "true" : undefined}
                     {...headDim("def", def)}
-                    className={`${HEAD} justify-center w-[2.125rem] text-[0.8125rem] tracking-[-0.02em] ${isSelected("def", def) ? HEAD_SELECTED : ""}`}
+                    className={`${HEAD} justify-center w-full ${isSelected("def", def) ? HEAD_SELECTED : ""}`}
                   >
                     <span aria-hidden="true">{typeNames[def].slice(0, 3)}</span>
                     <span className="sr-only">{typeNames[def]}</span>
@@ -190,7 +195,7 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
                     data-type={atk}
                     aria-current={isSelected("atk", atk) ? "true" : undefined}
                     {...headDim("atk", atk)}
-                    className={`${HEAD} w-26 px-3 ${isSelected("atk", atk) ? HEAD_SELECTED : ""}`}
+                    className={`${HEAD} w-26 ${isSelected("atk", atk) ? HEAD_SELECTED : ""}`}
                   >
                     {typeNames[atk]}
                   </Link>
