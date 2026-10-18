@@ -750,7 +750,65 @@ export async function getPokemonListByGen(
   }
 }
 
-// 10. Filtered query (Types + Generation) with pagination
+// 10. Ids that match the filters (Types + Generation), sorted
+export async function getFilteredPokemonIds({
+  types = [],
+  genId = null,
+}: {
+  types?: string[];
+  genId?: number | null;
+}): Promise<number[]> {
+  let candidateIds: number[] = [];
+
+  if (types.length > 0) {
+    const typeLists = await Promise.all(
+      types.map(async (t) => {
+        try {
+          const data = await pokeFetch<ApiTypeResponse>(
+            `type/${t.toLowerCase()}`,
+            DEFAULT_REVALIDATE * 7,
+          );
+          const ids = data.pokemon
+            .map((p: { pokemon: { url: string } }) => {
+              const parts = p.pokemon.url.split("/").filter(Boolean);
+              return parseInt(parts[parts.length - 1], 10);
+            })
+            .filter((id: number) => id <= 1025);
+          return new Set<number>(ids);
+        } catch {
+          return new Set<number>();
+        }
+      }),
+    );
+
+    const firstSet = typeLists[0];
+    candidateIds = Array.from(firstSet).filter((id) =>
+      typeLists.every((set) => set.has(id)),
+    );
+  } else if (genId) {
+    const genConfig = GENERATIONS.find((g) => g.id === genId);
+    if (genConfig) {
+      for (let i = genConfig.startId; i <= genConfig.endId; i++) {
+        candidateIds.push(i);
+      }
+    }
+  }
+
+  if (genId && types.length > 0) {
+    const genConfig = GENERATIONS.find((g) => g.id === genId);
+    if (genConfig) {
+      candidateIds = candidateIds.filter(
+        (id) => id >= genConfig.startId && id <= genConfig.endId,
+      );
+    }
+  }
+
+  candidateIds.sort((a, b) => a - b);
+
+  return candidateIds;
+}
+
+// 11. Filtered query (Types + Generation) with pagination
 export async function getFilteredPokemonList({
   types = [],
   genId = null,
@@ -763,52 +821,7 @@ export async function getFilteredPokemonList({
   pageSize?: number;
 }) {
   try {
-    let candidateIds: number[] = [];
-
-    if (types.length > 0) {
-      const typeLists = await Promise.all(
-        types.map(async (t) => {
-          try {
-            const data = await pokeFetch<ApiTypeResponse>(
-              `type/${t.toLowerCase()}`,
-              DEFAULT_REVALIDATE * 7,
-            );
-            const ids = data.pokemon
-              .map((p: { pokemon: { url: string } }) => {
-                const parts = p.pokemon.url.split("/").filter(Boolean);
-                return parseInt(parts[parts.length - 1], 10);
-              })
-              .filter((id: number) => id <= 1025);
-            return new Set<number>(ids);
-          } catch {
-            return new Set<number>();
-          }
-        }),
-      );
-
-      const firstSet = typeLists[0];
-      candidateIds = Array.from(firstSet).filter((id) =>
-        typeLists.every((set) => set.has(id)),
-      );
-    } else if (genId) {
-      const genConfig = GENERATIONS.find((g) => g.id === genId);
-      if (genConfig) {
-        for (let i = genConfig.startId; i <= genConfig.endId; i++) {
-          candidateIds.push(i);
-        }
-      }
-    }
-
-    if (genId && types.length > 0) {
-      const genConfig = GENERATIONS.find((g) => g.id === genId);
-      if (genConfig) {
-        candidateIds = candidateIds.filter(
-          (id) => id >= genConfig.startId && id <= genConfig.endId,
-        );
-      }
-    }
-
-    candidateIds.sort((a, b) => a - b);
+    const candidateIds = await getFilteredPokemonIds({ types, genId });
 
     const totalCount = candidateIds.length;
     const totalPages = Math.ceil(totalCount / pageSize) || 1;
@@ -848,7 +861,7 @@ export async function getFilteredPokemonList({
   }
 }
 
-// 11. Canonical Pokémon name formatting
+// 12. Canonical Pokémon name formatting
 const POKEMON_NAME_MAP: Record<string, string> = {
   "ho-oh": "Ho-Oh",
   "jangmo-o": "Jangmo-o",

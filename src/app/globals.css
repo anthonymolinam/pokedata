@@ -301,10 +301,14 @@ body {
 }
 
 /* Foco visible (§2.3, regla 7): 3px en la tinta del campo, separado 3px.
-   Sobre un campo de tinta hueso, el contorno sale en hueso. */
-:focus-visible {
-  outline: 3px solid var(--field-ink);
-  outline-offset: 3px;
+   Sobre un campo de tinta hueso, el contorno sale en hueso. Va en la capa
+   base para que un componente pueda cambiarlo con utilidades (la tarjeta lo
+   pone en tinta porque su contorno cae sobre el fondo, no sobre el campo). */
+@layer base {
+  :focus-visible {
+    outline: 3px solid var(--field-ink);
+    outline-offset: 3px;
+  }
 }
 
 /* Rol display (§3): Nunito 900, sentence case, tracking −0.04em, interlineado 0.95 */

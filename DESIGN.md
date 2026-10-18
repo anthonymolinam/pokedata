@@ -200,9 +200,9 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 **Panel de filtros:** oculto por defecto.
 - **En escritorio** es una capa flotante anclada bajo el botón: blanca, radio 28px, unos 560px de ancho y con sombra. **En móvil** es una hoja inferior a pantalla casi completa.
 - **Contenido:**
-  - **Tipos:** los 18 bloques de color en una rejilla de 3 columnas (2 en móvil), cada uno en su `field` con el nombre en `field-ink`. El seleccionado lleva un aro de 3px en `--ink` y una marca ✓, para no depender solo del color. Se pueden elegir varios (`?types=`).
+  - **Tipos:** los 18 bloques de color en una rejilla de 3 columnas (2 en móvil), cada uno en su `field` con el nombre en `field-ink`. El seleccionado lleva un aro de 3px en `--ink` y una marca ✓, para no depender solo del color. Se pueden elegir hasta dos (`?types=`), porque ningún Pokémon tiene más y el filtro es la intersección; al elegir un tercero sustituye al segundo. Junto al título «Tipos» lo indica la nota «Hasta dos».
   - **Región:** las 9 regiones como pastillas (Kanto … Paldea), con selección única (`?gen=`). La activa va en `--ink`.
-  - **Pie del panel:** «Limpiar» (terciario) y «Mostrar resultados» (secundario).
+  - **Pie del panel:** «Limpiar» y «Mostrar resultados» (secundario). «Limpiar» va en `--step`, porque un botón terciario en `--surface` no se vería sobre el panel blanco. Solo borra la selección del panel; nada cambia hasta pulsar «Mostrar resultados».
 - Se cierra con Esc, al pulsar fuera o al aplicar, y el foco vuelve al botón.
 
 **Chips de filtros activos:** una fila bajo la barra, que solo existe si hay filtros.
