@@ -30,6 +30,7 @@ La paleta repartida ("Candy chapters") se sustituye por los **18 colores de tipo
 | `--paper` | `#F7F5F0` | Fondo de la portada, de la tabla de tipos y del estado vacío |
 | `--paper-step` | `#EDEAE3` | Superficie un tono por debajo del papel: filas del índice, panel de filtros |
 | `--ink` | `#0A0A0A` | Tinta principal y fondo del pie |
+| `--ink-step` | `#262626` | Superficie un tono por encima de la tinta: `step` del pie y del capítulo del comparador (p. ej. el buscador sobre tinta) |
 | `--bone` | `#F7F5F0` | Tinta sobre campos oscuros (igual que `--paper`) |
 | `--accent` | `#0A0A0A` | Botón principal: relleno de tinta con texto hueso |
 

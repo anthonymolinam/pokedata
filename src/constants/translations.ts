@@ -8,6 +8,15 @@ export const translations = {
       compare: "Compare",
       searchPlaceholder: "Search Pokémon...",
     },
+    footer: {
+      disclaimer:
+        "PokéData is an unofficial fan-made project created for educational and recreational purposes.",
+      trademark:
+        "Pokémon, character names, trademarks and associated imagery are intellectual property of Nintendo, Creatures Inc. and GAME FREAK Inc. This website is not affiliated with, endorsed or sponsored by any of them.",
+      data: "Data from PokéAPI",
+      repo: "GitHub repository",
+      commitTitle: "View commit on GitHub",
+    },
     common: {
       forms: "Forms:",
       height: "Height",
@@ -43,9 +52,18 @@ export const translations = {
   es: {
     nav: {
       pokedex: "Pokédex",
-      typeChart: "Tabla de Tipos",
+      typeChart: "Tabla de tipos",
       compare: "Comparador",
       searchPlaceholder: "Buscar Pokémon...",
+    },
+    footer: {
+      disclaimer:
+        "PokéData es un proyecto no oficial hecho por fans con fines educativos y recreativos.",
+      trademark:
+        "Pokémon, los nombres de personajes, las marcas y las imágenes asociadas son propiedad intelectual de Nintendo, Creatures Inc. y GAME FREAK Inc. Esta web no está afiliada, respaldada ni patrocinada por ninguna de ellas.",
+      data: "Datos de PokéAPI",
+      repo: "Repositorio en GitHub",
+      commitTitle: "Ver el commit en GitHub",
     },
     common: {
       forms: "Formas:",

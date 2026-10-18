@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatPokemonDisplayName, PokemonSummary } from "@/lib/pokeapi";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 
+// El desplegable es una capa flotante: la única sombra permitida en la barra (DESIGN.md §4.1)
+const OVERLAY_SHADOW = "shadow-[0_12px_32px_rgb(10_10_10/0.18)]"; // taste-skill-ignore
+
 interface GlobalSearchBarProps {
   locale?: string;
   placeholder?: string;
@@ -162,34 +165,38 @@ export default function GlobalSearchBar({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-xs sm:max-w-sm">
+    <div ref={containerRef} className="relative w-full">
       <div className="relative flex items-center">
-        <Search className="absolute left-3 w-4 h-4 text-zinc-500 pointer-events-none" />
+        <Search
+          aria-hidden="true"
+          className="absolute left-3 w-4 h-4 pointer-events-none"
+        />
         <input
           ref={inputRef}
-          type="text"
+          type="search"
           value={query}
           onChange={handleInputChange}
           onFocus={() => query.trim() && results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-9 pr-14 py-1.5 text-base sm:text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-rose-500/70 focus:ring-1 focus:ring-rose-500/50 transition-all"
+          aria-label={placeholder}
+          className="w-full h-11 bg-field-step text-field-ink placeholder:text-field-ink pl-10 pr-10 lg:pr-20 text-body [&::-webkit-search-cancel-button]:appearance-none"
         />
 
-        <div className="absolute right-2.5 flex items-center gap-1">
+        <div className="absolute right-3 flex items-center gap-1 text-small font-bold">
           {loading ? (
-            <Loader2 className="w-3.5 h-3.5 text-zinc-500 animate-spin" />
+            <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" />
           ) : query ? (
             <button
               type="button"
               onClick={handleClear}
-              className="text-zinc-500 hover:text-zinc-300 cursor-pointer p-0.5"
-              title="Clear search"
+              className="cursor-pointer p-1 active:scale-[0.97] transition-transform duration-150"
+              aria-label={locale === "es" ? "Borrar búsqueda" : "Clear search"}
             >
-              <X className="w-3.5 h-3.5" />
+              <X aria-hidden="true" className="w-4 h-4" />
             </button>
           ) : (
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium text-zinc-400 bg-zinc-800/80 border border-zinc-700/60 rounded select-none pointer-events-none">
+            <kbd className="hidden lg:inline select-none pointer-events-none font-sans">
               {isMac ? "⌘K" : "Ctrl K"}
             </kbd>
           )}
@@ -198,13 +205,15 @@ export default function GlobalSearchBar({
 
       <AnimatePresence>
         {isOpen && results.length > 0 && (
+          // Capa flotante sobre papel: el único sitio de la barra con sombra (§4.1)
           <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
+            data-field="paper"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
             ref={resultsListRef}
-            className="absolute left-0 right-0 top-full mt-2 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-2xl shadow-2xl max-h-72 overflow-y-auto overscroll-contain custom-scrollbar z-50 py-1.5 divide-y divide-zinc-800/40"
+            className={`absolute left-0 right-0 md:right-auto md:w-[max(100%,24rem)] top-full mt-2 bg-paper text-ink ${OVERLAY_SHADOW} max-h-[min(24rem,60svh)] overflow-y-auto overscroll-contain custom-scrollbar z-50 py-1`}
           >
             {results.map((p, idx) => (
               <motion.button
@@ -217,31 +226,29 @@ export default function GlobalSearchBar({
                 }}
                 type="button"
                 onClick={() => handleSelect(p.name)}
-                className={`w-full flex items-center justify-between px-3.5 py-2 transition-colors text-left cursor-pointer ${
+                className={`w-full flex items-center gap-3 px-3 py-1.5 text-left cursor-pointer focus-visible:-outline-offset-3 ${
                   idx === selectedIndex
-                    ? "bg-rose-500/20 text-white"
-                    : "hover:bg-zinc-800/60 text-zinc-300"
+                    ? "bg-ink text-bone"
+                    : "hover:bg-paper-step"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="relative w-8 h-8 shrink-0">
-                    <Image
-                      src={p.image}
-                      alt={p.name}
-                      fill
-                      sizes="32px"
-                      className="object-contain transition-opacity duration-300 opacity-0"
-                      onLoad={(e) => {
-                        (e.target as HTMLElement).classList.remove("opacity-0");
-                        (e.target as HTMLElement).classList.add("opacity-100");
-                      }}
-                    />
-                  </div>
-                  <span className="font-semibold text-xs truncate">
-                    {formatPokemonDisplayName(p.name)}
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] text-zinc-500 shrink-0 ml-2">
+                <span className="relative w-10 h-10 shrink-0">
+                  <Image
+                    src={p.image}
+                    alt=""
+                    fill
+                    sizes="40px"
+                    className="object-contain transition-opacity duration-300 opacity-0"
+                    onLoad={(e) => {
+                      (e.target as HTMLElement).classList.remove("opacity-0");
+                      (e.target as HTMLElement).classList.add("opacity-100");
+                    }}
+                  />
+                </span>
+                <span className="flex-1 min-w-0 font-bold text-body truncate">
+                  {formatPokemonDisplayName(p.name)}
+                </span>
+                <span className="num font-bold text-small shrink-0">
                   #{String(p.id).padStart(4, "0")}
                 </span>
               </motion.button>

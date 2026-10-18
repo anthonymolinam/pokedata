@@ -57,31 +57,34 @@ export default function LanguageSwitcher({
     router.push(newPath);
   };
 
+  // Botones rectos en el campo de la barra: el idioma activo se rellena en tinta
+  const options: { locale: Locale; label: string; name: string }[] = [
+    { locale: "es", label: "ES", name: "Español" },
+    { locale: "en", label: "EN", name: "English" },
+  ];
+
   return (
-    <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 text-xs font-mono">
-      <button
-        type="button"
-        onClick={() => handleToggle("es")}
-        className={`px-2 py-0.5 rounded-lg transition-colors cursor-pointer ${
-          currentLocale === "es"
-            ? "bg-rose-500 text-white font-bold"
-            : "text-zinc-500 hover:text-zinc-300"
-        }`}
-      >
-        ES
-      </button>
-      <span className="text-zinc-700">|</span>
-      <button
-        type="button"
-        onClick={() => handleToggle("en")}
-        className={`px-2 py-0.5 rounded-lg transition-colors cursor-pointer ${
-          currentLocale === "en"
-            ? "bg-rose-500 text-white font-bold"
-            : "text-zinc-500 hover:text-zinc-300"
-        }`}
-      >
-        EN
-      </button>
+    <div className="flex items-center gap-1 font-bold text-small">
+      {options.map((option) => {
+        const isActive = currentLocale === option.locale;
+        return (
+          <button
+            key={option.locale}
+            type="button"
+            lang={option.locale}
+            aria-label={option.name}
+            aria-pressed={isActive}
+            onClick={() => handleToggle(option.locale)}
+            className={`h-11 min-w-11 px-3 cursor-pointer active:scale-[0.97] transition-transform duration-150 ${
+              isActive
+                ? "bg-field-ink text-field"
+                : "bg-field-step text-field-ink"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

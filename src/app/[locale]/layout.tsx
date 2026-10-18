@@ -128,53 +128,52 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   };
 
   return (
-    <html lang={locale} className={`dark ${chivo.variable}`}>
+    <html lang={locale} className={chivo.variable}>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col">
-        <header className="border-b border-zinc-800/80 backdrop-blur-md sticky top-0 z-50 bg-zinc-950/70">
-          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-            {/* Logo */}
+      {/* Fondo y tinta salen del campo de la página (globals.css): papel por
+          defecto, o el capítulo que marque la página con data-chapter */}
+      <body className="min-h-svh antialiased flex flex-col">
+        {/* Barra superior (DESIGN.md §4.1): plana, opaca, sin bordes, en el
+            color de la página. En móvil y tablet, dos filas: marca y enlaces; buscador e idioma */}
+        <header className="lg:sticky lg:top-0 z-50 bg-field text-field-ink">
+          <div className="max-w-[1440px] mx-auto px-6 lg:px-8 py-3 lg:py-0 lg:h-20 flex flex-wrap lg:flex-nowrap items-center gap-x-5 gap-y-3 lg:gap-x-8">
             <Link
               href={`/${locale}`}
-              className="flex items-center gap-2 font-black text-xl tracking-tight text-white hover:opacity-90 transition-opacity shrink-0"
+              className="display text-lead shrink-0 order-1"
             >
-              <span className="w-4 h-4 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50" />
-              <span className="hidden sm:inline">PokéData</span>
+              PokéData
             </Link>
 
-            {/* Buscador */}
-            <div className="flex-1 max-w-sm">
-              <GlobalSearchBar
-                locale={locale}
-                placeholder={dict.nav.searchPlaceholder}
-              />
-            </div>
+            <nav className="order-2 lg:order-3 ml-auto flex items-center gap-4 lg:gap-6 font-bold text-small lg:text-body">
+              <Link
+                href={getLocalizedPath(locale, "types")}
+                className="whitespace-nowrap underline-offset-4 decoration-2 hover:underline"
+              >
+                {dict.nav.typeChart}
+              </Link>
+              <Link
+                href={getLocalizedPath(locale, "compare")}
+                className="whitespace-nowrap underline-offset-4 decoration-2 hover:underline"
+              >
+                {dict.nav.compare}
+              </Link>
+            </nav>
 
-            {/* Navegación y selector de idioma */}
-            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-              <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-medium">
-                <Link
-                  href={getLocalizedPath(locale, "types")}
-                  className="text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
-                >
-                  {dict.nav.typeChart}
-                </Link>
-
-                <Link
-                  href={getLocalizedPath(locale, "compare")}
-                  className="text-zinc-400 hover:text-white transition-colors whitespace-nowrap"
-                >
-                  {dict.nav.compare ||
-                    (locale === "es" ? "Comparador" : "Compare")}
-                </Link>
-              </nav>
-
-              <LanguageSwitcher currentLocale={locale} />
+            <div className="order-3 w-full flex items-center gap-3 lg:contents">
+              <div className="flex-1 min-w-0 lg:order-2 lg:max-w-md">
+                <GlobalSearchBar
+                  locale={locale}
+                  placeholder={dict.nav.searchPlaceholder}
+                />
+              </div>
+              <div className="shrink-0 lg:order-4">
+                <LanguageSwitcher currentLocale={locale} />
+              </div>
             </div>
           </div>
         </header>
@@ -183,52 +182,57 @@ export default async function RootLayout({ children, params }: LayoutProps) {
           {children}
         </main>
 
-        {/* Footer */}
-        <footer className="border-t border-zinc-900 bg-zinc-950/90 py-8 mt-12 text-xs text-zinc-500">
-          <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1.5 max-w-3xl">
-              <p className="font-semibold text-zinc-400">
-                PokéData is an unofficial fan-made project created solely for
-                educational and recreational purposes.
-              </p>
-              <p className="leading-relaxed">
-                Pokémon, character names, trademarks, and associated imagery are
-                intellectual property of{" "}
-                <span className="text-zinc-400 font-medium">Nintendo</span>,{" "}
-                <span className="text-zinc-400 font-medium">
-                  Creatures Inc.
-                </span>
-                , and{" "}
-                <span className="text-zinc-400 font-medium">
-                  GAME FREAK Inc.
-                </span>{" "}
-                This website is not affiliated with, endorsed, or sponsored by
-                any of these entities.
-              </p>
-            </div>
-            <div className="sm:text-right shrink-0 space-y-1">
-              <p className="font-mono text-zinc-600">Data powered by PokéAPI</p>
-              <div className="flex items-center gap-2 sm:justify-end text-[11px] text-zinc-500">
-                <a
-                  href={repoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-zinc-300 underline transition-colors"
-                >
-                  GitHub Repository
-                </a>
-                <span>•</span>
-                <a
-                  href={commitUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 hover:text-white transition-colors inline-flex items-center gap-1"
-                  title="View commit on GitHub"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  {shortSha}
-                </a>
+        {/* Pie (DESIGN.md §4.6): campo de tinta a sangre, el nombre al ancho
+            completo y debajo el aviso legal y los datos del despliegue */}
+        <footer
+          data-field="ink"
+          className="bg-field text-field-ink mt-18 md:mt-30"
+        >
+          <div className="@container max-w-[1440px] mx-auto px-6 lg:px-8 pt-12 md:pt-20 pb-10 md:pb-12">
+            <p className="display text-[20.2cqi] whitespace-nowrap">
+              PokéData
+            </p>
+
+            <div className="mt-10 md:mt-16 grid gap-8 md:grid-cols-12 text-small">
+              <div className="md:col-span-7 lg:col-span-6 space-y-2 max-w-[65ch]">
+                <p className="font-bold">{dict.footer.disclaimer}</p>
+                <p>{dict.footer.trademark}</p>
               </div>
+
+              <ul className="md:col-span-4 md:col-start-9 lg:col-span-3 lg:col-start-10 space-y-2 font-bold">
+                <li>
+                  <a
+                    href="https://pokeapi.co"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline-offset-4 decoration-2 hover:underline"
+                  >
+                    {dict.footer.data}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={repoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline-offset-4 decoration-2 hover:underline"
+                  >
+                    {dict.footer.repo}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={commitUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={dict.footer.commitTitle}
+                    className="num inline-flex items-center gap-2 underline-offset-4 decoration-2 hover:underline"
+                  >
+                    <span aria-hidden="true" className="size-2 bg-emerald-500" />
+                    {shortSha}
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </footer>
