@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { getDictionary } from "@/constants/translations";
 import { isHeroSearchVisible, setHeroSearchVisible } from "@/lib/hero-search-visibility";
 import { Locale } from "@/proxy";
@@ -13,9 +13,9 @@ const DEBOUNCE_MS = 300;
 // Alto de la cabecera fija en escritorio: lo que queda debajo ya no se ve
 const HEADER_HEIGHT = 72;
 
-// Buscador grande del hero (DESIGN.md §4.2): pastilla de 60px con el botón
-// rojo «Buscar», la acción principal de la página. La búsqueda vive en ?q=,
-// junto a los filtros: sin JavaScript el formulario la envía igual.
+// Buscador grande del hero (DESIGN.md §4.2): pastilla de 60px que busca sola
+// al escribir, con un botón × para borrar cuando hay texto. La búsqueda vive
+// en ?q=, junto a los filtros: sin JavaScript, Intro envía el formulario.
 export default function HeroSearch({ locale }: { locale: Locale }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -97,7 +97,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
         search(query);
         document.getElementById("pokedex")?.scrollIntoView({ behavior: "smooth" });
       }}
-      className="flex items-center gap-2 h-14 md:h-15 pl-5 pr-2 rounded-pill bg-ground focus-within:bg-step has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-3 has-[input:focus-visible]:outline-ink motion-safe:transition-colors duration-200"
+      className={`flex items-center gap-2 h-14 md:h-15 pl-5 ${query ? "pr-2" : "pr-5"} rounded-pill bg-ground focus-within:bg-step has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-3 has-[input:focus-visible]:outline-ink motion-safe:transition-colors duration-200`}
     >
       <Search aria-hidden="true" strokeWidth={2.5} className="size-5 shrink-0" />
       <label htmlFor="hero-search" className="sr-only">
@@ -122,12 +122,20 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
       {/* Sin JavaScript, el formulario conserva los filtros activos */}
       {types && <input type="hidden" name="types" value={types} />}
       {gen && <input type="hidden" name="gen" value={gen} />}
-      <button
-        type="submit"
-        className="shrink-0 h-11 md:h-12 px-5 md:px-6 rounded-pill bg-accent text-white font-extrabold cursor-pointer motion-safe:transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:scale-[1.04] active:scale-[0.96]"
-      >
-        {hero.submit}
-      </button>
+      {query && (
+        <button
+          type="button"
+          aria-label={hero.clear}
+          onClick={() => {
+            setQuery("");
+            search("");
+            inputRef.current?.focus();
+          }}
+          className="grid place-items-center size-11 shrink-0 rounded-pill bg-surface cursor-pointer motion-safe:transition-transform duration-150 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:scale-[1.06] active:scale-[0.96]"
+        >
+          <X aria-hidden="true" strokeWidth={3} className="size-5" />
+        </button>
+      )}
     </form>
   );
 }

@@ -21,8 +21,8 @@ interface PokemonCardProps {
 const spring = "ease-[cubic-bezier(.34,1.56,.64,1)] duration-[350ms]";
 
 // Tarjeta de Pokémon (DESIGN.md §4.3): campo del tipo principal, artwork
-// normalizado que solo se sale por arriba, marca de agua con el número y una
-// zona reservada abajo con el nombre, las etiquetas de tipo y el total.
+// normalizado que solo se sale por arriba y una zona reservada abajo con el
+// nombre, la marca de agua del número, las etiquetas de tipo y el total.
 export default function PokemonCard({
   pokemon,
   href,
@@ -36,8 +36,10 @@ export default function PokemonCard({
   const types = pokemon.types.map((t) => t.toLowerCase()).filter(isPokemonType);
   const fit = getArtworkFit(pokemon.id);
 
-  // El nombre va en una línea: si no cabe, baja de --step-lead hasta 16px
-  const nameSize = `max(1rem, min(var(--step-lead), calc((100cqi - 2 * var(--card-pad)) / ${Math.max(name.length, 1) * 0.6})))`;
+  const number = String(pokemon.id).padStart(4, "0");
+  // El nombre y el número van en una línea: si no caben, bajan de --step-lead
+  // hasta 16px. Los 0.5em de más son el hueco entre los dos
+  const nameSize = `max(1rem, min(var(--step-lead), calc((100cqi - 2 * var(--card-pad)) / ${(Math.max(name.length, 1) + number.length) * 0.6 + 0.5})))`;
 
   return (
     <Link
@@ -51,10 +53,6 @@ export default function PokemonCard({
         className="relative"
         style={{ height: `${ART_TOP_ZONE}cqi` }}
       >
-        <span className="absolute top-[3cqi] right-(--card-pad) font-black text-[16.5cqi] leading-none tracking-[-0.04em] num opacity-[.12] select-none">
-          {String(pokemon.id).padStart(4, "0")}
-        </span>
-
         <div
           className={`pointer-events-none absolute motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.08] motion-safe:group-focus-visible:scale-[1.08]`}
           style={{
@@ -78,15 +76,21 @@ export default function PokemonCard({
 
       {/* Zona reservada: el artwork no entra nunca y el texto va por encima */}
       <div className="relative z-10 flex flex-1 flex-col gap-[max(0.375rem,2.5cqi)] px-(--card-pad) pt-3 pb-(--card-pad) min-h-[84px] md:min-h-24">
-        <Heading
-          className="truncate text-lead font-black"
-          style={{ fontSize: nameSize }}
-        >
-          {name}
-          <span className="sr-only">
-            , {card.number} {pokemon.id}
+        {/* Marca de agua del número en la fila del nombre: el artwork no llega */}
+        <div className="flex items-baseline gap-[0.5em]" style={{ fontSize: nameSize }}>
+          <Heading className="flex-1 min-w-0 truncate font-black leading-[1.05] tracking-[-0.03em]">
+            {name}
+            <span className="sr-only">
+              , {card.number} {pokemon.id}
+            </span>
+          </Heading>
+          <span
+            aria-hidden="true"
+            className="shrink-0 font-black leading-none tracking-[-0.04em] num opacity-40 select-none"
+          >
+            {number}
           </span>
-        </Heading>
+        </div>
 
         <div className="flex flex-wrap items-end justify-between gap-1.5">
           <ul className="flex flex-wrap gap-1">

@@ -34,25 +34,25 @@ function Die() {
 interface DailyPokemonProps {
   locale: Locale;
   today: Daily[];
-  // «17 de octubre», con la fecha UTC del servidor
-  dateLabel: string;
 }
 
 // Pokémon del día (DESIGN.md §4.2): tres columnas en el color de su tipo
 // principal, cada una un enlace a la ficha, y un dado que baraja otros tres
 // con la misma regla de tipos distintos. Lo barajado no se guarda.
-export default function DailyPokemon({ locale, today, dateLabel }: DailyPokemonProps) {
+export default function DailyPokemon({ locale, today }: DailyPokemonProps) {
   const reduceMotion = useReducedMotion();
   const { hero, card } = getDictionary(locale);
-  const [shown, setShown] = useState(today);
+  // Solo el dado cambia lo que se ve: buscar o filtrar vuelve a renderizar la
+  // página y trae un `today` nuevo, pero con los mismos Pokémon
+  const [shuffled, setShuffled] = useState<Daily[] | null>(null);
   const [spins, setSpins] = useState(0);
-  const shuffled = shown !== today;
+  const shown = shuffled ?? today;
 
   const shuffle = async () => {
     setSpins((n) => n + 1);
     // El índice id → tipos solo se descarga la primera vez que se usa el dado
     const { default: index } = await import("@/data/pokemon-index.json");
-    setShown(pickDistinctTypes(index, Math.random));
+    setShuffled(pickDistinctTypes(index, Math.random));
   };
 
   const hrefFor = (name: string) =>
@@ -65,16 +65,14 @@ export default function DailyPokemon({ locale, today, dateLabel }: DailyPokemonP
           <h2 id="daily-title" className="text-lead font-black">
             {hero.daily}
           </h2>
-          {shuffled ? (
+          {shuffled && (
             <button
               type="button"
-              onClick={() => setShown(today)}
+              onClick={() => setShuffled(null)}
               className="font-extrabold text-small underline underline-offset-4 decoration-2 cursor-pointer"
             >
               {hero.backToToday}
             </button>
-          ) : (
-            <p className="text-body">{dateLabel}</p>
           )}
         </div>
         <motion.button

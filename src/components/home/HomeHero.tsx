@@ -10,12 +10,6 @@ import { Locale } from "@/proxy";
 // para que a 1440×900 se vea entera la primera fila de tarjetas.
 export default function HomeHero({ locale }: { locale: Locale }) {
   const { hero } = getDictionary(locale);
-  const now = new Date();
-  const dateLabel = new Intl.DateTimeFormat(locale, {
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-  }).format(now);
 
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-5 lg:items-end">
@@ -27,7 +21,7 @@ export default function HomeHero({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <DailyPokemon locale={locale} today={getDailyPokemon(now)} dateLabel={dateLabel} />
+      <DailyPokemon locale={locale} today={getDailyPokemon()} />
     </div>
   );
 }

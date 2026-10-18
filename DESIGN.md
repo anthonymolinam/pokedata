@@ -34,7 +34,7 @@ Este documento es la referencia visual de PokéData. Si el código y este docume
 | `--bone` | `#F7F5F0` | Tinta sobre campos oscuros y sobre `--ink` |
 | `--bone-soft` | `#B9BCC8` | Texto secundario sobre `--ink`: la frase y la fila legal del pie |
 | `--ok` | `#3FB950` | Punto verde del SHA en el pie. Es una marca gráfica, nunca texto |
-| `--accent` | `#CC2E0B` | Rojo Pokébola. Solo en la acción principal (el botón «Buscar») y en la mitad superior del logo. Texto blanco: 5.3:1 |
+| `--accent` | `#CC2E0B` | Rojo Pokébola. Solo en la mitad superior del logo. Si algún día vuelve una acción principal, texto blanco: 5.3:1 |
 
 El acento rojo no se usa nunca para marcar estados ni selecciones; eso lo hace la tinta.
 
@@ -109,10 +109,10 @@ Una sola familia: **Nunito**, cargada con `next/font/google`, pesos 600, 700, 80
 --step-hero:  clamp(2.5rem, 1.6rem + 3.4vw, 4.5rem)     /* 40–72px: titular, nombre en ficha */
 ```
 
-Las dos piezas decorativas (la marca de agua del número y el nombre gigante de la ficha) no cuentan como tamaños de texto. Van en Nunito 900, en unidades de contenedor y con `aria-hidden`.
+Las dos piezas decorativas (la marca de agua del número y el nombre gigante de la ficha) no cuentan como tamaños de texto. Van en Nunito 900 y con `aria-hidden`: el nombre gigante en unidades de contenedor y la marca de agua al tamaño del nombre de la tarjeta.
 
 - Números y totales en Nunito con `font-variant-numeric: tabular-nums`. No hay letra monoespaciada en ningún sitio.
-- **Ningún título pasa de dos líneas.** El nombre de la tarjeta ocupa una sola línea: si no cabe, el tamaño baja con `min(var(--step-lead), calc(100cqi / (chars * 0.6)))` hasta un mínimo de 16px.
+- **Ningún título pasa de dos líneas.** El nombre de la tarjeta y su número ocupan una sola línea: si no caben, el tamaño baja con `min(var(--step-lead), calc(100cqi / ((chars + 4) * 0.6 + 0.5)))` hasta un mínimo de 16px.
 - Las formas («Urshifu Estilo Fluido») se escriben como nombre más una línea secundaria, no concatenadas.
 - Todo va alineado a la izquierda. Solo se centra el estado vacío.
 
@@ -128,8 +128,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Controles (botones, chips, buscador, etiquetas): pastilla completa (`999px`).
 - **Sombras permitidas:** la cabecera cuando la página se ha desplazado, las capas flotantes (desplegable del buscador, panel de filtros, modales) y el brillo de las tarjetas en hover (§4.3). Nada más lleva sombra en reposo.
 - **Sin degradados.** La Pokébola del logo es un SVG de formas planas.
-- **Botones:**
-  - Principal: relleno `--accent` con texto blanco, en el hero.
+- **Botones:** no hay botón principal en rojo; la búsqueda es automática y no lo necesita.
   - Secundario: relleno `--ink` con texto hueso.
   - Terciario: relleno `--surface` con texto en tinta.
   - Pulsación con `scale(0.96)` y hover con un pequeño rebote.
@@ -168,12 +167,13 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 **Escritorio:** dos columnas al 50/50 aproximadamente.
 - **Izquierda:** panel blanco con:
-  - El titular «¿A quién buscas hoy?» en `--step-hero`, en dos líneas como mucho.
+  - El titular en `--step-hero`, en dos líneas como mucho **en los dos idiomas**: «¿A quién buscas hoy?» y «Who are you looking for?». Un titular más largo en inglés pasa a tres líneas y empuja la primera fila de tarjetas fuera de la pantalla.
   - Una frase de apoyo en `--step-body`.
-  - El buscador grande: una pastilla de 60px (56px en móvil) con el botón rojo «Buscar».
-  - La búsqueda vive en la URL (`?q=`), junto a los filtros y dentro de ellos: al escribir se actualizan el recuento y la rejilla, y «Buscar» lleva a los resultados. Sin JavaScript, el formulario la envía igual.
+  - El buscador grande: una pastilla de 60px (56px en móvil) **sin botón «Buscar»**, porque la búsqueda es automática.
+  - Cuando hay texto escrito, a la derecha aparece un botón **×** redondo de 44px en `--surface` (etiqueta accesible «Borrar la búsqueda»). Vacía el campo y la búsqueda y devuelve el foco al campo. Sin texto no se muestra.
+  - La búsqueda vive en la URL (`?q=`), junto a los filtros y dentro de ellos: al escribir se actualizan el recuento y la rejilla, e Intro lleva a los resultados. Sin JavaScript, Intro envía el formulario igual.
 - **Derecha:** el bloque **Pokémon del día**:
-  - Arriba, una línea con el título «Pokémon del día» (`--step-lead`, 900) y la fecha («17 de octubre»). A su derecha, el botón del dado.
+  - Arriba, una línea con el título «Pokémon del día» (`--step-lead`, 900) y, a su derecha, el botón del dado. **No se muestra la fecha:** la semilla es la fecha UTC, y en Colombia por la noche aparecería ya el día siguiente.
   - Debajo, **tres columnas** de unos 280px de alto. Cada una se pinta en el `field` de su tipo principal y lleva el artwork grande y recortado, un rebote suave al pasar el ratón y abajo una pastilla blanca con el nombre y el número.
   - **Cada columna es un enlace** (`<a>`) a la ficha de ese Pokémon. Toda la columna es clicable y el nombre accesible es «Ver ficha de Charizard».
 
@@ -187,7 +187,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Es un botón redondo de 48px en `--surface` con un dado dibujado en SVG y la etiqueta accesible «Barajar otros tres».
   - Al pulsarlo, el dado gira con rebote (500ms) y las tres columnas cambian con un fundido y un pequeño salto, escalonado 60ms.
   - Baraja en el cliente con la misma regla de tipos distintos. Necesita un índice ligero id → nombre y tipos (`src/data/pokemon-index.json`, generado con `npm run pokemon-index`), que el cliente descarga la primera vez que se usa el dado.
-  - Tras barajar aparece un enlace de texto, «Volver a los de hoy».
+  - Tras barajar aparece un enlace de texto, «Volver a los de hoy», junto al título. **Solo el dado lo hace aparecer:** buscar o filtrar no cambia los Pokémon del día y no lo muestra.
   - Lo barajado no se guarda: al recargar vuelven los del día.
 
 ### 4.3 Portada: filtros y tarjetas
@@ -221,20 +221,20 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 ```
         ┌───────── artwork (puede salirse por arriba) ─────────┐
    ┌────┴──────────────────────────────────────────────────────┴────┐
-   │                                                     0006       │  ← marca de agua
+   │                                                                │
    │                      zona del artwork                          │
    ├────────────────────────────────────────────────────────────────┤
-   │ Charizard                                                      │  ← zona reservada
+   │ Charizard                                             0006     │  ← zona reservada, con la marca de agua
    │ [Fuego] [Volador]                              [Total 534]     │
    └────────────────────────────────────────────────────────────────┘
 ```
 
 - **Campo:** el `field` del tipo principal, con radio de 28px. Toda la tarjeta es un enlace a la ficha.
-- **Zona inferior reservada** (unos 96px, 84px en móvil), con el nombre, las etiquetas de tipo y el total. **El artwork nunca entra en esta zona.**
+- **Zona inferior reservada** (unos 96px, 84px en móvil), con el nombre, la marca de agua del número, las etiquetas de tipo y el total. **El artwork nunca entra en esta zona.**
   - El artwork se limita a la zona superior y solo puede salirse **por arriba**, hasta un 25 % de su altura.
   - El texto queda por encima en el orden de apilado, aunque el artwork no llegue a tocarlo.
-- **Marca de agua:** el número sin almohadilla (`0006`) en Nunito 900, enorme (unos 40 % del ancho de la tarjeta), en `field-ink` al 12 % de opacidad.
-  - Va detrás del artwork, arriba a la derecha de la zona superior, con `aria-hidden`.
+- **Marca de agua:** el número sin almohadilla (`0006`) en Nunito 900 con cifras tabulares, en `field-ink` al 40 % de opacidad y con `aria-hidden`.
+  - Va en la fila del nombre, alineado a la derecha y al mismo tamaño que el nombre. Ahí el artwork no entra nunca, así que siempre se lee. Antes iba enorme detrás del artwork, arriba a la derecha, y la figura lo tapaba (en Bulbasaur solo asomaba un «1»).
   - El número real se lee en la etiqueta accesible de la tarjeta («Charizard, n.º 6»).
 - **Etiquetas de tipo:** pastillas blancas al 80 % con el nombre en tinta (regla 4 del §2.3).
 - **Total:** pastilla en `--ink` con «Total 534» en hueso. La palabra «Total» va en 700 y la cifra en 900, con cifras tabulares.
@@ -291,39 +291,31 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 ### 4.7 Pie
 
-Un pie **compacto** sobre el campo `--ink` a sangre, sin la palabra gigante. Mide unos 160px de alto en escritorio. Tiene un margen superior de 96px respecto al contenido, para dejar sitio al Pokémon que se asoma.
+Un pie **compacto** sobre el campo `--ink` a sangre, sin la palabra gigante. Mide unos 180px de alto en escritorio y tiene un margen superior de 64px respecto al contenido.
 
-**Fila principal:** tres zonas alineadas con la rejilla.
+**Fila principal:** dos extremos.
 - **Izquierda:** el logo (Pokébola + «PokéData», Nunito 900, 22px, en hueso) y debajo una frase corta en `--step-small`, en `--bone-soft`: «Los 1025 Pokémon, con su artwork oficial.»
-- **Centro:** enlaces de texto en hueso, Nunito 800, `--step-small`.
+- **Derecha:** enlaces de texto en hueso, Nunito 800, `--step-small`, alineados al borde derecho.
   - Son «Pokédex», «Tipos», «Comparador» y «GitHub».
   - «GitHub» va al repositorio en una pestaña nueva, con una flecha ↗ y un aviso accesible «(se abre en una pestaña nueva)».
   - Hover: el texto sube 2px. El subrayado aparece solo en el foco.
-- **Derecha:** el SHA corto del commit (7 caracteres) en Nunito 700 con cifras tabulares y sin monoespaciada. Delante lleva un punto verde sólido de 8px (`--ok`, como en la versión anterior).
+**Línea divisoria:** entre las dos filas, una línea sutil de 1px en hueso al 15 %, con 24px por encima y 16px por debajo. Es la única línea fina fuera de las tablas, puesta a propósito para separar el aviso legal.
+
+**Fila inferior:** dos extremos, en `--step-small`.
+- **Izquierda:** el aviso legal en `--bone-soft`, usando todo el ancho disponible para quedarse en dos líneas como mucho en escritorio:
+
+  > PokéData es un proyecto hecho por fans, sin afiliación con Nintendo, Game Freak ni Creatures. Pokémon y sus nombres son marcas de sus respectivos propietarios. Datos e imágenes de PokéAPI.
+
+  «PokéAPI» es un enlace a pokeapi.co.
+- **Derecha:** el SHA corto del commit (7 caracteres) en Nunito 700 con cifras tabulares y sin monoespaciada. Delante lleva un punto verde sólido de 8px (`--ok`).
   - Todo el conjunto es un enlace al commit en GitHub, con la etiqueta accesible «Versión a1b2c3d».
   - Sin pastilla ni borde.
-
-**Fila inferior:** separada de la principal por 24px de espacio, sin línea divisoria. Va en `--step-small` y en `--bone-soft`:
-
-> PokéData es un proyecto hecho por fans, sin afiliación con Nintendo, Game Freak ni Creatures. Pokémon y sus nombres son marcas de sus respectivos propietarios. Datos e imágenes de PokéAPI.
-
-«PokéAPI» es un enlace a pokeapi.co.
-
-**El Pokémon que se asoma:**
-- Es el **primero de los tres Pokémon del día** (§4.2), el mismo para todos y en todas las páginas, calculado en el servidor con la misma semilla. Si el usuario baraja con el dado, el pie no cambia.
-- Su artwork, de unos 150px (96px en móvil), está **detrás del campo del pie** en el orden de apilado, a la derecha y alineado con la columna del SHA.
-- Solo se ve su mitad superior, unos 45 %, por encima del borde: la cabeza y los ojos asoman y el cuerpo queda tapado por el pie.
-- Es un enlace a su ficha, con la etiqueta accesible «Pokémon del día: Charizard».
-- **Hover/foco:** sube 10px más, con rebote (350ms), como si se asomara del todo.
-- **Al entrar en pantalla:** sube desde detrás del borde una vez (500ms). Con movimiento reducido aparece ya en su sitio.
-- Lleva la normalización de altura de las tarjetas (§4.3) para que todos asomen lo mismo.
 
 **Móvil (< 768px):** las zonas se apilan.
 - Primero va el logo con su frase.
 - Debajo, los cuatro enlaces en una fila que puede pasar a dos líneas, sin scroll lateral.
-- Después, el SHA.
-- Por último, la fila inferior.
-- El Pokémon asoma a la derecha, por encima del logo.
+- La línea divisoria.
+- Después, el aviso legal y, por último, el SHA.
 
 ### 4.8 404 y carga
 
@@ -352,7 +344,6 @@ Solo se animan `transform` y `opacity`. Todo tiene alternativa con `prefers-redu
 | Tarjetas, hover | Subida, crecimiento del artwork y brillo de tipo (§4.3) | 350ms de rebote · 250ms el brillo |
 | Pokémon del día | Giro del dado y cambio escalonado de columnas | 500ms · 60ms entre columnas |
 | Logo | Vuelta completa de la Pokébola en hover | 600ms con rebote |
-| Pie | El Pokémon del día sube desde detrás del borde al entrar en pantalla y se asoma más en hover | 500ms una vez · 350ms con rebote |
 | Cabecera | Aparece la sombra al desplazar y entra el buscador compacto en la portada | 200ms |
 | Panel de filtros | Escritorio: aparece y sube 8px. Móvil: la hoja sube desde abajo | 250ms · `cubic-bezier(.22,.8,.24,1)` |
 | Chips activos | Entrada con escala y salida con fundido | 200ms |
@@ -371,12 +362,12 @@ Lo que ya está en el código de los últimos commits (tokens, Chivo, cabecera y
 | Chivo, títulos en mayúsculas | Nunito, sentence case |
 | Esquinas rectas en todo | Superficies de 28px y controles en pastilla |
 | Fondo papel `#F7F5F0` | Fondo `#F3F4F8` con superficies blancas |
-| Sin acento: botón principal en tinta | Rojo Pokébola `#CC2E0B` solo en la acción principal |
+| Sin acento: botón principal en tinta | Rojo Pokébola `#CC2E0B` solo en el logo |
 | Portada como índice en filas | Hero compacto con el Pokémon del día y rejilla de tarjetas de color |
 | Filtros siempre visibles | Botón «Filtros» con contador, panel y chips removibles |
 | Ficha en un campo a sangre en toda la página | Escenario de color con el nombre gigante y paneles blancos debajo |
 | Ninguna sombra fuera de capas flotantes | Además, la cabecera al desplazar y el brillo de tipo en hover |
-| Pie con «POKÉDATA» gigante a todo el ancho | Pie compacto de dos filas con un Pokémon del día asomando |
+| Pie con «POKÉDATA» gigante a todo el ancho | Pie compacto de dos filas: marca y enlaces, aviso legal y versión |
 
 Se mantiene todo lo demás de la casa:
 - Ni monoespaciada, ni etiquetas diminutas en mayúsculas espaciadas, ni `backdrop-blur`, ni `transition-all`, ni `animate-pulse`.
@@ -394,7 +385,7 @@ Se mantiene todo lo demás de la casa:
    - Escala de cinco tamaños y radios (28px y pastilla).
    - Revisar que los 18 tipos siguen intactos.
 2. **Cabecera.** Logo con la Pokébola en SVG y su giro, navegación, ES/EN segmentado, cabecera fija con sombra al desplazar y buscador compacto con Ctrl K (sin la lógica de la portada todavía).
-3. **Pie compacto** (§4.7). Fila principal con logo y frase, enlaces y SHA con el punto verde, más la fila legal. Todavía sin el Pokémon que se asoma, que depende de los pasos 4 y 7.
+3. **Pie compacto** (§4.7). Fila principal con logo, frase y enlaces; fila inferior con el aviso legal y el SHA con el punto verde.
 4. **Tarjeta.** Anatomía con zona reservada, marca de agua y «Total», más el script `artwork-bounds.json` y la normalización del artwork. Se prueba aislada con Caterpie, Venusaur, Wailord y Pikachu.
 5. **Rejilla de la portada.** Columnas, paginación, estado vacío y tarjetas fantasma de carga.
 6. **Filtros.** Botón con contador, panel (capa flotante en escritorio y hoja en móvil) y chips removibles, todo conectado a `?types=` y `?gen=`.
@@ -403,8 +394,7 @@ Se mantiene todo lo demás de la casa:
    - Pokémon del día en el servidor (semilla UTC y regla de tipos distintos).
    - El dado con el índice id → tipos.
    - Columnas enlazadas.
-   - Comprobar el presupuesto de altura (§4.2).
-   - El primero del día se asoma por el borde del pie en todas las páginas (§4.7).
+   - Comprobar el presupuesto de altura (§4.2) en español y en inglés.
 8. **Buscador de cabecera en la portada:** aparece cuando el del hero sale de la pantalla, y Ctrl K enfoca el que se ve.
 9. **Ficha.** Escenario con el nombre gigante, formas, estadísticas, debilidades, evolución y anterior/siguiente.
 10. **Comparador.**
@@ -414,6 +404,6 @@ Se mantiene todo lo demás de la casa:
 14. **Revisión.**
     - `lint.mjs` sin FAIL. Las excepciones permitidas son el brillo de hover, la sombra de la cabecera y el acento rojo, cada una justificada en una frase.
     - `inspect.mjs` contra `npm run dev` a 1440, 768 y 390px.
-    - Verificar que a 1440×900 se ve una fila completa de tarjetas.
+    - Verificar que a 1440×900 se ve una fila completa de tarjetas, en `/es` y en `/en`.
     - Capturas de Pikachu, Glaceon, Snorlax, Sylveon y Gengar (§2.3).
     - Buscar «Pokédex» usado como nombre de la app en textos, títulos y metadatos y cambiarlo por PokéData. Como nombre de la sección se queda.
