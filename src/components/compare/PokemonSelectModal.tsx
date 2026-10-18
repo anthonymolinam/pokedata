@@ -120,7 +120,7 @@ export default function PokemonSelectModal({
         }}
         className={`layer-in m-auto flex-col open:flex w-[min(44rem,calc(100vw-2*var(--gutter)))] max-h-[min(85svh,52rem)] max-w-none overflow-hidden rounded-[22px] bg-surface p-0 text-ink ${LAYER_SHADOW} backdrop:bg-ink/40`}
       >
-        <div data-field="surface" className="flex flex-col gap-4 p-5 md:p-6">
+        <div data-field="surface" className="flex flex-col gap-4 px-7 py-5 md:px-8 md:py-6">
           <div className="flex items-center justify-between gap-4">
             <h2 id={`${id}-title`} className="text-lead font-black">
               {compare.selectTitle}
@@ -157,7 +157,9 @@ export default function PokemonSelectModal({
           </div>
         </div>
 
-        <div className="custom-scrollbar overflow-y-auto overscroll-contain px-5 pb-6 md:px-6">
+        {/* Relleno de sobra para que el brillo de hover de las tarjetas (28px
+            por los lados, 46px por abajo) no quede cortado por el scroll */}
+        <div className="custom-scrollbar overflow-y-auto overscroll-contain px-7 pb-12 md:px-8">
           {!cleanQuery && <h3 className="text-body font-black">{compare.suggestions}</h3>}
 
           {cleanQuery && !loading && results.length === 0 ? (

@@ -617,10 +617,13 @@ export default function EvolutionTree({
       </h2>
 
       {chain && hasEvolutions ? (
-        <div className="mt-6 md:mt-8 overflow-x-auto overscroll-x-contain custom-scrollbar">
-          {/* El scroll recorta lo que sale de la caja: el margen interior deja
-              ver entero el aro de selección (3px más 3px de separación) */}
-          <div className="flex justify-center min-w-fit px-2 pb-2">
+        // El scroll recorta todo lo que sale de su caja: el brillo de hover
+        // (hasta 46px por abajo y 28px por los lados), la subida y el aro de
+        // selección. La caja ocupa también el relleno del panel (margen
+        // negativo y el mismo relleno), así que el recorte cae en el borde del
+        // panel, donde el brillo ya se ha desvanecido, sin mover nada
+        <div className="-mx-6 -mb-6 mt-6 overflow-x-auto overscroll-x-contain custom-scrollbar px-6 pb-6 md:-mx-10 md:-mb-10 md:mt-8 md:px-10 md:pb-10">
+          <div className="flex justify-center min-w-fit">
             <Branch
               node={chain}
               currentLower={currentPokemonName.toLowerCase()}

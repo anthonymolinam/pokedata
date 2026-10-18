@@ -280,7 +280,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - **Escritorio (≥1024px):** la cadena corre de izquierda a derecha con flechas →. Si una etapa se ramifica en cadenas propias (Wurmple → Silcoon → Beautifly / Cascoon → Dustox), cada rama es una fila con su flecha, apiladas a la derecha del origen.
   - **Abanico:** cuatro o más evoluciones finales desde una misma etapa (Eevee) van en un bloque en `--ground` con una sola flecha desde el origen; la condición se pone encima de cada tarjeta. Así ninguna flecha parece salir de una hermana. Cuatro columnas desde 1280px, dos entre 1024 y 1279.
   - **Móvil:** en vertical, con flechas ↓. Las ramas van en dos columnas y el abanico, sin bloque, en una rejilla de dos.
-  - El contenedor de la cadena deja 8px de margen interior para que el aro de selección de la tarjeta actual (3px más 3px de separación) se vea entero y el scroll no lo recorte.
+  - **Nada se recorta:** el contenedor con scroll horizontal recorta todo lo que sale de su caja, así que ocupa también el relleno del panel (margen negativo y el mismo relleno: 24px en móvil, 40px desde 768px). El brillo de hover (hasta 46px por abajo y 28px por los lados), la subida y el aro de selección caben enteros y el recorte cae en el borde del panel, donde el brillo ya se ha desvanecido.
   - **Requisitos:** de los detalles de PokéAPI (uno por juego) manda el marcado como actual (`is_default`). Si en otros juegos también evoluciona junto a una roca (`near_special_rock`), se añade como alternativa: «Usar Piedra Hoja o subir de nivel junto a la Roca Musgo». Sylveon: «Amistad ≥ 160 · Conocer un movimiento de tipo Hada» (`known_move_type`). Una ubicación sola se muestra como «Subir de nivel en …». «Evolución especial» queda solo para lo que PokéAPI no describe.
 - **Anterior y siguiente:** dos tarjetas grandes al final, cada una en el `field` del Pokémon al que lleva.
 
@@ -299,7 +299,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Dos escenarios lado a lado** (apilados en móvil), cada uno en el `field` de su Pokémon y con la anatomía de la ficha en pequeño.
 - **Estadísticas enfrentadas** en un panel blanco: las barras crecen desde el eje central, cada una en el `deep` de su Pokémon. El ganador de cada estadística se marca con peso 900 y un tamaño más, no con color.
 - **«Intercambiar»:** pastilla en `--ink` en el eje central, centrada sobre la junta de las dos tarjetas. El centrado vive en un envoltorio y el rebote del hover en la pastilla, porque los dos usan `translate` y el del hover pisaba al del centrado (el botón se iba hacia abajo).
-- **Modal de selección:** capa flotante blanca con sombra, que usa el mismo buscador y las mismas mini tarjetas.
+- **Modal de selección:** capa flotante blanca con sombra, que usa el mismo buscador y las mismas mini tarjetas. Su zona con scroll lleva 28px de relleno lateral (32px desde 768px) y 48px abajo, para que el brillo de hover de las tarjetas no quede cortado; la cabecera del modal usa el mismo relleno lateral para alinearse con la rejilla.
 
 ### 4.7 Pie
 
