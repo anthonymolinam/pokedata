@@ -436,15 +436,23 @@ body {
   opacity: var(--guide-on, 0.65);
 }
 
-.type-head:not(:focus-visible) {
-  outline: var(--guide-outline, none);
-  outline-offset: 2px;
+/* El aro en tinta es solo de la selección; la guía de hover oscurece un poco
+   la pastilla, sin borde, para que nunca parezca una segunda selección */
+.type-head {
+  filter: var(--guide-shade, none);
+  transition: filter 150ms ease-out, opacity 200ms ease-out;
 }
 
-/* Guía de hover: al pasar por una celda se marcan su fila y su columna (las
-   celdas ×1 se oscurecen un tono, las cabeceras llevan un aro en tinta y lo
-   atenuado vuelve a leerse). Las variables se heredan hasta la cabecera. */
+/* Guía de hover: al pasar por una celda se marcan su fila y su columna. Un
+   solo criterio de color: la selección se tiñe de su tipo (.type-cross) y la
+   guía, de un gris neutro muy suave, solo en las celdas ×1 sin teñir; las
+   cabeceras se oscurecen y lo atenuado vuelve a leerse. Las variables se
+   heredan hasta la cabecera. */
 @media (hover: hover) {
+  .type-head:hover {
+    --guide-shade: brightness(0.92);
+  }
+
   .type-matrix tr:has(> td[data-col]:hover) > *,
   .type-matrix:has(td[data-col="normal"]:hover) [data-col="normal"],
   .type-matrix:has(td[data-col="fire"]:hover) [data-col="fire"],
@@ -465,10 +473,11 @@ body {
   .type-matrix:has(td[data-col="steel"]:hover) [data-col="steel"],
   .type-matrix:has(td[data-col="fairy"]:hover) [data-col="fairy"] {
     --guide-on: 1;
-    --guide-tint: color-mix(in srgb, var(--ink) 10%, var(--ground));
-    --guide-outline: 3px solid var(--ink);
+    --guide-tint: color-mix(in srgb, var(--ink) 5%, var(--ground));
+    --guide-shade: brightness(0.92);
   }
 }
+
 /* Capas flotantes (§6): aparecen y suben 8px en 250ms */
 @keyframes layer-in {
   from {

@@ -85,7 +85,9 @@ function Cell({ value, col, state }: CellProps) {
 
 // Fila y columna comparten pastilla: misma altura, letra y relleno
 const HEAD = `type-head flex items-center h-8 px-2 rounded-pill bg-field text-field-ink text-small font-extrabold focus-visible:outline-ink ${press}`;
-const HEAD_SELECTED = "ring-3 ring-ink ring-offset-2 ring-offset-surface";
+// Aro de selección: 3px de tinta separados 2px. relative z-20 lo pinta por
+// encima de las celdas y de las cabeceras fijas vecinas, que lo taparían
+const HEAD_SELECTED = "relative z-20 ring-3 ring-ink ring-offset-2 ring-offset-surface";
 
 const LEGEND_SWATCH = "grid place-items-center size-6 rounded-md text-small font-black";
 
@@ -147,7 +149,7 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
 
       <div
         {...(selected ? { "data-type": selected.type } : {})}
-        className="mt-3 overflow-x-auto overscroll-x-contain custom-scrollbar"
+        className="mt-1 py-2 overflow-x-auto overscroll-x-contain custom-scrollbar"
       >
         <table
           aria-describedby="types-caption"
@@ -156,9 +158,9 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
           <thead>
             <tr>
               {/* table-fixed: este ancho fija la columna de atacantes (relleno
-                  más la pastilla de 104px) y el resto se reparte a partes
+                  más la pastilla de 104px; a la derecha, el mismo margen) y el resto se reparte a partes
                   iguales */}
-              <td className="sticky left-0 z-10 w-32 md:w-[8.25rem] bg-surface pl-5 md:pl-6 pr-1">
+              <td className="sticky left-0 z-10 w-[8.25rem] md:w-[8.5rem] bg-surface pl-5 md:pl-6 pr-2">
                 <span className="sr-only">{t.corner}</span>
               </td>
               {POKEMON_TYPES.map((def) => (
@@ -179,7 +181,7 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
                   </Link>
                 </th>
               ))}
-              <td aria-hidden="true" className="w-2 md:w-3" />
+              <td aria-hidden="true" className="w-5 md:w-6" />
             </tr>
           </thead>
           <tbody>
@@ -187,7 +189,7 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
               <tr key={atk}>
                 <th
                   scope="row"
-                  className="sticky left-0 z-10 bg-surface pl-5 md:pl-6 pr-1 text-left font-extrabold"
+                  className={`sticky left-0 bg-surface pl-5 md:pl-6 pr-2 text-left font-extrabold ${isSelected("atk", atk) ? "z-20" : "z-10"}`}
                 >
                   <Link
                     href={hrefFor(basePath, toggle(selected, "atk", atk))}
