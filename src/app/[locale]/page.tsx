@@ -1,12 +1,18 @@
+import { Suspense } from "react";
 import { getPaginatedPokemonList, getFilteredPokemonList } from "@/lib/pokeapi";
 import { GENERATIONS } from "@/constants/generations";
+import { getDictionary } from "@/constants/translations";
+import { isPokemonType } from "@/constants/typeColors";
 import PokemonGrid from "@/components/home/PokemonGrid";
 import PokemonFiltersBar from "@/components/home/PokemonFiltersBar";
+import { PokemonGridSkeleton } from "@/components/pokemon/PokemonCardSkeleton";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ page?: string; types?: string; gen?: string }>;
 }
+
+const PAGE_SIZE = 24;
 
 export default async function HomePage({ params, searchParams }: PageProps) {
   const { locale } = await params;
@@ -16,8 +22,47 @@ export default async function HomePage({ params, searchParams }: PageProps) {
   const currentPage = Math.max(1, Number(resolvedParams?.page) || 1);
   const typesParam = resolvedParams?.types || null;
   const genParam = resolvedParams?.gen ? Number(resolvedParams.gen) : null;
-  const pageSize = 24;
 
+  // La rejilla se carga aparte: mientras llega cada página o filtro se ven las
+  // tarjetas fantasma (DESIGN.md §4.8)
+  return (
+    <div>
+      <h1 className="text-head font-black">
+        {isEs ? "Pokédex Nacional" : "National Pokédex"}
+      </h1>
+
+      <div className="mt-6">
+        <PokemonFiltersBar locale={locale} />
+      </div>
+
+      <Suspense
+        key={`${genParam || "all"}-${typesParam || "all"}-${currentPage}`}
+        fallback={<PokemonGridSkeleton />}
+      >
+        <HomeResults
+          locale={locale}
+          currentPage={currentPage}
+          typesParam={typesParam}
+          genParam={genParam}
+        />
+      </Suspense>
+    </div>
+  );
+}
+
+async function HomeResults({
+  locale,
+  currentPage,
+  typesParam,
+  genParam,
+}: {
+  locale: string;
+  currentPage: number;
+  typesParam: string | null;
+  genParam: number | null;
+}) {
+  const isEs = locale === "es";
+  const { typeNames } = getDictionary(locale);
   const activeTypes = typesParam ? typesParam.split(",").filter(Boolean) : [];
   const hasFilters = activeTypes.length > 0 || genParam !== null;
 
@@ -26,9 +71,9 @@ export default async function HomePage({ params, searchParams }: PageProps) {
         types: activeTypes,
         genId: genParam,
         page: currentPage,
-        pageSize,
+        pageSize: PAGE_SIZE,
       })
-    : await getPaginatedPokemonList(currentPage, pageSize);
+    : await getPaginatedPokemonList(currentPage, PAGE_SIZE);
 
   const currentGenData = genParam
     ? GENERATIONS.find((g) => g.id === genParam)
@@ -43,48 +88,32 @@ export default async function HomePage({ params, searchParams }: PageProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-1">
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">
-          {isEs ? "Pokédex Nacional" : "National Pokédex"}
-        </h1>
-        <p className="text-zinc-400 text-sm">
-          {hasFilters ? (
-            <>
-              {isEs ? (
-                <>
-                  Mostrando {totalCount} resultado{totalCount === 1 ? "" : "s"}{" "}
-                  para:{" "}
-                </>
-              ) : (
-                <>
-                  Showing {totalCount} result{totalCount === 1 ? "" : "s"}{" "}
-                  for:{" "}
-                </>
-              )}
-              {currentGenData && (
-                <span className="text-white font-semibold mr-1">
-                  {currentGenData.name} ({currentGenData.region})
-                </span>
-              )}
-              {activeTypes.length > 0 && (
-                <span className="text-rose-400 font-semibold uppercase">
-                  [{activeTypes.join(" + ")}]
-                </span>
-              )}
-            </>
-          ) : isEs ? (
-            `Explorando ${totalCount} Pokémon oficiales.`
-          ) : (
-            `Exploring ${totalCount} official Pokémon.`
-          )}
-        </p>
-      </section>
-
-      <PokemonFiltersBar locale={locale} />
+    <>
+      <p className="mt-4 mb-6 text-body">
+        {hasFilters ? (
+          <>
+            {isEs
+              ? `${totalCount} resultado${totalCount === 1 ? "" : "s"} para: `
+              : `${totalCount} result${totalCount === 1 ? "" : "s"} for: `}
+            {currentGenData && (
+              <span className="font-extrabold mr-1">
+                {currentGenData.name} ({currentGenData.region})
+              </span>
+            )}
+            {activeTypes.length > 0 && (
+              <span className="font-extrabold">
+                {activeTypes
+                  .map((t) => (isPokemonType(t) ? typeNames[t] : t))
+                  .join(" + ")}
+              </span>
+            )}
+          </>
+        ) : (
+          `${totalCount} Pokémon`
+        )}
+      </p>
 
       <PokemonGrid
-        key={`${genParam || "all"}-${typesParam || "all"}-${currentPage}`}
         initialList={pokemon}
         currentPage={currentPage}
         totalPages={totalPages}
@@ -96,6 +125,6 @@ export default async function HomePage({ params, searchParams }: PageProps) {
         }
         locale={locale}
       />
-    </div>
+    </>
   );
 }

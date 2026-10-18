@@ -332,6 +332,38 @@ body {
   opacity: 1;
 }
 
+/* Entrada «pop» de las tarjetas (§6): suben 30px y crecen desde 0.94, con
+   45ms de escalonado (--i es el índice). Es CSS, así que sin JavaScript la
+   tarjeta acaba igual de visible. */
+@keyframes card-pop {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.94);
+  }
+}
+
+.card-pop {
+  animation: card-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* Tarjetas fantasma (§4.8): aparecen con opacidad a partir de los 300ms */
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.skeleton-in {
+  animation: skeleton-in 200ms ease-out 300ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-pop {
+    animation: none;
+  }
+}
+
 /* Números (#0006, estadísticas, totales, SHA) */
 .num {
   font-variant-numeric: tabular-nums;

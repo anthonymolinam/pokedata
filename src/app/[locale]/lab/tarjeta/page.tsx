@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PokemonCard from "@/components/pokemon/PokemonCard";
+import { CARD_GRID } from "@/components/pokemon/PokemonCardSkeleton";
 import { searchPokemonGlobal } from "@/lib/pokeapi";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { Locale } from "@/proxy";
@@ -44,9 +45,9 @@ export default async function CardLabPage({
     `/${locale}/pokemon/${(locale === "es" && CANONICAL_TO_SPANISH[name]) || name}`;
 
   return (
-    <div className="pt-16">
+    <div className="pt-6">
       <h1 className="sr-only">Banco de pruebas de la tarjeta</h1>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-13 md:grid-cols-3 md:gap-x-5 md:gap-y-18 min-[67.5rem]:grid-cols-4">
+      <div className={CARD_GRID}>
         {results.map((pokemon, index) => (
           <PokemonCard
             key={pokemon.id}
