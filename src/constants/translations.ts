@@ -184,6 +184,11 @@ export const translations = {
       neutral: "Normal damage (blank)",
       matrix: "Full chart",
     },
+    notFound: {
+      title: "This page has vanished",
+      body: "The address doesn't lead to any Pokémon or section of PokéData. It may be misspelled, or the link may no longer exist.",
+      back: "Back to the Pokédex",
+    },
   },
   es: {
     nav: {
@@ -367,6 +372,11 @@ export const translations = {
       zero: "Sin efecto",
       neutral: "Daño normal (vacía)",
       matrix: "La tabla completa",
+    },
+    notFound: {
+      title: "Esta página se ha esfumado",
+      body: "La dirección no lleva a ningún Pokémon ni a ninguna sección de PokéData. Puede que esté mal escrita o que el enlace ya no exista.",
+      back: "Volver a la Pokédex",
     },
   },
 } as const;
