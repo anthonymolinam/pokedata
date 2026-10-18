@@ -9,6 +9,7 @@ import Pokeball from "@/components/common/Pokeball";
 import GlobalSearchBar from "@/components/common/GlobalSearchBar";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { getLocalizedPath } from "@/constants/routes";
+import { useHeroSearchVisible } from "@/lib/hero-search-visibility";
 import { Locale } from "@/proxy";
 
 // Sombra de la cabecera desplazada y de las capas flotantes (DESIGN.md §4.0)
@@ -41,6 +42,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const heroSearchVisible = useHeroSearchVisible();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -55,6 +57,9 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
     key === "pokedex"
       ? pathname === href || pathname.startsWith(`/${locale}/pokemon/`)
       : pathname === href;
+
+  // En la portada, el compacto se esconde mientras el buscador del hero se ve (§4.1)
+  const hideCompactSearch = pathname === `/${locale}` && heroSearchVisible;
 
   // Sombra a partir de 4px de desplazamiento (§4.1)
   useEffect(() => {
@@ -137,7 +142,13 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
           </ul>
         </nav>
 
-        <div className="hidden md:block ml-auto w-full max-w-60 min-w-0">
+        {/* Oculto conserva su hueco: la cabecera no se mueve cuando entra */}
+        <div
+          inert={hideCompactSearch}
+          className={`hidden md:block ml-auto w-full max-w-60 min-w-0 transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:translate-y-0 ${
+            hideCompactSearch ? "invisible opacity-0 translate-y-2" : "visible opacity-100 translate-y-0"
+          }`}
+        >
           <GlobalSearchBar
             locale={locale}
             placeholder={labels.search}

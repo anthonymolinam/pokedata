@@ -7,6 +7,7 @@ import { Search, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatPokemonDisplayName, PokemonSummary } from "@/lib/pokeapi";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
+import { isHeroSearchVisible } from "@/lib/hero-search-visibility";
 
 // El desplegable es una capa flotante: la única sombra permitida en la barra (DESIGN.md §4.1)
 const OVERLAY_SHADOW = "shadow-[0_12px_32px_rgb(10_10_10/0.18)]"; // taste-skill-ignore
@@ -48,12 +49,14 @@ export default function GlobalSearchBar({
     () => false,
   );
 
-  // Atajo global Ctrl+K / Cmd+K: solo lo atiende el buscador que se ve
+  // Atajo global Ctrl+K / Cmd+K: solo lo atiende el buscador que se ve. En la
+  // portada, mientras el del hero está en pantalla, es suyo (§4.1)
   useEffect(() => {
     function handleGlobalKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         const input = inputRef.current;
         if (!input || input.getClientRects().length === 0) return;
+        if (!isOverlay && isHeroSearchVisible()) return;
         e.preventDefault();
         input.focus();
         input.select();
@@ -62,7 +65,7 @@ export default function GlobalSearchBar({
 
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, []);
+  }, [isOverlay]);
 
   // Cerrar y limpiar al hacer clic afuera
   useEffect(() => {

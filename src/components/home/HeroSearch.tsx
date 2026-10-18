@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { getDictionary } from "@/constants/translations";
+import { isHeroSearchVisible, setHeroSearchVisible } from "@/lib/hero-search-visibility";
 import { Locale } from "@/proxy";
 
 // Espera tras la última tecla antes de buscar
 const DEBOUNCE_MS = 300;
+
+// Alto de la cabecera fija en escritorio: lo que queda debajo ya no se ve
+const HEADER_HEIGHT = 72;
 
 // Buscador grande del hero (DESIGN.md §4.2): pastilla de 60px con el botón
 // rojo «Buscar», la acción principal de la página. La búsqueda vive en ?q=,
@@ -20,6 +24,8 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
 
   const [query, setQuery] = useState(urlQuery);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Si la URL cambia por otro lado (Borrar filtros, atrás), el campo la sigue
   const [lastUrlQuery, setLastUrlQuery] = useState(urlQuery);
@@ -29,6 +35,43 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
   }
 
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  // Publica si el buscador está en pantalla. Solo deja de estarlo al salir por
+  // arriba, bajo la cabecera: entonces aparece el compacto (§4.1). La primera
+  // medida va antes de pintar, para que el compacto no parpadee al cargar.
+  useLayoutEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    const isVisible = (bottom: number) => bottom > HEADER_HEIGHT;
+    setHeroSearchVisible(isVisible(form.getBoundingClientRect().bottom));
+
+    const observer = new IntersectionObserver(
+      ([entry]) =>
+        setHeroSearchVisible(
+          entry.isIntersecting || isVisible(entry.boundingClientRect.bottom),
+        ),
+      { rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px` },
+    );
+    observer.observe(form);
+    return () => {
+      observer.disconnect();
+      setHeroSearchVisible(false);
+    };
+  }, []);
+
+  // Ctrl K / ⌘K enfoca este buscador mientras se ve; si no, el de la cabecera
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "k") return;
+      const input = inputRef.current;
+      if (!input || !isHeroSearchVisible()) return;
+      e.preventDefault();
+      input.focus();
+      input.select();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const search = (value: string) => {
     clearTimeout(timeoutRef.current);
@@ -46,6 +89,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
 
   return (
     <form
+      ref={formRef}
       role="search"
       action={`/${locale}`}
       onSubmit={(e) => {
@@ -60,6 +104,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
         {hero.searchLabel}
       </label>
       <input
+        ref={inputRef}
         id="hero-search"
         name="q"
         type="search"
