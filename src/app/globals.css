@@ -414,11 +414,56 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2l4-4M0 8l8-8M6 10l4-4' stroke='%235c6070' stroke-width='2.5'/%3E%3C/svg%3E");
 }
 
-/* ×1 en la fila y la columna del tipo elegido: su field mezclado con blanco */
+/* ×1 en la fila o la columna elegida: su field mezclado con blanco */
 .type-cross {
   background-color: color-mix(in srgb, var(--field) 35%, var(--surface));
 }
 
+/* ×1 fuera de la selección */
+.type-one {
+  background-color: var(--guide-tint, var(--ground));
+}
+
+/* Fila o columna elegida: el resto de celdas y las otras cabeceras de ese eje
+   se atenúan */
+.type-matrix [data-dim] {
+  opacity: var(--guide-on, 0.3);
+  transition: opacity 200ms ease-out;
+}
+
+.type-head:not(:focus-visible) {
+  outline: var(--guide-outline, none);
+  outline-offset: 2px;
+}
+
+/* Guía de hover: al pasar por una celda se marcan su fila y su columna (las
+   celdas ×1 se oscurecen un tono, las cabeceras llevan un aro en tinta y lo
+   atenuado vuelve a leerse). Las variables se heredan hasta la cabecera. */
+@media (hover: hover) {
+  .type-matrix tr:has(> td[data-col]:hover) > *,
+  .type-matrix:has(td[data-col="normal"]:hover) [data-col="normal"],
+  .type-matrix:has(td[data-col="fire"]:hover) [data-col="fire"],
+  .type-matrix:has(td[data-col="water"]:hover) [data-col="water"],
+  .type-matrix:has(td[data-col="grass"]:hover) [data-col="grass"],
+  .type-matrix:has(td[data-col="electric"]:hover) [data-col="electric"],
+  .type-matrix:has(td[data-col="ice"]:hover) [data-col="ice"],
+  .type-matrix:has(td[data-col="fighting"]:hover) [data-col="fighting"],
+  .type-matrix:has(td[data-col="poison"]:hover) [data-col="poison"],
+  .type-matrix:has(td[data-col="ground"]:hover) [data-col="ground"],
+  .type-matrix:has(td[data-col="flying"]:hover) [data-col="flying"],
+  .type-matrix:has(td[data-col="psychic"]:hover) [data-col="psychic"],
+  .type-matrix:has(td[data-col="bug"]:hover) [data-col="bug"],
+  .type-matrix:has(td[data-col="rock"]:hover) [data-col="rock"],
+  .type-matrix:has(td[data-col="ghost"]:hover) [data-col="ghost"],
+  .type-matrix:has(td[data-col="dragon"]:hover) [data-col="dragon"],
+  .type-matrix:has(td[data-col="dark"]:hover) [data-col="dark"],
+  .type-matrix:has(td[data-col="steel"]:hover) [data-col="steel"],
+  .type-matrix:has(td[data-col="fairy"]:hover) [data-col="fairy"] {
+    --guide-on: 1;
+    --guide-tint: color-mix(in srgb, var(--ink) 10%, var(--ground));
+    --guide-outline: 3px solid var(--ink);
+  }
+}
 /* Cabeceras de columna: la pastilla de tipo en vertical, leída de abajo arriba */
 .vertical-label {
   writing-mode: vertical-rl;

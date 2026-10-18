@@ -262,23 +262,32 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Nunito 900, en una línea, hasta 22vw (40vw en móvil). Se ajusta con unidades de contenedor para que los nombres largos quepan; si aun así no cabe, se recorta por los lados del escenario.
   - Va en `field-ink` al 14 % de opacidad y con `aria-hidden`.
 - **Artwork** centrado delante, de unos 60vh en escritorio y el 90 % del ancho en móvil, con una flotación lenta.
+  - **Nunca se muestra por encima de su tamaño real:** el lienzo del artwork oficial mide 475px y ese es su tope en pantalla (`ARTWORK_SIZE` en `src/lib/artwork.ts`), aunque el escenario deje sitio para más. Ampliarlo solo lo emborrona.
+  - Se pide a Next.js con `sizes` de 475px en escritorio y `quality={90}` (en `images.qualities` de `next.config.ts`, que en Next 16 solo admite 75 por defecto). El optimizador no amplía, así que en pantallas de alta densidad sirve el original a 475px.
+- **Variocolor:** un interruptor redondo de 48px con el icono de destellos (`Sparkles`), arriba a la derecha del escenario. Es independiente del selector de formas y se combina con cualquiera: al cambiar de forma se mantiene encendido si la forma tiene versión variocolor. Blanco apagado, en `--ink` encendido (`aria-pressed`).
 - **Debajo, sobre el campo:**
   - El nombre real (`<h1>`, `--step-hero`, en `field-ink`).
   - El número, las etiquetas de tipo, la altura y el peso.
-  - El selector de formas: pastillas blancas, con la activa en `--ink`.
+  - El selector de formas: pastillas blancas, con la activa en `--ink`. Solo formas; el variocolor va aparte (arriba).
+  - Los nombres de forma con siglas se escriben como tales: «PhD», no «Phd».
 - **Cambio de forma:** el campo nuevo entra como capa con fundido de opacidad (400ms) y el artwork se cruza. La URL se actualiza para que sea compartible.
 
 **Bloques siguientes:** paneles blancos sobre el fondo, cada uno con una composición distinta.
 - **Estadísticas base:** seis filas con el nombre, el valor y la barra (relleno `deep`, pista `--step`, escala sobre 255). El total va en `--step-head`.
 - **Debilidades:** etiquetas de tipo en su `field` con el multiplicador (×4, ×2, ×½, ×0) dentro de la propia etiqueta.
-- **Cadena evolutiva:** mini tarjetas con la misma anatomía que las de la portada (§4.3) y la condición de evolución como texto en `--step-small`.
+- **Cadena evolutiva:** mini tarjetas con la misma anatomía que las de la portada (§4.3), unidas por flechas. La condición («Nivel 22», «Usar Piedra Trueno», «Intercambio») va **encima de la flecha**, en `--step-small` y 800, nunca debajo de la tarjeta.
+  - **Escritorio (≥1024px):** la cadena corre de izquierda a derecha con flechas →. Si una etapa se ramifica en cadenas propias (Wurmple → Silcoon → Beautifly / Cascoon → Dustox), cada rama es una fila con su flecha, apiladas a la derecha del origen.
+  - **Abanico:** cuatro o más evoluciones finales desde una misma etapa (Eevee) van en un bloque en `--ground` con una sola flecha desde el origen; la condición se pone encima de cada tarjeta. Así ninguna flecha parece salir de una hermana. Cuatro columnas desde 1280px, dos entre 1024 y 1279.
+  - **Móvil:** en vertical, con flechas ↓. Las ramas van en dos columnas y el abanico, sin bloque, en una rejilla de dos.
 - **Anterior y siguiente:** dos tarjetas grandes al final, cada una en el `field` del Pokémon al que lleva.
 
 ### 4.5 Tabla de tipos
 
-- **Selector:** los 18 bloques de color del panel de filtros, en grande. El seleccionado pinta la cabecera de la página con su `field`.
+- **Sin selector aparte:** la propia matriz es el selector. Pulsar el tipo de una fila elige ese tipo **como atacante** (`?atk=`); pulsar el de una columna, **como defensor** (`?def=`). Pulsarlo otra vez quita la selección. Los enlaces antiguos con `?type=` abren la fila.
+- **Con selección:** la cabecera de la página se pinta en el `field` del tipo y resume solo ese lado («Al atacar» o «Al defender»). En la matriz, la fila o columna elegida se tiñe (×1 en su `field` mezclado con blanco) y su cabecera lleva el aro en tinta; el resto de celdas y las otras cabeceras de ese eje bajan al 30 % de opacidad.
+- **Guía de hover** (solo con puntero): al pasar por una celda se marcan su fila y su columna. Las celdas ×1 se oscurecen un tono, las dos cabeceras llevan un aro en tinta y lo atenuado vuelve a leerse. Es CSS puro (`:has()` en `globals.css`).
 - **Matriz 18×18:** es una tabla real, así que se permiten líneas finas.
-  - Las cabeceras de fila y columna son pastillas de tipo con su texto.
+  - Las cabeceras de fila y columna son pastillas de tipo con su texto, y son enlaces.
   - Celdas: ×2 en `--ink` con «2» en hueso; ×½ en `--step` con «½» en tinta; ×0 en `--ink` con «0» y rayas a 45°; ×1 vacía. El multiplicador nunca depende solo del color.
 - **Móvil:** la matriz va en un contenedor con scroll horizontal y la primera columna fija.
 
@@ -286,7 +295,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 - **Dos escenarios lado a lado** (apilados en móvil), cada uno en el `field` de su Pokémon y con la anatomía de la ficha en pequeño.
 - **Estadísticas enfrentadas** en un panel blanco: las barras crecen desde el eje central, cada una en el `deep` de su Pokémon. El ganador de cada estadística se marca con peso 900 y un tamaño más, no con color.
-- **«Intercambiar»:** pastilla secundaria en el eje central.
+- **«Intercambiar»:** pastilla en `--ink` en el eje central, centrada sobre la junta de las dos tarjetas. El centrado vive en un envoltorio y el rebote del hover en la pastilla, porque los dos usan `translate` y el del hover pisaba al del centrado (el botón se iba hacia abajo).
 - **Modal de selección:** capa flotante blanca con sombra, que usa el mismo buscador y las mismas mini tarjetas.
 
 ### 4.7 Pie

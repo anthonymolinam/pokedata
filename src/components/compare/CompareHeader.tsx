@@ -72,16 +72,20 @@ export default function CompareHeader({
       />
 
       {/* En móvil va entre los dos escenarios, montada sobre la junta; en
-          escritorio, en la junta y a media altura de los artworks */}
-      <Link
-        href={compareHref(basePath, p2Slug, p1Slug)}
-        scroll={false}
-        aria-label={compare.swapLabel}
-        className={`${control} relative z-10 -my-8 justify-self-center bg-ink px-5 text-bone focus-visible:outline-ink md:absolute md:left-1/2 md:top-[calc(min(40svh,360px)/2)] md:my-0 md:-translate-x-1/2 md:-translate-y-1/2`}
-      >
-        <ArrowLeftRight aria-hidden="true" strokeWidth={2.5} className="size-4 rotate-90 md:rotate-0" />
-        {compare.swap}
-      </Link>
+          escritorio, en la junta y a media altura de los artworks. El
+          centrado vive en el envoltorio, para que el rebote del hover (que
+          también usa translate) no lo pise */}
+      <div className="relative z-10 -my-8 justify-self-center md:absolute md:left-1/2 md:top-[calc(min(40svh,360px)/2)] md:my-0 md:-translate-x-1/2 md:-translate-y-1/2">
+        <Link
+          href={compareHref(basePath, p2Slug, p1Slug)}
+          scroll={false}
+          aria-label={compare.swapLabel}
+          className={`${control} bg-ink px-5 text-bone focus-visible:outline-ink`}
+        >
+          <ArrowLeftRight aria-hidden="true" strokeWidth={2.5} className="size-4 rotate-90 md:rotate-0" />
+          {compare.swap}
+        </Link>
+      </div>
 
       <CompareStage
         slot={2}

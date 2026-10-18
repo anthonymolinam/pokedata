@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { EvolutionStage } from "@/lib/pokeapi";
 import PokemonCard from "@/components/pokemon/PokemonCard";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
@@ -531,50 +532,26 @@ function evolutionRequirements(
   return requirements;
 }
 
-interface PlacedStage {
-  node: EvolutionStage;
-  parent: EvolutionStage | null;
-  depth: number;
-}
-
-// El árbol en orden de etapas: primero la forma inicial, luego todas sus
-// evoluciones directas, y así. Eevee y sus ocho evoluciones caben en la misma
-// rejilla que una cadena de tres.
-function flattenChain(
-  node: EvolutionStage,
-  parent: EvolutionStage | null = null,
-  depth = 0,
-  out: PlacedStage[] = [],
-): PlacedStage[] {
-  out.push({ node, parent, depth });
-  node.evolvesTo.forEach((child) => flattenChain(child, node, depth + 1, out));
-  return out;
-}
-
 const REGIONAL_FORM = /-(alola|galar|hisui|paldea)$/;
 
+// Cuatro o más evoluciones finales desde una misma etapa (Eevee) van en abanico:
+// una sola flecha hacia un bloque con todas ellas y la condición encima de
+// cada tarjeta. Las ramas con su propia cadena (Silcoon → Beautifly) van en
+// filas, cada una con su flecha.
+const isLeaf = (node: EvolutionStage) => node.evolvesTo.length === 0;
+
 // Cadena evolutiva (DESIGN.md §4.4): mini tarjetas con la anatomía de las de
-// la portada y, debajo de cada una, la condición para llegar a ella. El
-// Pokémon que se está viendo lleva el aro de selección en tinta.
+// la portada unidas por flechas, con la condición encima de cada flecha. En
+// escritorio la cadena corre de izquierda a derecha y las ramas se apilan a la
+// derecha de su origen; en móvil baja en vertical, con las flechas hacia abajo. El Pokémon que se está
+// viendo lleva el aro de selección en tinta.
 export default function EvolutionTree({
   currentPokemonName,
   chain,
   locale,
 }: EvolutionTreeProps) {
   const { detail } = getDictionary(locale);
-  const currentLower = currentPokemonName.toLowerCase();
-
-  const stages = chain ? flattenChain(chain).sort((a, b) => a.depth - b.depth) : [];
-
-  // Si una etapa sale de más de un Pokémon (Silcoon y Cascoon), cada
-  // condición dice de cuál viene
-  const parentsPerDepth = new Map<number, Set<string>>();
-  for (const { parent, depth } of stages) {
-    if (!parent) continue;
-    const parents = parentsPerDepth.get(depth) ?? new Set<string>();
-    parents.add(parent.name);
-    parentsPerDepth.set(depth, parents);
-  }
+  const hasEvolutions = Boolean(chain && chain.evolvesTo.length > 0);
 
   return (
     <section
@@ -585,54 +562,123 @@ export default function EvolutionTree({
         {detail.evolution}
       </h2>
 
-      {stages.length < 2 ? (
-        <p className="mt-3 text-body">{detail.noEvolution}</p>
+      {chain && hasEvolutions ? (
+        <div className="mt-6 md:mt-8 overflow-x-auto overscroll-x-contain custom-scrollbar">
+          <div className="flex justify-center min-w-fit">
+            <Branch
+              node={chain}
+              currentLower={currentPokemonName.toLowerCase()}
+              locale={locale}
+            />
+          </div>
+        </div>
       ) : (
-        <ol className="mt-16 md:mt-20 grid grid-cols-2 gap-x-3 gap-y-[52px] md:grid-cols-3 md:gap-x-5 md:gap-y-[72px] lg:grid-cols-4">
-          {stages.map(({ node, parent, depth }, index) => {
-            const nodeLower = node.name.toLowerCase();
-            const isCurrent =
-              nodeLower === currentLower ||
-              node.speciesName?.toLowerCase() === currentLower ||
-              nodeLower.startsWith(`${currentLower}-`);
-
-            const requirements = parent
-              ? evolutionRequirements(
-                  node.triggerDetails,
-                  locale,
-                  node.speciesName || node.name,
-                )
-              : [];
-            if (parent && (parentsPerDepth.get(depth)?.size ?? 0) > 1) {
-              requirements.unshift(
-                `${detail.from} ${formatEvolutionPokemonName(parent.speciesName || parent.name, locale)}`,
-              );
-            }
-
-            return (
-              <li key={`${node.name}-${index}`} className="flex flex-col gap-3">
-                <PokemonCard
-                  pokemon={{
-                    id: node.id,
-                    // Las formas regionales conservan su nombre (Vulpix de Alola)
-                    name: REGIONAL_FORM.test(nodeLower)
-                      ? node.name
-                      : node.speciesName || node.name,
-                    image: node.image,
-                    types: node.types,
-                  }}
-                  href={getEvolutionHref(node, locale)}
-                  locale={locale}
-                  current={isCurrent}
-                />
-                {requirements.length > 0 && (
-                  <p className="text-small font-bold">{requirements.join(" · ")}</p>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+        <p className="mt-3 text-body">{detail.noEvolution}</p>
       )}
     </section>
+  );
+}
+
+interface BranchProps {
+  node: EvolutionStage;
+  currentLower: string;
+  locale: Locale;
+}
+
+// Una etapa y, a continuación, sus evoluciones, cada una tras su flecha
+function Branch({ node, currentLower, locale }: BranchProps) {
+  const children = node.evolvesTo;
+  const nodeLower = node.name.toLowerCase();
+  const isCurrent =
+    nodeLower === currentLower ||
+    node.speciesName?.toLowerCase() === currentLower ||
+    nodeLower.startsWith(`${currentLower}-`);
+
+  const fan = children.length > 3 && children.every(isLeaf);
+  const card = (
+    // El artwork sobresale por arriba de la tarjeta: el hueco superior le
+    // deja sitio
+    <div className="w-full max-w-44 shrink-0 pt-10 lg:w-48 lg:max-w-none lg:pt-12">
+      <PokemonCard
+        pokemon={{
+          id: node.id,
+          // Las formas regionales conservan su nombre (Vulpix de Alola)
+          name: REGIONAL_FORM.test(nodeLower)
+            ? node.name
+            : node.speciesName || node.name,
+          image: node.image,
+          types: node.types,
+        }}
+        href={getEvolutionHref(node, locale)}
+        locale={locale}
+        current={isCurrent}
+      />
+    </div>
+  );
+  const requirementsOf = (child: EvolutionStage) =>
+    evolutionRequirements(child.triggerDetails, locale, child.speciesName || child.name);
+
+  // En móvil ocupa su columna entera, para que la tarjeta tenga ancho
+  return (
+    <div className="flex w-full flex-col items-center lg:w-auto lg:flex-row">
+      {card}
+
+      {fan ? (
+        <>
+          <Arrow requirements={[]} />
+          {/* En móvil, sin bloque: la única flecha ya baja hacia la rejilla y
+              las tarjetas ganan ancho */}
+          <ul className="grid w-full grid-cols-2 gap-x-3 sm:w-auto sm:grid-cols-4 sm:rounded-surface sm:bg-ground sm:px-3 sm:pb-4 lg:grid-cols-2 lg:gap-x-5 lg:px-5 lg:pb-5 xl:grid-cols-4">
+            {children.map((child, index) => (
+              <li
+                key={`${child.name}-${index}`}
+                className="flex min-w-0 flex-col items-center justify-between sm:w-40 lg:w-auto"
+              >
+                <p className="pt-4 text-center text-small font-extrabold text-balance">
+                  {requirementsOf(child).join(" · ")}
+                </p>
+                <Branch node={child} currentLower={currentLower} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        children.length > 0 && (
+          <ul
+            className={
+              children.length > 1
+                ? "grid w-full grid-cols-2 gap-x-3 lg:w-auto lg:grid-cols-1"
+                : "contents"
+            }
+          >
+            {children.map((child, index) => (
+              <li
+                key={`${child.name}-${index}`}
+                className="flex w-full min-w-0 flex-col items-center lg:w-auto lg:flex-row"
+              >
+                <Arrow requirements={requirementsOf(child)} />
+                <Branch node={child} currentLower={currentLower} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        )
+      )}
+    </div>
+  );
+}
+
+// Flecha entre dos etapas con la condición encima: hacia la derecha en
+// escritorio y hacia abajo en móvil
+function Arrow({ requirements }: { requirements: string[] }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 pt-4 text-center lg:w-36 lg:shrink-0 lg:px-3 lg:pt-12">
+      {requirements.length > 0 && (
+        <p className="max-w-40 text-small font-extrabold text-balance lg:max-w-none">
+          {requirements.join(" · ")}
+        </p>
+      )}
+      <ArrowDown aria-hidden="true" strokeWidth={3} className="size-6 lg:hidden" />
+      <ArrowRight aria-hidden="true" strokeWidth={3} className="hidden size-6 lg:block" />
+    </div>
   );
 }

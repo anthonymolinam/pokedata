@@ -290,6 +290,9 @@ const VARIETY_SUFFIX_MAP: Record<string, string> = {
   "family-of-three": "Family of Three",
   "two-segment": "Two-Segment Form",
   "three-segment": "Three-Segment Form",
+
+  // Pikachu disfrazado: siglas que el formateo genérico dejaría en «Phd»
+  phd: "PhD",
 };
 
 function formatVarietyLabel(name: string, baseName: string): string {

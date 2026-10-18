@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import { PokemonDetail, PokemonVariety } from "@/lib/pokeapi";
-import { figureStyle } from "@/lib/artwork";
+import { ARTWORK_SIZE, figureStyle } from "@/lib/artwork";
 import { formatPokemonHeroName, formatVariantLabel } from "@/lib/pokemon-names";
 import { isPokemonType } from "@/constants/typeColors";
 import { getDictionary } from "@/constants/translations";
@@ -88,6 +89,21 @@ export default function PokemonStage({
         className="absolute inset-0 -z-10 bg-field fade-in"
       />
 
+      {/* Variocolor: interruptor aparte, arriba a la derecha, que se combina
+          con cualquier forma */}
+      {active.shinyImage && (
+        <button
+          type="button"
+          aria-pressed={shiny}
+          aria-label={detail.shiny}
+          title={detail.shiny}
+          onClick={() => setShiny((on) => !on)}
+          className={`${control} absolute right-4 top-4 z-10 grid size-12 place-items-center px-0 md:right-6 md:top-6`}
+        >
+          <Sparkles aria-hidden="true" strokeWidth={2.5} className="size-5" />
+        </button>
+      )}
+
       <div
         aria-hidden="true"
         className="relative h-[min(86vw,48svh)] md:h-[min(52svh,600px)] [container-type:size]"
@@ -116,14 +132,18 @@ export default function PokemonStage({
                   maxWidth: "90cqw",
                   centerX: "50%",
                   centerY: "54%",
+                  maxSize: `${ARTWORK_SIZE}px`,
                 })}
               >
+                {/* Nunca pasa de 475px en pantalla, así que se pide a ese
+                    ancho (el optimizador no amplía) y con calidad 90 */}
                 <Image
                   src={image}
                   alt=""
                   fill
                   priority
-                  sizes="(min-width: 768px) 60vh, 90vw"
+                  quality={90}
+                  sizes={`(min-width: 768px) ${ARTWORK_SIZE}px, 90vw`}
                   className="object-contain"
                 />
               </span>
@@ -166,33 +186,23 @@ export default function PokemonStage({
           </div>
         </div>
 
-        {(varieties.length > 1 || active.shinyImage) && (
-          <div className="flex max-w-xl flex-wrap gap-2 md:justify-end">
-            {varieties.length > 1 && (
-              <div role="group" aria-label={detail.forms} className="contents">
-                {varieties.map((variant) => (
-                  <button
-                    key={variant.name}
-                    type="button"
-                    aria-pressed={(selectedVariant?.name ?? pokemon.name) === variant.name}
-                    onClick={() => onVariantChange(variant)}
-                    className={control}
-                  >
-                    {formatVariantLabel(variant.label, isEs)}
-                  </button>
-                ))}
-              </div>
-            )}
-            {active.shinyImage && (
+        {varieties.length > 1 && (
+          <div
+            role="group"
+            aria-label={detail.forms}
+            className="flex max-w-xl flex-wrap gap-2 md:justify-end"
+          >
+            {varieties.map((variant) => (
               <button
+                key={variant.name}
                 type="button"
-                aria-pressed={shiny}
-                onClick={() => setShiny((on) => !on)}
+                aria-pressed={(selectedVariant?.name ?? pokemon.name) === variant.name}
+                onClick={() => onVariantChange(variant)}
                 className={control}
               >
-                {detail.shiny}
+                {formatVariantLabel(variant.label, isEs)}
               </button>
-            )}
+            ))}
           </div>
         )}
       </div>

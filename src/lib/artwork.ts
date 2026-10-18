@@ -33,6 +33,9 @@ const round = (value: number) => Math.round(value * 100) / 100;
 const ARTWORK_URL =
   "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork";
 
+// Lado real del artwork oficial de PokéAPI, en píxeles
+export const ARTWORK_SIZE = 475;
+
 export function artworkUrl(id: number): string {
   return `${ARTWORK_URL}/${id}.png`;
 }
@@ -45,6 +48,8 @@ interface FigureBox {
   centerX: string;
   bottom?: string;
   centerY?: string;
+  // Tope del lienzo, para no ampliar la imagen por encima de su tamaño real
+  maxSize?: string;
 }
 
 // Coloca el lienzo cuadrado del artwork para que la figura opaca mida `height`
@@ -58,7 +63,7 @@ export function figureStyle(id: number, box: FigureBox): Record<string, string> 
     : `calc(${box.centerY ?? "50%"} - var(--art) * ${round((t + b) / 2)})`;
 
   return {
-    "--art": `min(${box.height} / ${round(b - t)}, ${box.maxWidth} / ${round(r - l)})`,
+    "--art": `min(${box.height} / ${round(b - t)}, ${box.maxWidth} / ${round(r - l)}${box.maxSize ? `, ${box.maxSize}` : ""})`,
     left: `calc(${box.centerX} - var(--art) * ${round(centerX)})`,
     top,
     width: "var(--art)",
