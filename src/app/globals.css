@@ -402,9 +402,27 @@ body {
   transition-delay: calc(var(--i, 0) * 70ms);
 }
 
+/* Comparador (§4.6): las barras de la izquierda crecen desde el eje central */
+.stat-bar-end {
+  transform-origin: right;
+}
+
+/* Capas flotantes (§6): aparecen y suben 8px en 250ms */
+@keyframes layer-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.layer-in[open] {
+  animation: layer-in 250ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-pop,
-  .float {
+  .float,
+  .layer-in[open] {
     animation: none;
   }
 

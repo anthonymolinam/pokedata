@@ -557,7 +557,7 @@ export async function searchPokemonMatches(
 
   const allPokemon = await getAllPokemonIndex();
 
-  if (/^d+$/.test(cleanQuery)) {
+  if (/^\d+$/.test(cleanQuery)) {
     return allPokemon.filter((poke) => poke.id === Number(cleanQuery));
   }
 

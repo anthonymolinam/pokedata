@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { getDictionary } from "@/constants/translations";
+import { useReveal } from "@/lib/use-reveal";
 import { Locale } from "@/proxy";
 
 interface BaseStatsProps {
@@ -16,25 +16,8 @@ interface BaseStatsProps {
 // reducido se ven ya llenas.
 export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps) {
   const { detail } = getDictionary(locale);
-  const ref = useRef<HTMLElement>(null);
+  const ref = useReveal<HTMLElement>();
   const total = stats.reduce((sum, stat) => sum + stat.value, 0);
-
-  useEffect(() => {
-    const panel = ref.current;
-    if (!panel || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    panel.dataset.reveal = "pending";
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        panel.dataset.reveal = "shown";
-        observer.disconnect();
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(panel);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <section
