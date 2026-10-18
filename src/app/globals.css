@@ -478,6 +478,49 @@ body {
   }
 }
 
+/* Tooltip de las celdas (§4.5): «Fuego → Planta: ×2» encima de la celda, solo
+   con puntero. Es una capa flotante, así que lleva sombra. En las dos primeras
+   y las dos últimas columnas se abre hacia dentro para no salirse de la tabla
+   (y no provocar scroll). */
+@keyframes tip-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (hover: hover) {
+  .type-matrix td[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    z-index: 30;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    translate: -50% 0;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bone);
+    font-size: var(--step-small);
+    font-weight: 800;
+    line-height: 1.45;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--ink) 45%, transparent); /* taste-skill-ignore: capa flotante */
+    animation: tip-in 120ms ease-out;
+  }
+
+  .type-matrix td[data-tip-edge="start"]:hover::after {
+    left: 0;
+    translate: none;
+  }
+
+  .type-matrix td[data-tip-edge="end"]:hover::after {
+    left: auto;
+    right: 0;
+    translate: none;
+  }
+}
+
 /* Capas flotantes (§6): aparecen y suben 8px en 250ms */
 @keyframes layer-in {
   from {

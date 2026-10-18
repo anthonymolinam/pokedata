@@ -45,12 +45,21 @@ interface CellProps {
   // Columna de la celda, para la guía de hover de globals.css
   col: PokemonType;
   state: CellState;
+  // Tooltip de hover («Fuego → Planta: ×2») y hacia dónde se abre en los
+  // bordes, para que no se salga de la tabla
+  tip: string;
+  edge?: "start" | "end";
 }
 
 // Celda de la matriz: ×2 en tinta, ×½ en step, ×0 en tinta con rayas a 45° y ×1
 // vacía. El multiplicador siempre se lee como texto, nunca solo como color.
-function Cell({ value, col, state }: CellProps) {
-  const attrs = { "data-col": col, ...(state === "dim" ? { "data-dim": "" } : {}) };
+function Cell({ value, col, state, tip, edge }: CellProps) {
+  const attrs = {
+    "data-col": col,
+    "data-tip": tip,
+    ...(edge ? { "data-tip-edge": edge } : {}),
+    ...(state === "dim" ? { "data-dim": "" } : {}),
+  };
 
   if (value === 2) {
     return (
@@ -85,17 +94,19 @@ function Cell({ value, col, state }: CellProps) {
 
 // Fila y columna comparten pastilla: misma altura, letra y relleno
 const HEAD = `type-head flex items-center h-8 px-2 rounded-pill bg-field text-field-ink text-small font-extrabold focus-visible:outline-ink ${press}`;
-// Aro de selección: 3px de tinta separados 2px. relative z-20 lo pinta por
-// encima de las celdas y de las cabeceras fijas vecinas, que lo taparían
-const HEAD_SELECTED = "relative z-20 ring-3 ring-ink ring-offset-2 ring-offset-surface";
+// Aro de selección por dentro de la pastilla, en la tinta de su campo (tinta
+// sobre los claros, hueso sobre los oscuros): nunca invade a las vecinas
+const HEAD_SELECTED = "inset-ring-3 inset-ring-field-ink";
 
-const LEGEND_SWATCH = "grid place-items-center size-6 rounded-md text-small font-black";
+// Multiplicador tal y como se lee en el tooltip
+const MULTIPLIER: Record<number, string> = { 2: "×2", 1: "×1", 0.5: "×½", 0: "×0" };
 
-// Tabla de tipos (DESIGN.md §4.5): una franja con el título, la explicación y
-// la leyenda, y debajo la matriz 18×18, que es también el selector. Filas =
+// Tabla de tipos (DESIGN.md §4.5): una franja con el título y la explicación,
+// y debajo la matriz 18×18, que es también el selector. Filas =
 // tipo que ataca, columnas = tipo que recibe. Pulsar la cabecera de una fila o
 // columna la tiñe de su field y atenúa el resto; al pasar el ratón por una
-// celda, su fila y su columna se marcan como guía (globals.css). Cabe entera en
+// celda, su fila y su columna se marcan como guía y un tooltip dice el
+// enfrentamiento («Fuego → Planta: ×2», en globals.css). Cabe entera en
 // 1440×900; en móvil se desplaza en horizontal con la columna de atacantes
 // fija. La selección vive en la URL (?atk= o ?def=), así que se puede compartir.
 export default function TypeChart({ locale, basePath, selected }: TypeChartProps) {
@@ -118,33 +129,13 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
       data-field="surface"
       className="rounded-surface bg-surface text-ink py-5"
     >
-      <div className="px-5 md:px-6 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-        <div>
-          <h1 id="types-title" className="text-lead font-black">
-            {t.title}
-          </h1>
-          <p id="types-caption" className="mt-1 text-body">
-            {t.caption}
-          </p>
-        </div>
-        <ul aria-label={t.legend} className="flex flex-wrap gap-x-4 gap-y-2 text-small font-extrabold">
-          <li className="flex items-center gap-1.5">
-            <span aria-hidden="true" className={`${LEGEND_SWATCH} bg-ink text-bone`}>2</span>
-            {t.double}
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span aria-hidden="true" className={`${LEGEND_SWATCH} bg-step`}>½</span>
-            {t.half}
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span aria-hidden="true" className={`${LEGEND_SWATCH} type-zero text-bone`}>0</span>
-            {t.zero}
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span aria-hidden="true" className={`${LEGEND_SWATCH} bg-ground`} />
-            {t.neutral}
-          </li>
-        </ul>
+      <div className="px-5 md:px-6">
+        <h1 id="types-title" className="text-lead font-black">
+          {t.title}
+        </h1>
+        <p id="types-caption" className="mt-1 text-body">
+          {t.caption}
+        </p>
       </div>
 
       <div
@@ -189,7 +180,7 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
               <tr key={atk}>
                 <th
                   scope="row"
-                  className={`sticky left-0 bg-surface pl-5 md:pl-6 pr-2 text-left font-extrabold ${isSelected("atk", atk) ? "z-20" : "z-10"}`}
+                  className="sticky left-0 z-10 bg-surface pl-5 md:pl-6 pr-2 text-left font-extrabold"
                 >
                   <Link
                     href={hrefFor(basePath, toggle(selected, "atk", atk))}
@@ -202,8 +193,15 @@ export default function TypeChart({ locale, basePath, selected }: TypeChartProps
                     {typeNames[atk]}
                   </Link>
                 </th>
-                {POKEMON_TYPES.map((def) => (
-                  <Cell key={def} value={TYPE_CHART[atk][def]} col={def} state={cellState(atk, def)} />
+                {POKEMON_TYPES.map((def, index) => (
+                  <Cell
+                    key={def}
+                    value={TYPE_CHART[atk][def]}
+                    col={def}
+                    state={cellState(atk, def)}
+                    tip={`${typeNames[atk]} → ${typeNames[def]}: ${MULTIPLIER[TYPE_CHART[atk][def]]}`}
+                    edge={index < 2 ? "start" : index > POKEMON_TYPES.length - 3 ? "end" : undefined}
+                  />
                 ))}
                 <td aria-hidden="true" />
               </tr>

@@ -163,11 +163,6 @@ export const translations = {
       title: "Type chart",
       caption: "Rows attack, columns take the hit. Tap a type to highlight it.",
       corner: "Attack ↓ Defence →",
-      legend: "Key",
-      double: "Super effective",
-      half: "Not very effective",
-      zero: "No effect",
-      neutral: "Normal damage (blank)",
     },
     notFound: {
       title: "This page has vanished",
@@ -337,11 +332,6 @@ export const translations = {
       title: "Tabla de tipos",
       caption: "Las filas atacan y las columnas reciben. Toca un tipo para resaltarlo.",
       corner: "Ataca ↓ Recibe →",
-      legend: "Leyenda",
-      double: "Súper eficaz",
-      half: "Poco eficaz",
-      zero: "Sin efecto",
-      neutral: "Daño normal (vacía)",
     },
     notFound: {
       title: "Esta página se ha esfumado",
