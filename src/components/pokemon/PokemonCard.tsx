@@ -40,9 +40,10 @@ export default function PokemonCard({
   const number = String(pokemon.id).padStart(4, "0");
   // El nombre y el número van en una línea: si no caben, bajan de --step-lead
   // hasta 16px. Los 0.5em de más son el hueco entre los dos. En tarjetas
-  // estrechas (cadena evolutiva, rejilla de móvil) el número sube encima y el
-  // nombre se ajusta solo a su propio largo, con algo de margen para las letras
-  // anchas (Crabominable)
+  // estrechas (menos de 18rem: móvil, tablet, cadena evolutiva) el número sube
+  // encima con el total a su derecha, y el nombre se ajusta solo a su propio
+  // largo, con algo de margen para las letras anchas (Crabominable). 18rem es
+  // lo que piden las dos etiquetas de tipo más largas y el total en una línea
   const inner = "(100cqi - 2 * var(--card-pad))";
   const nameSize = {
     "--name-inline": `max(1rem, min(var(--step-lead), calc(${inner} / ${(Math.max(name.length, 1) + number.length) * 0.6 + 0.5})))`,
@@ -54,7 +55,7 @@ export default function PokemonCard({
       href={href}
       data-type={types[0] ?? "normal"}
       aria-current={current ? "page" : undefined}
-      className={`group type-glow relative flex flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:outline-3 aria-[current=page]:outline-offset-3 aria-[current=page]:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`}
+      className={`group type-glow relative flex h-full flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:outline-3 aria-[current=page]:outline-offset-3 aria-[current=page]:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`}
     >
       <div
         aria-hidden="true"
@@ -86,24 +87,33 @@ export default function PokemonCard({
       <div className="relative z-10 flex flex-1 flex-col gap-[max(0.375rem,2.5cqi)] px-(--card-pad) pt-3 pb-(--card-pad) min-h-[84px] md:min-h-24">
         {/* Marca de agua del número en la fila del nombre: el artwork no llega */}
         <div
-          className="flex items-baseline gap-[0.5em] text-(length:--name-inline) @max-[13rem]:flex-col-reverse @max-[13rem]:items-start @max-[13rem]:gap-0.5 @max-[13rem]:text-(length:--name-stacked)"
+          className="flex items-baseline gap-[0.5em] text-(length:--name-inline) @max-[18rem]:flex-col-reverse @max-[18rem]:items-start @max-[18rem]:gap-0.5 @max-[18rem]:text-(length:--name-stacked)"
           style={nameSize}
         >
-          <Heading className="flex-1 min-w-0 truncate font-black leading-[1.05] tracking-[-0.03em] @max-[13rem]:w-full @max-[13rem]:overflow-visible @max-[13rem]:whitespace-normal @max-[13rem]:break-words">
+          <Heading className="flex-1 min-w-0 truncate font-black leading-[1.05] tracking-[-0.03em] @max-[18rem]:w-full @max-[18rem]:overflow-visible @max-[18rem]:whitespace-normal @max-[18rem]:break-words">
             {name}
             <span className="sr-only">
               , {card.number} {pokemon.id}
             </span>
           </Heading>
-          <span
-            aria-hidden="true"
-            className="shrink-0 font-black leading-none tracking-[-0.04em] num opacity-40 select-none @max-[13rem]:text-small"
-          >
-            {number}
+          <span className="flex shrink-0 items-center justify-between gap-2 @max-[18rem]:w-full">
+            <span
+              aria-hidden="true"
+              className="font-black leading-none tracking-[-0.04em] num opacity-40 select-none @max-[18rem]:text-small"
+            >
+              {number}
+            </span>
+            {/* En tarjetas estrechas el total va aquí, a la derecha del número,
+                y la línea de tipos queda solo para los tipos */}
+            {pokemon.total !== undefined && (
+              <TotalPill label={card.total} total={pokemon.total} className="hidden @max-[18rem]:block" />
+            )}
           </span>
         </div>
 
-        <div className="flex flex-wrap items-end justify-between gap-1.5">
+        {/* mt-auto: en una fila de tarjetas de distinta altura, los tipos
+            quedan alineados abajo */}
+        <div className="mt-auto flex flex-wrap items-end justify-between gap-1.5">
           <ul className="flex flex-wrap gap-1">
             {types.map((type) => (
               <li
@@ -115,15 +125,21 @@ export default function PokemonCard({
             ))}
           </ul>
 
-          {/* En tarjetas de móvil no cabe junto a las etiquetas (§4.3) */}
+          {/* En tarjetas estrechas sube a la línea del número (§4.3) */}
           {pokemon.total !== undefined && (
-            <p className="rounded-pill bg-ink px-2.5 py-0.5 text-small text-bone num @max-[12rem]:hidden">
-              <span className="font-bold">{card.total}</span>{" "}
-              <span className="font-black">{pokemon.total}</span>
-            </p>
+            <TotalPill label={card.total} total={pokemon.total} className="@max-[18rem]:hidden" />
           )}
         </div>
       </div>
     </Link>
+  );
+}
+
+// Pastilla «Total 534»: la palabra en 700 y la cifra en 900, tabulares
+function TotalPill({ label, total, className }: { label: string; total: number; className: string }) {
+  return (
+    <p className={`rounded-pill bg-ink px-2.5 py-0.5 text-small text-bone num ${className}`}>
+      <span className="font-bold">{label}</span> <span className="font-black">{total}</span>
+    </p>
   );
 }

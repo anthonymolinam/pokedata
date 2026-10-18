@@ -238,10 +238,11 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - El texto queda por encima en el orden de apilado, aunque el artwork no llegue a tocarlo.
 - **Marca de agua:** el número sin almohadilla (`0006`) en Nunito 900 con cifras tabulares, en `field-ink` al 40 % de opacidad y con `aria-hidden`.
   - Va en la fila del nombre, alineado a la derecha y al mismo tamaño que el nombre. Ahí el artwork no entra nunca, así que siempre se lee. Antes iba enorme detrás del artwork, arriba a la derecha, y la figura lo tapaba (en Bulbasaur solo asomaba un «1»).
-  - **En tarjetas estrechas** (menos de 208px de ancho: cadena evolutiva y rejilla de móvil) el número sube **encima del nombre**, en `--step-small`, y el nombre se ajusta solo a su propio largo. Así ningún nombre se corta (Kommo-o, Crabominable, Fletchinder); si aun así no cabe, salta de línea en vez de recortarse con «…».
+  - **En tarjetas estrechas** (menos de 18rem, 288px: móvil, tablet, la rejilla de 4 columnas por debajo de unos 1200px y la cadena evolutiva) el número sube **encima del nombre**, en `--step-small`, con el **Total a su derecha** en la misma línea, y el nombre se ajusta solo a su propio largo. 18rem es lo que piden las dos etiquetas de tipo más largas más el Total en una línea; por debajo, la línea de tipos queda solo para los tipos y las tarjetas de doble tipo no crecen. Así ningún nombre se corta (Kommo-o, Crabominable, Fletchinder); si aun así no cabe, salta de línea en vez de recortarse con «…».
   - El número real se lee en la etiqueta accesible de la tarjeta («Charizard, n.º 6»).
 - **Etiquetas de tipo:** pastillas blancas al 80 % con el nombre en tinta (regla 4 del §2.3).
-- **Total:** pastilla en `--ink` con «Total 534» en hueso. La palabra «Total» va en 700 y la cifra en 900, con cifras tabulares.
+- **Total:** pastilla en `--ink` con «Total 534» en hueso. La palabra «Total» va en 700 y la cifra en 900, con cifras tabulares. En tarjetas anchas va a la derecha de los tipos; en las estrechas, a la derecha del número (ver arriba).
+- **Misma altura por fila:** la tarjeta ocupa toda la altura de su celda de la rejilla y la línea de tipos se apoya abajo (`mt-auto`), así que todas las tarjetas de una fila miden lo mismo aunque una tenga más contenido.
   - Si no cabe a la derecha de las etiquetas, baja a la línea siguiente.
   - En tarjetas de menos de 12rem (móvil, 2 columnas) no cabe en la zona reservada y se oculta: dos etiquetas largas («Fantasma» y «Veneno») ya ocupan el ancho.
 - **Artwork normalizado a la misma altura visual.** El artwork oficial tiene márgenes transparentes distintos en cada Pokémon: Caterpie ocupa la mitad de su lienzo y Venusaur casi todo.
