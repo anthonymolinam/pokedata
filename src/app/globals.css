@@ -464,12 +464,6 @@ body {
     --guide-outline: 3px solid var(--ink);
   }
 }
-/* Cabeceras de columna: la pastilla de tipo en vertical, leída de abajo arriba */
-.vertical-label {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-}
-
 /* Capas flotantes (§6): aparecen y suben 8px en 250ms */
 @keyframes layer-in {
   from {

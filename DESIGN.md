@@ -286,13 +286,18 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 ### 4.5 Tabla de tipos
 
-- **Sin selector aparte:** la propia matriz es el selector. Pulsar el tipo de una fila elige ese tipo **como atacante** (`?atk=`); pulsar el de una columna, **como defensor** (`?def=`). Pulsarlo otra vez quita la selección. Los enlaces antiguos con `?type=` abren la fila.
-- **Con selección:** la cabecera de la página se pinta en el `field` del tipo y resume solo ese lado («Al atacar» o «Al defender»). En la matriz, la fila o columna elegida se tiñe (×1 en su `field` mezclado con blanco) y su cabecera lleva el aro en tinta; el resto de celdas y las otras cabeceras de ese eje bajan al 30 % de opacidad.
+**Toda la página es un panel blanco** con la tabla, y **cabe entera en 1440×900 sin scroll.**
+
+- **Franja superior:** un título pequeño («Tabla de tipos», `<h1>` en `--step-lead`), una línea de explicación («Las filas atacan y las columnas reciben. Toca un tipo para resaltarlo.») y, en la misma franja a la derecha, la leyenda compacta (muestras de 24px). Sin tarjeta grande de título ni subtítulo «La tabla completa».
+- **Sin selector aparte ni panel de información:** la propia matriz es el selector. Pulsar el tipo de una fila elige ese tipo **como atacante** (`?atk=`); pulsar el de una columna, **como defensor** (`?def=`). Pulsarlo otra vez quita la selección y pulsar otro la cambia. No hay resumen de debilidades ni botón «Quitar la selección». Los enlaces antiguos con `?type=` abren la fila.
+- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con blanco) y su cabecera lleva el aro en tinta; el resto de celdas y las otras cabeceras de ese eje bajan al 30 % de opacidad.
 - **Guía de hover** (solo con puntero): al pasar por una celda se marcan su fila y su columna. Las celdas ×1 se oscurecen un tono, las dos cabeceras llevan un aro en tinta y lo atenuado vuelve a leerse. Es CSS puro (`:has()` en `globals.css`).
 - **Matriz 18×18:** es una tabla real, así que se permiten líneas finas.
-  - Las cabeceras de fila y columna son pastillas de tipo con su texto, y son enlaces.
+  - Celdas de 34×30px con 3px de separación y radio de 6px; las cifras en `--step-small` y 900.
+  - Cabeceras de columna: pastillas de tipo de 34×30px con la **abreviatura de tres letras en horizontal** (Nor, Fue, Agu… / Nor, Fir, Wat…), sacada del nombre del tipo en cada idioma. El nombre completo va en `title` y para lectores de pantalla.
+  - Cabeceras de fila: pastillas de tipo de 104×30px con el nombre completo.
   - Celdas: ×2 en `--ink` con «2» en hueso; ×½ en `--step` con «½» en tinta; ×0 en `--ink` con «0» y rayas a 45°; ×1 vacía. El multiplicador nunca depende solo del color.
-- **Móvil:** la matriz va en un contenedor con scroll horizontal y la primera columna fija.
+- **Móvil:** la matriz va en un contenedor con scroll horizontal y la columna de tipos atacantes fija a la izquierda.
 
 ### 4.6 Comparador
 
