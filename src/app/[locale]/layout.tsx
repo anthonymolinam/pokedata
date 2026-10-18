@@ -21,9 +21,9 @@ export async function generateMetadata({
   const locale: Locale = rawLocale === "en" ? "en" : "es";
   const isEs = locale === "es";
 
+  // Corregido el doble https://
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://https://pokedata-pied.vercel.app";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata-pied.vercel.app";
 
   const titleDefault = isEs
     ? "PokéData | Base de Datos, Tabla de Tipos y Comparador Pokémon"
@@ -107,8 +107,25 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   const repoUrl = "https://github.com/anthonymolinam/pokedata";
   const commitUrl = commitSha ? `${repoUrl}/commit/${commitSha}` : repoUrl;
 
+  // Schema.org estructurado para forzar el nombre "PokéData" en Google
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata-pied.vercel.app";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "PokéData",
+    alternateName: ["PokeData", "PokéData App"],
+    url: siteUrl,
+  };
+
   return (
     <html lang={locale} className="dark">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="bg-zinc-950 text-zinc-100 min-h-screen antialiased flex flex-col">
         <header className="border-b border-zinc-800/80 backdrop-blur-md sticky top-0 z-50 bg-zinc-950/70">
           <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
