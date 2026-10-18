@@ -14,11 +14,20 @@ const OVERLAY_SHADOW = "shadow-[0_12px_32px_rgb(10_10_10/0.18)]"; // taste-skill
 interface GlobalSearchBarProps {
   locale?: string;
   placeholder?: string;
+  label?: string;
+  // compact: pastilla de 40px de la cabecera · overlay: buscador a pantalla completa en móvil
+  variant?: "compact" | "overlay";
+  autoFocus?: boolean;
+  onNavigate?: () => void;
 }
 
 export default function GlobalSearchBar({
   locale = "es",
   placeholder = "Search Pokémon...",
+  label = placeholder,
+  variant = "compact",
+  autoFocus = false,
+  onNavigate,
 }: GlobalSearchBarProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PokemonSummary[]>([]);
@@ -30,6 +39,7 @@ export default function GlobalSearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsListRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const isOverlay = variant === "overlay";
 
   // Detección segura en cliente de Mac sin useEffect síncrono
   const isMac = useSyncExternalStore(
@@ -38,13 +48,15 @@ export default function GlobalSearchBar({
     () => false,
   );
 
-  // Atajo global Ctrl+K / Cmd+K
+  // Atajo global Ctrl+K / Cmd+K: solo lo atiende el buscador que se ve
   useEffect(() => {
     function handleGlobalKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        const input = inputRef.current;
+        if (!input || input.getClientRects().length === 0) return;
         e.preventDefault();
-        inputRef.current?.focus();
-        inputRef.current?.select();
+        input.focus();
+        input.select();
       }
     }
 
@@ -141,6 +153,7 @@ export default function GlobalSearchBar({
         : cleanName;
 
     router.push(`/${locale}/pokemon/${slug}`);
+    onNavigate?.();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -169,34 +182,43 @@ export default function GlobalSearchBar({
       <div className="relative flex items-center">
         <Search
           aria-hidden="true"
-          className="absolute left-3 w-4 h-4 pointer-events-none"
+          strokeWidth={2.5}
+          className="absolute left-3.5 w-4 h-4 pointer-events-none"
         />
         <input
           ref={inputRef}
           type="search"
+          autoFocus={autoFocus}
           value={query}
           onChange={handleInputChange}
           onFocus={() => query.trim() && results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          aria-label={placeholder}
-          className="w-full h-11 bg-field-step text-field-ink placeholder:text-field-ink pl-10 pr-10 lg:pr-20 text-body [&::-webkit-search-cancel-button]:appearance-none"
+          aria-label={label}
+          className={`w-full rounded-pill bg-surface focus:bg-step text-ink placeholder:text-ink-soft pl-10 font-semibold transition-colors duration-150 [&::-webkit-search-cancel-button]:appearance-none ${
+            isOverlay ? "h-12 pr-12 text-body" : "h-10 pr-10 lg:pr-20 text-small"
+          }`}
         />
 
-        <div className="absolute right-3 flex items-center gap-1 text-small font-bold">
+        <div className="absolute right-3 flex items-center gap-1 text-small font-extrabold">
           {loading ? (
             <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" />
           ) : query ? (
             <button
               type="button"
               onClick={handleClear}
-              className="cursor-pointer p-1 active:scale-[0.97] transition-transform duration-150"
+              className="cursor-pointer p-1 rounded-pill active:scale-[0.96] transition-transform duration-150 after:absolute after:-inset-2"
               aria-label={locale === "es" ? "Borrar búsqueda" : "Clear search"}
             >
               <X aria-hidden="true" className="w-4 h-4" />
             </button>
           ) : (
-            <kbd className="hidden lg:inline select-none pointer-events-none font-sans">
+            // Pista del atajo como texto secundario, sin caja (§4.1)
+            <kbd
+              className={`select-none pointer-events-none font-sans text-ink-soft ${
+                isOverlay ? "hidden" : "hidden lg:inline"
+              }`}
+            >
               {isMac ? "⌘K" : "Ctrl K"}
             </kbd>
           )}
@@ -205,15 +227,19 @@ export default function GlobalSearchBar({
 
       <AnimatePresence>
         {isOpen && results.length > 0 && (
-          // Capa flotante sobre papel: el único sitio de la barra con sombra (§4.1)
+          // Capa flotante sobre blanco: el único sitio de la barra con sombra (§4.1)
           <motion.div
-            data-field="paper"
+            data-field="surface"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             ref={resultsListRef}
-            className={`absolute left-0 right-0 md:right-auto md:w-[max(100%,24rem)] top-full mt-2 bg-paper text-ink ${OVERLAY_SHADOW} max-h-[min(24rem,60svh)] overflow-y-auto overscroll-contain custom-scrollbar z-50 py-1`}
+            className={`bg-surface text-ink overflow-y-auto overscroll-contain custom-scrollbar py-2 ${
+              isOverlay
+                ? "mt-3 max-h-[calc(100svh-7rem)]"
+                : `absolute right-0 w-[max(100%,24rem)] top-full mt-2 rounded-[1.375rem] ${OVERLAY_SHADOW} max-h-[min(24rem,60svh)] z-50`
+            }`}
           >
             {results.map((p, idx) => (
               <motion.button
@@ -226,10 +252,10 @@ export default function GlobalSearchBar({
                 }}
                 type="button"
                 onClick={() => handleSelect(p.name)}
-                className={`w-full flex items-center gap-3 px-3 py-1.5 text-left cursor-pointer focus-visible:-outline-offset-3 ${
+                className={`w-full flex items-center gap-3 px-4 py-1.5 text-left cursor-pointer focus-visible:-outline-offset-3 ${
                   idx === selectedIndex
                     ? "bg-ink text-bone"
-                    : "hover:bg-paper-step"
+                    : "hover:bg-step"
                 }`}
               >
                 <span className="relative w-10 h-10 shrink-0">

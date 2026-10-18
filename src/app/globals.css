@@ -1,20 +1,30 @@
 @import "tailwindcss";
 
 /* =========================================================================
-   Tokens del rediseño (DESIGN.md §2 y §3). Ningún otro archivo escribe a mano
-   un color de tipo: todo sale de aquí o de src/constants/typeColors.ts.
+   Tokens de la dirección «Pop» (DESIGN.md §2, §3 y §4.0). Ningún otro archivo
+   escribe a mano un color de tipo: todo sale de aquí o de src/constants/typeColors.ts.
    ========================================================================= */
 
 :root {
   /* Globales (§2.1) */
-  --paper: #f7f5f0;
-  --paper-step: #edeae3;
-  --ink: #0a0a0a;
+  --ground: #f3f4f8;
+  --surface: #ffffff;
+  --step: #e6e8ef;
+  --ink: #15161c;
+  --ink-soft: #5c6070;
   --bone: #f7f5f0;
-  --accent: #0a0a0a;
-  --ink-step: #262626;
+  --bone-soft: #b9bcc8;
+  --accent: #cc2e0b;
+  --ok: #3fb950;
 
-  /* Tipos (§2.2): field · field-ink · step (field −14 %) · deep (≥ 4.5:1 sobre papel) */
+  /* Margen lateral (§4.0): 20px en móvil, 32px en escritorio */
+  --gutter: 1.25rem;
+
+  /* Esquinas (§4.0): superficies 28px (22px en móvil), controles en pastilla */
+  --surface-radius: 1.375rem;
+  --pill-radius: 999px;
+
+  /* Tipos (§2.2): field · field-ink · step (field −14 %) · deep (≥ 4.9:1 sobre blanco) */
   --type-normal: #a8a77a;
   --type-normal-ink: var(--ink);
   --type-normal-step: #909069;
@@ -105,62 +115,69 @@
   --type-fairy-step: #b87295;
   --type-fairy-deep: #985e7b;
 
-  /* Campo de contexto: por defecto, papel. [data-type] lo sustituye (ver abajo). */
-  --field: var(--paper);
+  /* Campo de contexto: por defecto, el fondo. [data-type] lo sustituye (ver abajo). */
+  --field: var(--ground);
   --field-ink: var(--ink);
-  --field-step: var(--paper-step);
+  --field-step: var(--step);
   --field-deep: var(--ink);
 
   /* Escala tipográfica (§3): cinco tamaños, ninguno más */
-  --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
-  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
-  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
-  --step-head: clamp(2.5rem, 1.2rem + 5vw, 5.5rem);
-  --step-hero: clamp(3.5rem, 15vw, 12rem);
+  --step-small: 0.875rem;
+  --step-body: clamp(1rem, 0.95rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.1875rem, 1rem + 0.6vw, 1.625rem);
+  --step-head: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  --step-hero: clamp(2.5rem, 1.6rem + 3.4vw, 4.5rem);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --surface-radius: 1.75rem;
+    --gutter: 2rem;
+  }
 }
 
 /* Campo de contexto: cualquier contenedor con data-type="fire" pinta su
    interior con bg-field / text-field-ink / bg-field-step / text-field-deep.
-   Es la base de los capítulos de color y del cambio de forma (§1).
+   Es la base de las tarjetas, las columnas del día, el escenario de la ficha
+   y el cambio de forma. */
+[data-type="normal"] { --field: var(--type-normal); --field-ink: var(--type-normal-ink); --field-step: var(--type-normal-step); --field-deep: var(--type-normal-deep); }
+[data-type="fire"] { --field: var(--type-fire); --field-ink: var(--type-fire-ink); --field-step: var(--type-fire-step); --field-deep: var(--type-fire-deep); }
+[data-type="water"] { --field: var(--type-water); --field-ink: var(--type-water-ink); --field-step: var(--type-water-step); --field-deep: var(--type-water-deep); }
+[data-type="electric"] { --field: var(--type-electric); --field-ink: var(--type-electric-ink); --field-step: var(--type-electric-step); --field-deep: var(--type-electric-deep); }
+[data-type="grass"] { --field: var(--type-grass); --field-ink: var(--type-grass-ink); --field-step: var(--type-grass-step); --field-deep: var(--type-grass-deep); }
+[data-type="ice"] { --field: var(--type-ice); --field-ink: var(--type-ice-ink); --field-step: var(--type-ice-step); --field-deep: var(--type-ice-deep); }
+[data-type="fighting"] { --field: var(--type-fighting); --field-ink: var(--type-fighting-ink); --field-step: var(--type-fighting-step); --field-deep: var(--type-fighting-deep); }
+[data-type="poison"] { --field: var(--type-poison); --field-ink: var(--type-poison-ink); --field-step: var(--type-poison-step); --field-deep: var(--type-poison-deep); }
+[data-type="ground"] { --field: var(--type-ground); --field-ink: var(--type-ground-ink); --field-step: var(--type-ground-step); --field-deep: var(--type-ground-deep); }
+[data-type="flying"] { --field: var(--type-flying); --field-ink: var(--type-flying-ink); --field-step: var(--type-flying-step); --field-deep: var(--type-flying-deep); }
+[data-type="psychic"] { --field: var(--type-psychic); --field-ink: var(--type-psychic-ink); --field-step: var(--type-psychic-step); --field-deep: var(--type-psychic-deep); }
+[data-type="bug"] { --field: var(--type-bug); --field-ink: var(--type-bug-ink); --field-step: var(--type-bug-step); --field-deep: var(--type-bug-deep); }
+[data-type="rock"] { --field: var(--type-rock); --field-ink: var(--type-rock-ink); --field-step: var(--type-rock-step); --field-deep: var(--type-rock-deep); }
+[data-type="ghost"] { --field: var(--type-ghost); --field-ink: var(--type-ghost-ink); --field-step: var(--type-ghost-step); --field-deep: var(--type-ghost-deep); }
+[data-type="dragon"] { --field: var(--type-dragon); --field-ink: var(--type-dragon-ink); --field-step: var(--type-dragon-step); --field-deep: var(--type-dragon-deep); }
+[data-type="dark"] { --field: var(--type-dark); --field-ink: var(--type-dark-ink); --field-step: var(--type-dark-step); --field-deep: var(--type-dark-deep); }
+[data-type="steel"] { --field: var(--type-steel); --field-ink: var(--type-steel-ink); --field-step: var(--type-steel-step); --field-deep: var(--type-steel-deep); }
+[data-type="fairy"] { --field: var(--type-fairy); --field-ink: var(--type-fairy-ink); --field-step: var(--type-fairy-step); --field-deep: var(--type-fairy-deep); }
 
-   Capítulo de página: una página marca su raíz con data-chapter="fire" (o "ink")
-   y body:has() pinta todo el body, así la barra superior, que vive en el layout,
-   toma el color de la página sin JavaScript (§4.1). Sin marca, papel. */
-body:has([data-chapter="normal"]), [data-type="normal"] { --field: var(--type-normal); --field-ink: var(--type-normal-ink); --field-step: var(--type-normal-step); --field-deep: var(--type-normal-deep); }
-body:has([data-chapter="fire"]), [data-type="fire"] { --field: var(--type-fire); --field-ink: var(--type-fire-ink); --field-step: var(--type-fire-step); --field-deep: var(--type-fire-deep); }
-body:has([data-chapter="water"]), [data-type="water"] { --field: var(--type-water); --field-ink: var(--type-water-ink); --field-step: var(--type-water-step); --field-deep: var(--type-water-deep); }
-body:has([data-chapter="electric"]), [data-type="electric"] { --field: var(--type-electric); --field-ink: var(--type-electric-ink); --field-step: var(--type-electric-step); --field-deep: var(--type-electric-deep); }
-body:has([data-chapter="grass"]), [data-type="grass"] { --field: var(--type-grass); --field-ink: var(--type-grass-ink); --field-step: var(--type-grass-step); --field-deep: var(--type-grass-deep); }
-body:has([data-chapter="ice"]), [data-type="ice"] { --field: var(--type-ice); --field-ink: var(--type-ice-ink); --field-step: var(--type-ice-step); --field-deep: var(--type-ice-deep); }
-body:has([data-chapter="fighting"]), [data-type="fighting"] { --field: var(--type-fighting); --field-ink: var(--type-fighting-ink); --field-step: var(--type-fighting-step); --field-deep: var(--type-fighting-deep); }
-body:has([data-chapter="poison"]), [data-type="poison"] { --field: var(--type-poison); --field-ink: var(--type-poison-ink); --field-step: var(--type-poison-step); --field-deep: var(--type-poison-deep); }
-body:has([data-chapter="ground"]), [data-type="ground"] { --field: var(--type-ground); --field-ink: var(--type-ground-ink); --field-step: var(--type-ground-step); --field-deep: var(--type-ground-deep); }
-body:has([data-chapter="flying"]), [data-type="flying"] { --field: var(--type-flying); --field-ink: var(--type-flying-ink); --field-step: var(--type-flying-step); --field-deep: var(--type-flying-deep); }
-body:has([data-chapter="psychic"]), [data-type="psychic"] { --field: var(--type-psychic); --field-ink: var(--type-psychic-ink); --field-step: var(--type-psychic-step); --field-deep: var(--type-psychic-deep); }
-body:has([data-chapter="bug"]), [data-type="bug"] { --field: var(--type-bug); --field-ink: var(--type-bug-ink); --field-step: var(--type-bug-step); --field-deep: var(--type-bug-deep); }
-body:has([data-chapter="rock"]), [data-type="rock"] { --field: var(--type-rock); --field-ink: var(--type-rock-ink); --field-step: var(--type-rock-step); --field-deep: var(--type-rock-deep); }
-body:has([data-chapter="ghost"]), [data-type="ghost"] { --field: var(--type-ghost); --field-ink: var(--type-ghost-ink); --field-step: var(--type-ghost-step); --field-deep: var(--type-ghost-deep); }
-body:has([data-chapter="dragon"]), [data-type="dragon"] { --field: var(--type-dragon); --field-ink: var(--type-dragon-ink); --field-step: var(--type-dragon-step); --field-deep: var(--type-dragon-deep); }
-body:has([data-chapter="dark"]), [data-type="dark"] { --field: var(--type-dark); --field-ink: var(--type-dark-ink); --field-step: var(--type-dark-step); --field-deep: var(--type-dark-deep); }
-body:has([data-chapter="steel"]), [data-type="steel"] { --field: var(--type-steel); --field-ink: var(--type-steel-ink); --field-step: var(--type-steel-step); --field-deep: var(--type-steel-deep); }
-body:has([data-chapter="fairy"]), [data-type="fairy"] { --field: var(--type-fairy); --field-ink: var(--type-fairy-ink); --field-step: var(--type-fairy-step); --field-deep: var(--type-fairy-deep); }
+/* Campos fijos: blanco para paneles y capas flotantes (vuelven a blanco aunque
+   estén dentro de un campo de tipo) y tinta para el pie. */
+[data-field="surface"] { --field: var(--surface); --field-ink: var(--ink); --field-step: var(--step); --field-deep: var(--ink); }
+[data-field="ink"] { --field: var(--ink); --field-ink: var(--bone); --field-step: var(--ink-soft); --field-deep: var(--bone); }
 
-/* Campos fijos: papel para las capas flotantes (vuelven a papel aunque la
-   página sea de tinta o de tipo) y tinta para el pie y el comparador.
-   --ink-step es la superficie un tono por encima de la tinta. */
-[data-field="paper"] { --field: var(--paper); --field-ink: var(--ink); --field-step: var(--paper-step); --field-deep: var(--ink); }
-body:has([data-chapter="ink"]), [data-field="ink"] { --field: var(--ink); --field-ink: var(--bone); --field-step: var(--ink-step); --field-deep: var(--bone); }
-
-/* Utilidades de Tailwind: bg-paper, text-ink, bg-type-fire, text-type-fire-ink,
-   bg-type-fire-step, text-type-fire-deep, bg-field, text-field-ink…
-   text-small/body/lead/head/hero, font-sans (Chivo), tracking-display… */
+/* Utilidades de Tailwind: bg-ground, bg-surface, text-ink, bg-type-fire,
+   text-type-fire-ink, bg-type-fire-step, text-type-fire-deep, bg-field,
+   text-field-ink… text-small/body/lead/head/hero, font-sans (Nunito),
+   rounded-surface, rounded-pill… */
 @theme inline {
-  --color-paper: var(--paper);
-  --color-paper-step: var(--paper-step);
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-step: var(--step);
   --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
   --color-bone: var(--bone);
+  --color-bone-soft: var(--bone-soft);
   --color-accent: var(--accent);
-  --color-ink-step: var(--ink-step);
+  --color-ok: var(--ok);
 
   --color-field: var(--field);
   --color-field-ink: var(--field-ink);
@@ -240,54 +257,61 @@ body:has([data-chapter="ink"]), [data-field="ink"] { --field: var(--ink); --fiel
   --color-type-fairy-step: var(--type-fairy-step);
   --color-type-fairy-deep: var(--type-fairy-deep);
 
-  /* Chivo es la única familia (la monoespaciada se retira componente a componente, §7) */
-  --font-sans: var(--font-chivo), ui-sans-serif, system-ui, sans-serif;
+  /* Nunito es la única familia; no hay monoespaciada en ningún sitio (§3) */
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 
   --text-small: var(--step-small);
   --text-small--line-height: 1.45;
   --text-body: var(--step-body);
   --text-body--line-height: 1.45;
-  --text-body--letter-spacing: -0.01em;
   --text-lead: var(--step-lead);
-  --text-lead--line-height: 1.2;
+  --text-lead--line-height: 1.05;
+  --text-lead--letter-spacing: -0.03em;
   --text-head: var(--step-head);
-  --text-head--line-height: 0.88;
-  --text-head--letter-spacing: -0.05em;
+  --text-head--line-height: 1.05;
+  --text-head--letter-spacing: -0.03em;
   --text-hero: var(--step-hero);
-  --text-hero--line-height: 0.88;
-  --text-hero--letter-spacing: -0.05em;
+  --text-hero--line-height: 0.95;
+  --text-hero--letter-spacing: -0.04em;
 
-  --tracking-display: -0.05em;
-  --tracking-text: -0.01em;
-  --leading-display: 0.88;
+  --tracking-display: -0.04em;
+  --leading-display: 0.95;
   --leading-text: 1.45;
 
-  --radius-none: 0;
+  --radius-surface: var(--surface-radius);
+  --radius-pill: var(--pill-radius);
 }
 
 body {
-  background: var(--field);
-  color: var(--field-ink);
+  background: var(--ground);
+  color: var(--ink);
   font-family: var(--font-sans);
   font-size: var(--step-body);
+  font-weight: 600;
   line-height: 1.45;
-  letter-spacing: -0.01em;
 }
 
-/* Foco visible (§2.3, regla 6): 3px en la tinta del campo, separado 3px */
+/* Contenedor común (§4.0): márgenes de 20px en móvil y 32px desde 768px,
+   contenido de 1280px como máximo */
+@utility shell {
+  width: 100%;
+  max-width: calc(1280px + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Foco visible (§2.3, regla 7): 3px en la tinta del campo, separado 3px.
+   Sobre un campo de tinta hueso, el contorno sale en hueso. */
 :focus-visible {
   outline: 3px solid var(--field-ink);
   outline-offset: 3px;
 }
 
-/* Rol display (§3): Chivo 900, mayúsculas, tracking −0.05em, interlineado 0.88.
-   El padding superior evita que las tildes en mayúscula (É, Í, Ó) se salgan. */
+/* Rol display (§3): Nunito 900, sentence case, tracking −0.04em, interlineado 0.95 */
 .display {
   font-weight: 900;
-  text-transform: uppercase;
   letter-spacing: var(--tracking-display);
   line-height: var(--leading-display);
-  padding-block-start: 0.08em;
 }
 
 /* Números (#0006, estadísticas, totales, SHA) */
@@ -305,15 +329,16 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--ink-step);
+  background: var(--step);
+  border-radius: var(--pill-radius);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--ink);
+  background: var(--ink-soft);
 }
 
 /* Firefox */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--ink-step) transparent;
+  scrollbar-color: var(--step) transparent;
 }

@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Chivo } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "../globals.css";
-import GlobalSearchBar from "@/components/common/GlobalSearchBar";
-import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import SiteHeader from "@/components/common/SiteHeader";
 import { getDictionary } from "@/constants/translations";
-import { getLocalizedPath } from "@/constants/routes";
 import { Locale } from "@/proxy";
 
-// Única familia del rediseño (DESIGN.md §3): display 900, navegación 700, texto 400
-const chivo = Chivo({
+// Única familia (DESIGN.md §3): display 900, controles 800, texto 600
+const nunito = Nunito({
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "700", "900"],
-  variable: "--font-chivo",
+  weight: ["600", "700", "800", "900"],
+  variable: "--font-nunito",
   display: "swap",
 });
 
@@ -128,55 +125,31 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   };
 
   return (
-    <html lang={locale} className={chivo.variable}>
+    <html lang={locale} className={nunito.variable}>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      {/* Fondo y tinta salen del campo de la página (globals.css): papel por
-          defecto, o el capítulo que marque la página con data-chapter */}
       <body className="min-h-svh antialiased flex flex-col">
-        {/* Barra superior (DESIGN.md §4.1): plana, opaca, sin bordes, en el
-            color de la página. En móvil y tablet, dos filas: marca y enlaces; buscador e idioma */}
-        <header className="lg:sticky lg:top-0 z-50 bg-field text-field-ink">
-          <div className="max-w-[1440px] mx-auto px-6 lg:px-8 py-3 lg:py-0 lg:h-20 flex flex-wrap lg:flex-nowrap items-center gap-x-5 gap-y-3 lg:gap-x-8">
-            <Link
-              href={`/${locale}`}
-              className="display text-lead shrink-0 order-1"
-            >
-              PokéData
-            </Link>
-
-            <nav className="order-2 lg:order-3 ml-auto flex items-center gap-4 lg:gap-6 font-bold text-small lg:text-body">
-              <Link
-                href={getLocalizedPath(locale, "types")}
-                className="whitespace-nowrap underline-offset-4 decoration-2 hover:underline"
-              >
-                {dict.nav.typeChart}
-              </Link>
-              <Link
-                href={getLocalizedPath(locale, "compare")}
-                className="whitespace-nowrap underline-offset-4 decoration-2 hover:underline"
-              >
-                {dict.nav.compare}
-              </Link>
-            </nav>
-
-            <div className="order-3 w-full flex items-center gap-3 lg:contents">
-              <div className="flex-1 min-w-0 lg:order-2 lg:max-w-md">
-                <GlobalSearchBar
-                  locale={locale}
-                  placeholder={dict.nav.searchPlaceholder}
-                />
-              </div>
-              <div className="shrink-0 lg:order-4">
-                <LanguageSwitcher currentLocale={locale} />
-              </div>
-            </div>
-          </div>
-        </header>
+        <SiteHeader
+          locale={locale}
+          labels={{
+            pokedex: dict.nav.pokedex,
+            types: dict.nav.types,
+            compare: dict.nav.compare,
+            search: dict.nav.search,
+            searchLabel: dict.nav.searchLabel,
+            openSearch: dict.nav.openSearch,
+            closeSearch: dict.nav.closeSearch,
+            menu: dict.nav.menu,
+            closeMenu: dict.nav.closeMenu,
+            mainNav: dict.nav.mainNav,
+            home: dict.nav.home,
+            language: dict.nav.language,
+          }}
+        />
 
         <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
           {children}
@@ -228,7 +201,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
                     title={dict.footer.commitTitle}
                     className="num inline-flex items-center gap-2 underline-offset-4 decoration-2 hover:underline"
                   >
-                    <span aria-hidden="true" className="size-2 bg-emerald-500" />
+                    <span aria-hidden="true" className="size-2 rounded-full bg-ok" />
                     {shortSha}
                   </a>
                 </li>

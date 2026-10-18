@@ -2,10 +2,11 @@ import type { PokemonType } from "@/constants/typeChart";
 
 // Tokens de color de los 18 tipos (DESIGN.md §2.2). Son los mismos valores
 // que las variables --type-* de globals.css; si cambias uno, cambia ambos.
-//   field: color del tipo, usado como fondo de página o bloque
+//   field: color del tipo, fondo de tarjetas, columnas y escenario de la ficha
 //   ink:   tinta sobre el campo (negra o hueso, la de más contraste)
 //   step:  campo oscurecido un 14 %, superficie secundaria dentro del campo
-//   deep:  el tipo como texto sobre papel (≥ 4.5:1 sobre --paper)
+//   deep:  el tipo como texto sobre blanco (≥ 4.9:1 sobre --surface; sobre
+//          --ground, Agua, Hielo y Psíquico bajan de 4.5:1, ver §2.3)
 export interface TypeTokens {
   field: string;
   ink: string;
@@ -13,9 +14,9 @@ export interface TypeTokens {
   deep: string;
 }
 
-export const PAPER = "#F7F5F0";
-export const PAPER_STEP = "#EDEAE3";
-export const INK = "#0A0A0A";
+export const GROUND = "#F3F4F8";
+export const SURFACE = "#FFFFFF";
+export const INK = "#15161C";
 export const BONE = "#F7F5F0";
 
 export const TYPE_TOKENS: Record<PokemonType, TypeTokens> = {

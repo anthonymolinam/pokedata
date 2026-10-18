@@ -51,26 +51,26 @@ Se conservan los valores actuales de `src/constants/typeColors.ts`. Cada tipo ti
 
 | Tipo | `field` | `field-ink` | field/ink | `step` | `deep` | deep/blanco | deep/fondo |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Normal | `#A8A77A` | ink | 7.99 | `#909069` | `#727253` | 4.94 | 4.50 |
-| Fuego | `#EE8130` | ink | 7.37 | `#CD6F29` | `#A95C22` | 4.95 | 4.51 |
-| Agua | `#6390F0` | ink | 6.39 | `#557CCE` | `#4C6FB9` | 4.90 | *4.46* |
-| Eléctrico | `#F7D02C` | ink | 13.21 | `#D4B326` | `#836E17` | 4.99 | 4.54 |
-| Planta | `#7AC74C` | ink | 9.52 | `#69AB41` | `#4C7B2F` | 5.02 | 4.57 |
-| Hielo | `#96D9D6` | ink | 12.44 | `#81BBB8` | `#527776` | 4.93 | *4.49* |
+| Normal | `#A8A77A` | ink | 7.28 | `#909069` | `#727253` | 4.94 | 4.50 |
+| Fuego | `#EE8130` | ink | 6.72 | `#CD6F29` | `#A95C22` | 4.95 | 4.51 |
+| Agua | `#6390F0` | ink | 5.83 | `#557CCE` | `#4C6FB9` | 4.90 | *4.46* |
+| Eléctrico | `#F7D02C` | ink | 12.05 | `#D4B326` | `#836E17` | 4.99 | 4.54 |
+| Planta | `#7AC74C` | ink | 8.68 | `#69AB41` | `#4C7B2F` | 5.02 | 4.57 |
+| Hielo | `#96D9D6` | ink | 11.34 | `#81BBB8` | `#527776` | 4.93 | *4.49* |
 | Lucha | `#C22E28` | bone | 5.19 | `#A72822` | `#C22E28` | 5.65 | 5.14 |
 | Veneno | `#A33EA1` | bone | 5.12 | `#8C358A` | `#A33EA1` | 5.58 | 5.08 |
-| Tierra | `#E2BF65` | ink | 11.19 | `#C2A457` | `#816D3A` | 5.02 | 4.57 |
-| Volador | `#A98FF3` | ink | 7.46 | `#917BD1` | `#7664AA` | 5.03 | 4.58 |
-| Psíquico | `#F95587` | ink | 6.30 | `#D64974` | `#C24269` | 4.91 | *4.47* |
-| Bicho | `#A6B91A` | ink | 9.03 | `#8F9F16` | `#6A7611` | 4.99 | 4.54 |
-| Roca | `#B6A136` | ink | 7.67 | `#9D8A2E` | `#7E6F25` | 5.01 | 4.56 |
+| Tierra | `#E2BF65` | ink | 10.21 | `#C2A457` | `#816D3A` | 5.02 | 4.57 |
+| Volador | `#A98FF3` | ink | 6.80 | `#917BD1` | `#7664AA` | 5.03 | 4.58 |
+| Psíquico | `#F95587` | ink | 5.74 | `#D64974` | `#C24269` | 4.91 | *4.47* |
+| Bicho | `#A6B91A` | ink | 8.23 | `#8F9F16` | `#6A7611` | 4.99 | 4.54 |
+| Roca | `#B6A136` | ink | 7.00 | `#9D8A2E` | `#7E6F25` | 5.01 | 4.56 |
 | Fantasma | `#735797` | bone | 5.45 | `#634B82` | `#735797` | 5.93 | 5.40 |
 | Dragón | `#6F35FC` | bone | 5.37 | `#5F2ED9` | `#6F35FC` | 5.85 | 5.32 |
 | Siniestro | `#705746` | bone | 6.14 | `#604B3C` | `#705746` | 6.69 | 6.08 |
-| Acero | `#B7B7CE` | ink | 10.07 | `#9D9DB1` | `#6E6E7C` | 5.02 | 4.57 |
-| Hada | `#D685AD` | ink | 7.37 | `#B87295` | `#985E7B` | 4.97 | 4.53 |
+| Acero | `#B7B7CE` | ink | 9.18 | `#9D9DB1` | `#6E6E7C` | 5.02 | 4.57 |
+| Hada | `#D685AD` | ink | 6.72 | `#B87295` | `#985E7B` | 4.97 | 4.53 |
 
-Los contrastes están calculados con WCAG 2.x. Las cifras en cursiva no llegan a 4.5:1, y de ahí sale la regla 1 del §2.3.
+Los contrastes están calculados con WCAG 2.x, con la tinta `--ink` (`#15161C`). Las cifras en cursiva no llegan a 4.5:1, y de ahí sale la regla 1 del §2.3.
 
 Los tokens viven en un único sitio: `typeColors.ts` y las variables `--type-*` de `globals.css`. Ningún otro fichero escribe a mano un color de tipo. Veneno, Fantasma y Dragón son violetas canónicos y llevan el comentario `taste-skill-ignore`.
 
