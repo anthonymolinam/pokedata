@@ -106,7 +106,12 @@ export default function PokemonCard({
             {/* En tarjetas estrechas el total va aquí, a la derecha del número,
                 y la línea de tipos queda solo para los tipos */}
             {pokemon.total !== undefined && (
-              <TotalPill label={card.total} total={pokemon.total} className="hidden @max-[18rem]:block" />
+              <TotalPill
+                label={card.total}
+                total={pokemon.total}
+                compact
+                className="hidden @max-[18rem]:block"
+              />
             )}
           </span>
         </div>
@@ -135,10 +140,22 @@ export default function PokemonCard({
   );
 }
 
+interface TotalPillProps {
+  label: string;
+  total: number;
+  className: string;
+  // En tarjetas estrechas, junto al número: más pequeña y translúcida, en la
+  // tinta del campo, para que no compita con el nombre
+  compact?: boolean;
+}
+
 // Pastilla «Total 534»: la palabra en 700 y la cifra en 900, tabulares
-function TotalPill({ label, total, className }: { label: string; total: number; className: string }) {
+function TotalPill({ label, total, className, compact = false }: TotalPillProps) {
+  const look = compact
+    ? "bg-ink/15 text-field-ink px-2 py-px text-[0.75rem] leading-[1.4]"
+    : "bg-ink text-bone px-2.5 py-0.5 text-small";
   return (
-    <p className={`rounded-pill bg-ink px-2.5 py-0.5 text-small text-bone num ${className}`}>
+    <p className={`rounded-pill num ${look} ${className}`}>
       <span className="font-bold">{label}</span> <span className="font-black">{total}</span>
     </p>
   );
