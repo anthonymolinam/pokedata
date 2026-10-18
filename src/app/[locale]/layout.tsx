@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Chivo } from "next/font/google";
 import "../globals.css";
 import GlobalSearchBar from "@/components/common/GlobalSearchBar";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { getDictionary } from "@/constants/translations";
 import { getLocalizedPath } from "@/constants/routes";
 import { Locale } from "@/proxy";
+
+// Única familia del rediseño (DESIGN.md §3): display 900, navegación 700, texto 400
+const chivo = Chivo({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "700", "900"],
+  variable: "--font-chivo",
+  display: "swap",
+});
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -119,7 +128,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   };
 
   return (
-    <html lang={locale} className="dark">
+    <html lang={locale} className={`dark ${chivo.variable}`}>
       <head>
         <script
           type="application/ld+json"
