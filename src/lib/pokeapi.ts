@@ -152,6 +152,7 @@ export interface AdjacentPokemon {
   id: number;
   name: string;
   image: string;
+  types: string[];
 }
 
 function sumBaseStats(stats: ApiPokemonStat[]): number {
@@ -661,6 +662,7 @@ export async function getAdjacentPokemon(currentId: number): Promise<{
           data.sprites.other?.["official-artwork"]?.front_default ??
           data.sprites.front_default ??
           "/placeholder.png",
+        types: data.types.map((t) => t.type.name),
       };
     } catch {
       return null;

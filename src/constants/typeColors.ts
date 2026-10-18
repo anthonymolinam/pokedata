@@ -67,28 +67,3 @@ export const TYPE_COLORS: Record<string, string> = {
   dark: "bg-type-dark text-type-dark-ink",
   fairy: "bg-type-fairy text-type-fairy-ink",
 };
-
-/**
- * @deprecated Los halos degradados desaparecen en el rediseño (DESIGN.md §7).
- * Solo sigue aquí hasta que se rehaga PokemonHeroSection (paso 9, la ficha); entonces se borra.
- */
-export const TYPE_GLOWS: Record<string, string> = {
-  normal: "from-zinc-500/20 to-transparent",
-  fire: "from-orange-500/25 to-transparent",
-  water: "from-blue-500/25 to-transparent",
-  grass: "from-emerald-500/25 to-transparent",
-  electric: "from-amber-400/25 to-transparent",
-  ice: "from-cyan-400/25 to-transparent",
-  fighting: "from-red-600/25 to-transparent",
-  poison: "from-purple-600/25 to-transparent",
-  ground: "from-amber-600/25 to-transparent",
-  flying: "from-indigo-400/25 to-transparent",
-  psychic: "from-pink-500/25 to-transparent",
-  bug: "from-lime-500/25 to-transparent",
-  rock: "from-stone-500/25 to-transparent",
-  ghost: "from-violet-600/25 to-transparent",
-  dragon: "from-indigo-600/25 to-transparent",
-  steel: "from-slate-400/25 to-transparent",
-  dark: "from-neutral-700/30 to-transparent",
-  fairy: "from-rose-400/25 to-transparent",
-};

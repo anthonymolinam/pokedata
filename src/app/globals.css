@@ -362,9 +362,54 @@ body {
   animation: skeleton-in 200ms ease-out 300ms both;
 }
 
+/* Ficha (§6): el artwork del escenario flota despacio, en bucle de 6s */
+@keyframes float {
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Cambio de forma (§4.4): el campo nuevo entra como capa con fundido de 400ms */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.fade-in {
+  animation: fade-in 400ms ease-out both;
+}
+
+/* Barras de estadísticas (§6): scaleX de 0 a su valor (--v) al entrar en
+   pantalla, 600ms con 70ms de escalonado (--i). Solo se encogen si el script
+   marca el bloque como pendiente, así que sin JavaScript se ven ya llenas. Al
+   cambiar de forma, la barra se desliza a su nuevo valor. */
+.stat-bar {
+  transform-origin: left;
+  transform: scaleX(var(--v, 1));
+  transition: transform 600ms cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+
+[data-reveal="pending"] .stat-bar {
+  transform: scaleX(0);
+}
+
+[data-reveal="shown"] .stat-bar {
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .card-pop {
+  .card-pop,
+  .float {
     animation: none;
+  }
+
+  .stat-bar {
+    transition: none;
   }
 }
 

@@ -1,16 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight } from "lucide-react";
 import { EvolutionStage } from "@/lib/pokeapi";
-import { TYPE_COLORS } from "@/constants/typeColors";
+import PokemonCard from "@/components/pokemon/PokemonCard";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
+import { getDictionary } from "@/constants/translations";
+import { Locale } from "@/proxy";
 
 interface EvolutionTreeProps {
   currentPokemonName: string;
   chain: EvolutionStage | null;
-  locale?: string;
+  locale: Locale;
 }
 
 // 1. Diccionario de objetos evolutivos en inglés
@@ -149,27 +148,6 @@ const SPECIAL_EVOLUTION_OVERRIDES: Record<string, { es: string; en: string }> =
       en: "Use Psyshield Bash in Agile Style 20 times",
     },
   };
-
-const TYPE_TRANSLATIONS_ES: Record<string, string> = {
-  normal: "Normal",
-  fire: "Fuego",
-  water: "Agua",
-  grass: "Planta",
-  electric: "Eléctrico",
-  ice: "Hielo",
-  fighting: "Lucha",
-  poison: "Veneno",
-  ground: "Tierra",
-  flying: "Volador",
-  psychic: "Psíquico",
-  bug: "Bicho",
-  rock: "Roca",
-  ghost: "Fantasma",
-  dragon: "Dragón",
-  steel: "Acero",
-  dark: "Siniestro",
-  fairy: "Hada",
-};
 
 function formatItemName(rawItem: string, isEs: boolean): string {
   if (!rawItem) return "";
@@ -403,16 +381,14 @@ function formatSpecialCondition(
   return { label: rawCondition, absorbsLevel: false };
 }
 
-function EvolutionArrowWithDetails({
-  details,
-  locale,
-  targetPokemonName,
-}: {
-  details?: EvolutionStage["triggerDetails"];
-  locale: string;
-  targetPokemonName?: string;
-}) {
-  if (!details) return null;
+// Condiciones para evolucionar, en frases cortas («Nivel 16», «Usar Piedra
+// Fuego»)
+function evolutionRequirements(
+  details: EvolutionStage["triggerDetails"],
+  locale: string,
+  targetPokemonName?: string,
+): string[] {
+  if (!details) return [];
   const isEs = locale === "es";
 
   const requirements: string[] = [];
@@ -552,160 +528,111 @@ function EvolutionArrowWithDetails({
     requirements.push(isEs ? "Evolución especial" : "Special Evolution");
   }
 
-  return (
-    <div className="flex flex-col items-center justify-center gap-1.5 w-44 shrink-0">
-      <div className="flex flex-col gap-1 w-full items-center justify-center">
-        {requirements.map((req, index) => (
-          <span
-            key={`${req}-${index}`}
-            className="w-full max-w-38.75 px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-center text-[10px] font-semibold text-amber-300 leading-snug whitespace-normal text-balance"
-          >
-            {req}
-          </span>
-        ))}
-      </div>
-
-      <ArrowRight className="w-5 h-5 text-zinc-500 rotate-90 md:rotate-0 shrink-0" />
-    </div>
-  );
+  return requirements;
 }
 
-function EvolutionBranch({
-  node,
-  currentPokemonName,
-  locale,
-}: {
+interface PlacedStage {
   node: EvolutionStage;
-  currentPokemonName: string;
-  locale: string;
-}) {
-  const isEs = locale === "es";
-  const currentLower = currentPokemonName.toLowerCase();
-  const isCurrent =
-    node.name.toLowerCase() === currentLower ||
-    (node.speciesName && node.speciesName.toLowerCase() === currentLower) ||
-    node.name.toLowerCase().startsWith(`${currentLower}-`);
-
-  const targetHref = getEvolutionHref(node, locale);
-
-  return (
-    <div className="flex flex-col md:flex-row items-center gap-6">
-      {/* Tarjeta del Pokémon */}
-      <Link
-        href={targetHref}
-        className={`group flex flex-col items-center p-3 rounded-2xl border transition-all ${
-          isCurrent
-            ? "bg-zinc-800/80 border-rose-500/80 shadow-lg shadow-rose-500/10"
-            : "bg-zinc-950/40 border-zinc-800/60 hover:border-zinc-700 hover:bg-zinc-900/40"
-        }`}
-      >
-        <span className="text-[10px] font-mono text-zinc-500">
-          #{String(node.id).padStart(4, "0")}
-        </span>
-        <div className="relative w-20 h-20 my-1">
-          <Image
-            src={node.image}
-            alt={node.name}
-            fill
-            sizes="80px"
-            className="object-contain group-hover:scale-110 transition-transform duration-200"
-          />
-        </div>
-        <span className="font-bold text-xs text-zinc-200 mb-1 text-center">
-          {formatEvolutionPokemonName(node.speciesName || node.name, locale)}
-        </span>
-        <div className="flex gap-1 flex-wrap justify-center">
-          {node.types.map((t) => {
-            const rawType = t.toLowerCase();
-            const displayType =
-              isEs && TYPE_TRANSLATIONS_ES[rawType]
-                ? TYPE_TRANSLATIONS_ES[rawType]
-                : t;
-
-            return (
-              <span
-                key={t}
-                className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${
-                  TYPE_COLORS[rawType] || "bg-zinc-700 text-white"
-                }`}
-              >
-                {displayType}
-              </span>
-            );
-          })}
-        </div>
-      </Link>
-
-      {/* Flechas y ramas evolutivas */}
-      {node.evolvesTo.length > 0 && (
-        <div className="flex flex-col gap-6 items-center justify-center">
-          {node.evolvesTo.map((child) => (
-            <div
-              key={child.id}
-              className="flex flex-col md:flex-row items-center justify-start gap-4 w-full"
-            >
-              <EvolutionArrowWithDetails
-                details={child.triggerDetails}
-                locale={locale}
-                targetPokemonName={child.speciesName || child.name}
-              />
-              <EvolutionBranch
-                node={child}
-                currentPokemonName={currentPokemonName}
-                locale={locale}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  parent: EvolutionStage | null;
+  depth: number;
 }
 
+// El árbol en orden de etapas: primero la forma inicial, luego todas sus
+// evoluciones directas, y así. Eevee y sus ocho evoluciones caben en la misma
+// rejilla que una cadena de tres.
+function flattenChain(
+  node: EvolutionStage,
+  parent: EvolutionStage | null = null,
+  depth = 0,
+  out: PlacedStage[] = [],
+): PlacedStage[] {
+  out.push({ node, parent, depth });
+  node.evolvesTo.forEach((child) => flattenChain(child, node, depth + 1, out));
+  return out;
+}
+
+const REGIONAL_FORM = /-(alola|galar|hisui|paldea)$/;
+
+// Cadena evolutiva (DESIGN.md §4.4): mini tarjetas con la anatomía de las de
+// la portada y, debajo de cada una, la condición para llegar a ella. El
+// Pokémon que se está viendo lleva el aro de selección en tinta.
 export default function EvolutionTree({
   currentPokemonName,
   chain,
-  locale = "es",
+  locale,
 }: EvolutionTreeProps) {
-  const isEs = locale === "es";
+  const { detail } = getDictionary(locale);
+  const currentLower = currentPokemonName.toLowerCase();
 
-  if (!chain || chain.evolvesTo.length === 0) {
-    return (
-      <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-2">
-        <h3 className="text-base font-bold text-white tracking-tight">
-          {isEs ? "Cadena Evolutiva" : "Evolution Chain"}
-        </h3>
-        <p className="text-xs text-zinc-400">
-          {isEs
-            ? "Este Pokémon no tiene evoluciones conocidas."
-            : "This Pokémon does not have any known evolutions."}
-        </p>
-      </div>
-    );
+  const stages = chain ? flattenChain(chain).sort((a, b) => a.depth - b.depth) : [];
+
+  // Si una etapa sale de más de un Pokémon (Silcoon y Cascoon), cada
+  // condición dice de cuál viene
+  const parentsPerDepth = new Map<number, Set<string>>();
+  for (const { parent, depth } of stages) {
+    if (!parent) continue;
+    const parents = parentsPerDepth.get(depth) ?? new Set<string>();
+    parents.add(parent.name);
+    parentsPerDepth.set(depth, parents);
   }
 
   return (
-    <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
-      <div>
-        <h3 className="text-base font-bold text-white tracking-tight">
-          {isEs ? "Cadena Evolutiva" : "Evolution Chain"}
-        </h3>
-        <p className="text-xs text-zinc-400">
-          {isEs
-            ? "Métodos y condiciones para evolucionar."
-            : "Methods and conditions for evolution."}
-        </p>
-      </div>
+    <section
+      aria-labelledby="evolution-title"
+      className="rounded-surface bg-surface p-6 md:p-10 text-ink"
+    >
+      <h2 id="evolution-title" className="text-head font-black">
+        {detail.evolution}
+      </h2>
 
-      <div className="overflow-x-auto pb-4 pt-2">
-        <div className="min-w-fit flex justify-center">
-          <EvolutionBranch
-            node={chain}
-            currentPokemonName={currentPokemonName}
-            locale={locale}
-          />
-        </div>
-      </div>
-    </div>
+      {stages.length < 2 ? (
+        <p className="mt-3 text-body">{detail.noEvolution}</p>
+      ) : (
+        <ol className="mt-16 md:mt-20 grid grid-cols-2 gap-x-3 gap-y-[52px] md:grid-cols-3 md:gap-x-5 md:gap-y-[72px] lg:grid-cols-4">
+          {stages.map(({ node, parent, depth }, index) => {
+            const nodeLower = node.name.toLowerCase();
+            const isCurrent =
+              nodeLower === currentLower ||
+              node.speciesName?.toLowerCase() === currentLower ||
+              nodeLower.startsWith(`${currentLower}-`);
+
+            const requirements = parent
+              ? evolutionRequirements(
+                  node.triggerDetails,
+                  locale,
+                  node.speciesName || node.name,
+                )
+              : [];
+            if (parent && (parentsPerDepth.get(depth)?.size ?? 0) > 1) {
+              requirements.unshift(
+                `${detail.from} ${formatEvolutionPokemonName(parent.speciesName || parent.name, locale)}`,
+              );
+            }
+
+            return (
+              <li key={`${node.name}-${index}`} className="flex flex-col gap-3">
+                <PokemonCard
+                  pokemon={{
+                    id: node.id,
+                    // Las formas regionales conservan su nombre (Vulpix de Alola)
+                    name: REGIONAL_FORM.test(nodeLower)
+                      ? node.name
+                      : node.speciesName || node.name,
+                    image: node.image,
+                    types: node.types,
+                  }}
+                  href={getEvolutionHref(node, locale)}
+                  locale={locale}
+                  current={isCurrent}
+                />
+                {requirements.length > 0 && (
+                  <p className="text-small font-bold">{requirements.join(" · ")}</p>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </section>
   );
 }

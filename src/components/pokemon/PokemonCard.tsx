@@ -13,6 +13,8 @@ interface PokemonCardProps {
   // Las primeras tarjetas de la página cargan su artwork sin esperar al scroll
   eager?: boolean;
   headingAs?: "h2" | "h3";
+  // En la cadena evolutiva de la ficha, el Pokémon que se está viendo
+  current?: boolean;
 }
 
 // Curva de rebote de la dirección Pop (§4.3 y §6)
@@ -27,6 +29,7 @@ export default function PokemonCard({
   locale,
   eager = false,
   headingAs: Heading = "h3",
+  current = false,
 }: PokemonCardProps) {
   const { card, typeNames } = getDictionary(locale);
   const name = formatPokemonDisplayName(pokemon.name);
@@ -40,7 +43,8 @@ export default function PokemonCard({
     <Link
       href={href}
       data-type={types[0] ?? "normal"}
-      className={`group type-glow relative flex flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`}
+      aria-current={current ? "page" : undefined}
+      className={`group type-glow relative flex flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:outline-3 aria-[current=page]:outline-offset-3 aria-[current=page]:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`}
     >
       <div
         aria-hidden="true"

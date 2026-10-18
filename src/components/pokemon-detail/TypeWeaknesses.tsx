@@ -1,137 +1,79 @@
 import { TypeEffectiveness } from "@/lib/type-matrix";
-import { TYPE_COLORS } from "@/constants/typeColors";
+import { getDictionary } from "@/constants/translations";
+import { isPokemonType } from "@/constants/typeColors";
+import type { PokemonType } from "@/constants/typeChart";
+import { Locale } from "@/proxy";
 
 interface TypeWeaknessesProps {
   effectiveness: TypeEffectiveness;
-  locale?: string;
+  locale: Locale;
 }
 
-interface GroupConfig {
-  label: string;
-  badge: string;
-  badgeColor: string;
-  types: string[];
-}
+type Tag = [type: PokemonType, multiplier: string];
 
-const TYPE_TRANSLATIONS_ES: Record<string, string> = {
-  normal: "Normal",
-  fire: "Fuego",
-  water: "Agua",
-  grass: "Planta",
-  electric: "Eléctrico",
-  ice: "Hielo",
-  fighting: "Lucha",
-  poison: "Veneno",
-  ground: "Tierra",
-  flying: "Volador",
-  psychic: "Psíquico",
-  bug: "Bicho",
-  rock: "Roca",
-  ghost: "Fantasma",
-  dragon: "Dragón",
-  steel: "Acero",
-  dark: "Siniestro",
-  fairy: "Hada",
-};
+const tags = (types: string[], multiplier: string): Tag[] =>
+  types.filter(isPokemonType).map((type) => [type, multiplier]);
 
-export default function TypeWeaknesses({
-  effectiveness,
-  locale = "es",
-}: TypeWeaknessesProps) {
-  const isEs = locale === "es";
+// Debilidades (DESIGN.md §4.4): etiquetas de tipo en su field, con el
+// multiplicador dentro de la propia etiqueta. Las debilidades van más grandes
+// que las resistencias, que es lo que se busca primero.
+export default function TypeWeaknesses({ effectiveness, locale }: TypeWeaknessesProps) {
+  const { detail, typeNames } = getDictionary(locale);
 
-  const groups: GroupConfig[] = [
+  const groups = [
     {
-      label: isEs ? "Superdébil" : "Super Weak",
-      badge: "4×",
-      badgeColor: "bg-rose-500/20 text-rose-400 border-rose-500/40",
-      types: effectiveness.weaknesses4x,
+      label: detail.weakTo,
+      large: true,
+      items: [
+        ...tags(effectiveness.weaknesses4x, "×4"),
+        ...tags(effectiveness.weaknesses2x, "×2"),
+      ],
     },
     {
-      label: isEs ? "Débil" : "Weak",
-      badge: "2×",
-      badgeColor: "bg-amber-500/20 text-amber-400 border-amber-500/40",
-      types: effectiveness.weaknesses2x,
+      label: detail.resists,
+      large: false,
+      items: [
+        ...tags(effectiveness.resistancesHalf, "×½"),
+        ...tags(effectiveness.resistancesQuarter, "×¼"),
+      ],
     },
     {
-      label: isEs ? "Resistente" : "Resistant",
-      badge: "½×",
-      badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
-      types: effectiveness.resistancesHalf,
+      label: detail.immuneTo,
+      large: false,
+      items: tags(effectiveness.immunities0x, "×0"),
     },
-    {
-      label: isEs ? "Superresistente" : "Super Resistant",
-      badge: "¼×",
-      badgeColor: "bg-teal-500/20 text-teal-400 border-teal-500/40",
-      types: effectiveness.resistancesQuarter,
-    },
-    {
-      label: isEs ? "Inmune" : "Immune",
-      badge: "0×",
-      badgeColor: "bg-zinc-800 text-zinc-400 border-zinc-700",
-      types: effectiveness.immunities0x,
-    },
-  ];
+  ].filter((group) => group.items.length > 0);
 
   return (
-    <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
-      <div>
-        <h3 className="text-base font-bold text-white tracking-tight">
-          {isEs
-            ? "Eficacia de Tipos (Debilidades y Resistencias)"
-            : "Defensive Matchups (Weaknesses & Resistances)"}
-        </h3>
-        <p className="text-xs text-zinc-400">
-          {isEs
-            ? "Multiplicadores de daño recibidos según el tipo de ataque atacante."
-            : "Damage multipliers received based on incoming attack types."}
-        </p>
-      </div>
+    <section
+      aria-labelledby="weaknesses-title"
+      className="rounded-surface bg-surface p-6 md:p-10 text-ink"
+    >
+      <h2 id="weaknesses-title" className="text-head font-black">
+        {detail.weaknesses}
+      </h2>
 
-      <div className="space-y-4">
-        {groups.map((group) => {
-          if (group.types.length === 0) return null;
-
-          return (
-            <div
-              key={group.label}
-              className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 rounded-2xl bg-zinc-950/40 border border-zinc-800/40"
-            >
-              <div className="flex items-center gap-2 min-w-36">
-                <span
-                  className={`text-xs font-mono font-black px-2 py-0.5 rounded-md border ${group.badgeColor}`}
+      <div className="mt-6 md:mt-8 flex flex-col gap-6">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <h3 className="text-body font-extrabold">{group.label}</h3>
+            <ul className="mt-2.5 flex flex-wrap gap-2">
+              {group.items.map(([type, multiplier]) => (
+                <li
+                  key={type}
+                  data-type={type}
+                  className={`flex items-center gap-2 rounded-pill bg-field text-field-ink font-extrabold ${
+                    group.large ? "min-h-11 px-4 text-body" : "min-h-9 px-3.5 text-small"
+                  }`}
                 >
-                  {group.badge}
-                </span>
-                <span className="text-xs font-medium text-zinc-300">
-                  {group.label}
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 flex-1">
-                {group.types.map((type) => {
-                  const displayType =
-                    isEs && TYPE_TRANSLATIONS_ES[type.toLowerCase()]
-                      ? TYPE_TRANSLATIONS_ES[type.toLowerCase()]
-                      : type;
-
-                  return (
-                    <span
-                      key={type}
-                      className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full ${
-                        TYPE_COLORS[type.toLowerCase()] ||
-                        "bg-zinc-700 text-white"
-                      }`}
-                    >
-                      {displayType}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+                  {typeNames[type]}
+                  <span className="font-black num">{multiplier}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-    </div>
+    </section>
   );
 }
