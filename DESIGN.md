@@ -175,7 +175,9 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - La búsqueda vive en la URL (`?q=`), junto a los filtros y dentro de ellos: al escribir se actualizan el recuento y la rejilla, e Intro lleva a los resultados. Sin JavaScript, Intro envía el formulario igual.
 - **Derecha:** el bloque **Pokémon del día**:
   - Arriba, una línea con el título «Pokémon del día» (`--step-lead`, 900) y, a su derecha, el botón del dado. **No se muestra la fecha:** la semilla es la fecha UTC, y en Colombia por la noche aparecería ya el día siguiente.
-  - Debajo, **tres columnas** de unos 280px de alto. Cada una se pinta en el `field` de su tipo principal y lleva el artwork grande y recortado, un rebote suave al pasar el ratón y abajo una pastilla blanca con el nombre y el número.
+  - Debajo, **tres columnas** de unos 280px de alto. Cada una se pinta en el `field` de su tipo principal y lleva el artwork, un rebote suave al pasar el ratón y abajo una pastilla blanca con el nombre y el número.
+  - **El artwork se ve entero, nunca recortado:** usa la misma normalización de tamaño visual que las tarjetas (§4.3, `figureStyle` con `artwork-bounds.json`). La figura opaca mide el 86 % de la zona por encima de la pastilla, o el 86 % del ancho si el Pokémon es muy ancho (Grovyle, Musharna), y se apoya justo encima de la pastilla. Queda margen alrededor y el rebote del hover tampoco la corta.
+  - Nunca se amplía por encima de su tamaño real (475px) y se pide con `sizes` de 475px en escritorio y calidad 90, para que se vea nítido.
   - **Cada columna es un enlace** (`<a>`) a la ficha de ese Pokémon. Toda la columna es clicable y el nombre accesible es «Ver ficha de Charizard».
 
 **Móvil:** el panel del titular ocupa todo el ancho y las tres columnas quedan debajo, en una fila de 3 de 150px de alto. No hay scroll lateral. Para no pasar de 400px, por debajo de 640px se omite la frase de apoyo y el dado mide 44px. En las columnas, el número solo aparece si cabe junto al nombre.

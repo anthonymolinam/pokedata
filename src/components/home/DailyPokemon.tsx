@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { formatPokemonDisplayName } from "@/lib/pokeapi";
-import { artworkUrl, figureStyle } from "@/lib/artwork";
+import { ARTWORK_SIZE, artworkUrl, figureStyle } from "@/lib/artwork";
 import { pickDistinctTypes, type DailyPokemon as Daily } from "@/lib/daily";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { getDictionary } from "@/constants/translations";
@@ -107,23 +107,31 @@ export default function DailyPokemon({ locale, today }: DailyPokemonProps) {
                   href={hrefFor(pokemon.name)}
                   aria-label={`${hero.viewCard} ${formatPokemonDisplayName(pokemon.name)}`}
                   data-type={pokemon.types[0]}
-                  className="group relative flex h-full items-end p-2.5 md:p-4 overflow-hidden rounded-surface bg-field text-ink [container-type:size] focus-visible:outline-ink motion-safe:transition-transform duration-[350ms] ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:-translate-y-1.5 active:scale-[0.98]"
+                  className="group relative flex h-full items-end p-2.5 md:p-4 overflow-hidden rounded-surface [--pill:2.5rem] md:[--pill:3.5rem] bg-field text-ink [container-type:size] focus-visible:outline-ink motion-safe:transition-transform duration-[350ms] ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:-translate-y-1.5 active:scale-[0.98]"
                 >
+                  {/* Misma normalización que las tarjetas (§4.3): la figura
+                      opaca mide el 86 % de la zona por encima de la pastilla
+                      (--pill, con su relleno) o el 86 % del ancho si es muy
+                      ancha, se apoya justo encima de la pastilla y nunca pasa
+                      de su tamaño real. Así se ve entera, con margen, y el
+                      rebote del hover tampoco la recorta */}
                   <span
                     aria-hidden="true"
                     className="absolute motion-safe:transition-transform duration-500 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:group-hover:scale-[1.06] motion-safe:group-hover:-rotate-3"
                     style={figureStyle(pokemon.id, {
-                      height: "96cqh",
-                      maxWidth: "150cqw",
+                      height: "calc((100cqh - var(--pill)) * 0.86)",
+                      maxWidth: "86cqw",
                       centerX: "50%",
-                      centerY: "44%",
+                      bottom: "calc(100cqh - var(--pill) - 3cqh)",
+                      maxSize: `${ARTWORK_SIZE}px`,
                     })}
                   >
                     <Image
                       src={artworkUrl(pokemon.id)}
                       alt=""
                       fill
-                      sizes="(min-width: 768px) 300px, 160px"
+                      sizes="(min-width: 768px) 475px, 240px"
+                      quality={90}
                       loading="eager"
                       className="object-contain"
                     />
