@@ -314,6 +314,24 @@ body {
   line-height: var(--leading-display);
 }
 
+/* Brillo de tipo de las tarjetas (§4.3): solo en hover y foco, nunca en
+   reposo. La sombra vive en una capa aparte para fundirla con la opacidad. */
+.type-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--field) 70%, transparent); /* taste-skill-ignore: brillo de hover (§4.0) */
+  opacity: 0;
+  transition: opacity 250ms ease-out;
+  pointer-events: none;
+}
+
+.type-glow:hover::before,
+.type-glow:focus-visible::before {
+  opacity: 1;
+}
+
 /* Números (#0006, estadísticas, totales, SHA) */
 .num {
   font-variant-numeric: tabular-nums;

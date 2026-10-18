@@ -237,11 +237,15 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - El número real se lee en la etiqueta accesible de la tarjeta («Charizard, n.º 6»).
 - **Etiquetas de tipo:** pastillas blancas al 80 % con el nombre en tinta (regla 4 del §2.3).
 - **Total:** pastilla en `--ink` con «Total 534» en hueso. La palabra «Total» va en 700 y la cifra en 900, con cifras tabulares.
-  - En móvil se mantiene, debajo de las etiquetas, si cabe en la zona reservada.
+  - Si no cabe a la derecha de las etiquetas, baja a la línea siguiente.
+  - En tarjetas de menos de 12rem (móvil, 2 columnas) no cabe en la zona reservada y se oculta: dos etiquetas largas («Fantasma» y «Veneno») ya ocupan el ancho.
 - **Artwork normalizado a la misma altura visual.** El artwork oficial tiene márgenes transparentes distintos en cada Pokémon: Caterpie ocupa la mitad de su lienzo y Venusaur casi todo.
   - Un script de compilación mide el recuadro opaco de cada imagen y guarda un factor de escala por id (`artwork-bounds.json`).
   - La tarjeta aplica ese factor para que la figura mida siempre un 85 % de la altura de la zona superior, limitada por el ancho.
-  - Sin datos, se cae a `object-fit: contain`.
+  - Aquí «zona superior» es la zona del artwork completa: la parte de la tarjeta por encima de la zona reservada (62 % del ancho de la tarjeta) más la franja de salida por arriba, del 25 % de la zona. La figura se apoya un poco por encima de la zona reservada y no pasa del 88 % del ancho. Las medidas viven en `src/lib/artwork.ts`.
+  - El script es `npm run artwork-bounds`; guarda `src/data/artwork-bounds.json`, que se versiona. Solo hay que repetirlo si PokéAPI cambia el artwork o se añaden Pokémon.
+  - Sin datos (formas alternativas), se cae a `object-fit: contain`.
+  - Banco de pruebas en desarrollo: `/es/lab/tarjeta`, con los Pokémon del paso 4 y los de contraste del §2.3. En producción da 404.
 - **Hover y foco:**
   - La tarjeta sube 6px.
   - El artwork crece a `scale(1.08)`.

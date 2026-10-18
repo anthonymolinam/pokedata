@@ -70,7 +70,7 @@ export const TYPE_COLORS: Record<string, string> = {
 
 /**
  * @deprecated Los halos degradados desaparecen en el rediseño (DESIGN.md §7).
- * Solo sigue aquí hasta que se rehaga PokemonHeroSection (paso 4); entonces se borra.
+ * Solo sigue aquí hasta que se rehaga PokemonHeroSection (paso 9, la ficha); entonces se borra.
  */
 export const TYPE_GLOWS: Record<string, string> = {
   normal: "from-zinc-500/20 to-transparent",

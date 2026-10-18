@@ -95,6 +95,9 @@ export interface PokemonSummary {
   name: string;
   image: string;
   types: string[];
+  // Suma de las estadísticas base (la pastilla «Total» de la tarjeta). Falta
+  // solo cuando PokéAPI no responde y la tarjeta se arma con datos mínimos.
+  total?: number;
 }
 
 export interface PokemonDetail extends PokemonSummary {
@@ -145,6 +148,10 @@ export interface AdjacentPokemon {
   id: number;
   name: string;
   image: string;
+}
+
+function sumBaseStats(stats: ApiPokemonStat[]): number {
+  return stats.reduce((sum, s) => sum + s.base_stat, 0);
 }
 
 /**
@@ -219,6 +226,7 @@ export async function getPaginatedPokemonList(
           pokeData.sprites.front_default ??
           "/placeholder.png",
         types: pokeData.types.map((t) => t.type.name),
+        total: sumBaseStats(pokeData.stats),
       };
     }),
   );
@@ -558,6 +566,7 @@ export async function searchPokemonGlobal(
           data.sprites.front_default ??
           "/placeholder.png",
         types: data.types.map((t) => t.type.name),
+        total: sumBaseStats(data.stats),
       };
     }),
   );
@@ -671,6 +680,7 @@ export async function getPokemonListByType(
               pData.sprites.front_default ??
               "/placeholder.png",
             types: pData.types.map((t) => t.type.name),
+            total: sumBaseStats(pData.stats),
           };
         } catch {
           return {
@@ -728,6 +738,7 @@ export async function getPokemonListByGen(
             pokeData.sprites.front_default ??
             "/placeholder.png",
           types: pokeData.types.map((t) => t.type.name),
+          total: sumBaseStats(pokeData.stats),
         };
       }),
     );
@@ -817,6 +828,7 @@ export async function getFilteredPokemonList({
               pData.sprites.front_default ??
               "/placeholder.png",
             types: pData.types.map((t) => t.type.name),
+            total: sumBaseStats(pData.stats),
           };
         } catch {
           return {
