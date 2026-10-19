@@ -90,7 +90,7 @@ Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon
 
 ## 3. Tipografía: Nunito
 
-Una sola familia: **Nunito**, cargada con `next/font/google`, pesos 600, 700, 800 y 900, subconjuntos `latin` y `latin-ext`. Sustituye a Chivo.
+Una sola familia: **Nunito**, cargada con `next/font/local` desde `src/app/fonts/` (licencia OFL): un woff2 estático por peso (600, 700, 800 y 900), con los caracteres de `latin` y `latin-ext`. No se usa `next/font/google`, que falla al compilar en Vercel. Sustituye a Chivo.
 
 | Papel | Peso | Ajustes |
 | --- | --- | --- |

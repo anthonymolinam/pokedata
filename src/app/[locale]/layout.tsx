@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
+import localFont from "next/font/local";
 import "../globals.css";
 import SiteHeader from "@/components/common/SiteHeader";
 import SiteFooter from "@/components/common/SiteFooter";
@@ -7,10 +7,16 @@ import MotionProvider from "@/components/common/MotionProvider";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 
-// Única familia (DESIGN.md §3): display 900, controles 800, texto 600
-const nunito = Nunito({
-  subsets: ["latin", "latin-ext"],
-  weight: ["600", "700", "800", "900"],
+// Única familia (DESIGN.md §3): display 900, controles 800, texto 600.
+// Va en el proyecto (src/app/fonts, OFL) y no desde Google Fonts, que falla
+// al compilar en Vercel: un woff2 estático por peso, con latin y latin-ext
+const nunito = localFont({
+  src: [
+    { path: "../fonts/Nunito-600.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/Nunito-700.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/Nunito-800.woff2", weight: "800", style: "normal" },
+    { path: "../fonts/Nunito-900.woff2", weight: "900", style: "normal" },
+  ],
   variable: "--font-nunito",
   display: "swap",
 });
