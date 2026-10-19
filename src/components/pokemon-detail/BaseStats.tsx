@@ -11,10 +11,10 @@ interface BaseStatsProps {
 }
 
 // Estadísticas base (DESIGN.md §4.4): seis filas con el nombre, el valor y la
-// barra sobre 255, en el color de texto del tipo principal (deep en claro, glow en oscuro) sobre una pista --step. Las
-// barras crecen al entrar en pantalla, cada vez que se monta el panel (la
-// ficha le da una key por Pokémon y forma); sin JavaScript o con movimiento
-// reducido se ven ya llenas.
+// barra sobre 255, en el color de texto del tipo principal (deep en claro, glow en oscuro) sobre una pista --step. Cada
+// barra crece cuando su fila entra en pantalla, cada vez que se monta el panel
+// (la ficha le da una key por Pokémon y forma); sin JavaScript o con
+// movimiento reducido se ven ya llenas.
 export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps) {
   const { detail } = getDictionary(locale);
   const ref = useReveal<HTMLElement>();
@@ -23,7 +23,6 @@ export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps
   return (
     <section
       ref={ref}
-      data-reveal="pending"
       aria-labelledby="stats-title"
       data-type={primaryType}
       className="rounded-surface bg-surface p-6 md:p-10 text-ink"
@@ -38,9 +37,10 @@ export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps
       </div>
 
       <dl className="mt-6 md:mt-8">
-        {stats.map((stat, i) => (
+        {stats.map((stat) => (
           <div
             key={stat.name}
+            data-reveal="pending"
             className="grid grid-cols-[minmax(6.5rem,9rem)_2.75rem_1fr] items-center gap-x-3 md:gap-x-5 py-2"
           >
             <dt className="text-body">{detail.statNames[stat.name] ?? stat.name}</dt>
@@ -51,7 +51,6 @@ export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps
                 style={
                   {
                     "--v": Math.min(stat.value / 255, 1),
-                    "--i": i,
                   } as React.CSSProperties
                 }
               />

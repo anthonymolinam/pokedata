@@ -466,7 +466,7 @@ Solo se animan `transform` y `opacity`. Todo tiene alternativa con `prefers-redu
 | Panel de filtros | Escritorio: se despliega en altura con fundido y empuja la rejilla (con movimiento reducido, solo el fundido). Móvil: la hoja sube desde abajo | 250ms · `cubic-bezier(.22,.8,.24,1)` |
 | Chips activos | Entrada con escala y salida con fundido | 200ms |
 | Ficha | Flotación lenta del artwork y cambio de forma | 6s en bucle · 400ms |
-| Barras de estadísticas | `scaleX` de 0 a su valor al entrar en pantalla, cada vez que se muestra un Pokémon o una forma nuevos (ficha y comparador). Salen vacías desde el primer pintado; sin JavaScript o con movimiento reducido, ya llenas | 600ms · 70ms de escalonado |
+| Barras de estadísticas | `scaleX` de 0 a su valor cuando su fila entra en pantalla (cada fila por separado: las visibles al cargar crecen enseguida y las de abajo, al bajar hasta ellas), cada vez que se muestra un Pokémon o una forma nuevos (ficha y comparador). Salen vacías desde el primer pintado; sin JavaScript o con movimiento reducido, ya llenas | 600ms · 70ms de escalonado |
 | Controles | Pulsación `scale(0.96)` y hover con rebote | 150ms |
 | Selector de tema | El relleno del segmento activo se desliza al nuevo (`transform`); el tema cambia sin fundido | 250ms con rebote · tooltip 120ms |
 
