@@ -37,7 +37,9 @@ const compactPill =
 const secondary = `${pill} bg-ink text-bone`;
 const iconButton =
   "grid place-items-center size-11 rounded-pill bg-step cursor-pointer active:scale-[0.96] motion-safe:transition-transform duration-150";
-const selectedRing = "ring-3 ring-ink ring-offset-2 ring-offset-surface";
+// Selección igual en tipos y regiones: ✓ y un borde de 3px en tinta por
+// dentro de la pastilla, que no cambia su tamaño ni toca a las vecinas
+const selectedRing = "inset-ring-3 inset-ring-ink";
 
 const FOCUSABLE = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
@@ -98,37 +100,9 @@ export default function PokemonFiltersBar({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  const search = searchParams.get("q") ?? "";
   const draftKey = `${[...draftTypes].sort().join(",")}|${draftGen ?? ""}`;
   const appliedKey = `${[...activeTypes].sort().join(",")}|${activeGen ?? ""}`;
-  const dirty = open && draftKey !== appliedKey;
-
-  // Recuento del borrador para «Aplicar», con la búsqueda activa incluida.
-  // Se guarda con su clave, así un recuento viejo nunca se muestra.
-  const [preview, setPreview] = useState<{ key: string; total: number } | null>(null);
-  const previewTotal = preview?.key === `${draftKey}|${search}` ? preview.total : null;
-
-  useEffect(() => {
-    if (!dirty) return;
-    const key = `${draftKey}|${search}`;
-    const params = new URLSearchParams();
-    if (draftTypes.length > 0) params.set("types", draftTypes.join(","));
-    if (draftGen !== null) params.set("gen", String(draftGen));
-    if (search) params.set("q", search);
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/count?${params}`, { signal: controller.signal });
-        if (res.ok) setPreview({ key, total: (await res.json()).total });
-      } catch {
-        // Sin recuento, «Aplicar» sigue funcionando
-      }
-    }, 150);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [dirty, draftKey, draftTypes, draftGen, search]);
+  const dirty = draftKey !== appliedKey;
 
   const regionName = (id: number) => filters.regionNames[id - 1];
 
@@ -137,6 +111,7 @@ export default function PokemonFiltersBar({
     if (types.length > 0) params.set("types", types.join(","));
     if (gen !== null) params.set("gen", String(gen));
     // La búsqueda del hero se mantiene al cambiar los filtros
+    const search = searchParams.get("q");
     if (search) params.set("q", search);
     const query = params.toString();
     startTransition(() => {
@@ -219,8 +194,8 @@ export default function PokemonFiltersBar({
     </button>
   );
 
-  // «Limpiar» vacía el borrador; «Aplicar» lleva el número de resultados que
-  // dará y está desactivado mientras el borrador no cambie nada
+  // «Limpiar» vacía el borrador; «Aplicar» está desactivado mientras el
+  // borrador no cambie nada
   const actions = (
     <>
       <button
@@ -240,12 +215,6 @@ export default function PokemonFiltersBar({
         className={`${secondary} disabled:bg-step disabled:text-ink-soft disabled:cursor-not-allowed disabled:active:scale-100`}
       >
         {filters.apply}
-        {dirty && previewTotal !== null && (
-          <span className="grid place-items-center min-w-6 h-6 px-1.5 -mr-2 rounded-pill bg-surface text-ink font-black num">
-            {previewTotal}
-            <span className="sr-only"> Pokémon</span>
-          </span>
-        )}
       </button>
     </>
   );
@@ -280,8 +249,11 @@ export default function PokemonFiltersBar({
                   type="button"
                   aria-pressed={selected}
                   onClick={() => toggleGen(gen.id)}
-                  className={`${compactPill} ${selected ? "bg-ink text-bone" : "bg-step text-ink"}`}
+                  className={`${compactPill} bg-step text-ink ${selected ? selectedRing : ""}`}
                 >
+                  {selected && (
+                    <Check aria-hidden="true" strokeWidth={3.5} className="size-3.5 shrink-0 -ml-0.5" />
+                  )}
                   {regionName(gen.id)}
                 </button>
               </li>
@@ -376,8 +348,11 @@ export default function PokemonFiltersBar({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => toggleGen(gen.id)}
-                    className={`${pill} ${selected ? "bg-ink text-bone" : "bg-step text-ink"}`}
+                    className={`${pill} bg-step text-ink ${selected ? selectedRing : ""}`}
                   >
+                    {selected && (
+                      <Check aria-hidden="true" strokeWidth={3.5} className="size-4 -ml-1" />
+                    )}
                     {regionName(gen.id)}
                   </button>
                 </li>

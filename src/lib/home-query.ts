@@ -20,8 +20,8 @@ export async function getSearchMatches(query: Query) {
   return matches.filter((m) => allowed.has(m.id));
 }
 
-// Sin filtros ni búsqueda son todos; si no, los que cumplen. Lo usan el
-// recuento de la portada y el botón «Aplicar» del panel de filtros
+// Recuento de la portada: sin filtros ni búsqueda son todos; si no, los que
+// cumplen
 export async function countResults(query: Query) {
   if (query.q) return (await getSearchMatches(query)).length;
   if (hasFilters(query)) return (await getFilteredPokemonIds(query)).length;
