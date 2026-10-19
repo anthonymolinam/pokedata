@@ -66,7 +66,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
       const input = inputRef.current;
       if (!input || !isHeroSearchVisible()) return;
       e.preventDefault();
-      input.focus();
+      input.focus({ preventScroll: true });
       input.select();
     };
     window.addEventListener("keydown", onKeyDown);

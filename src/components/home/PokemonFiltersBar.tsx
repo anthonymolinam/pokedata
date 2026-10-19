@@ -36,6 +36,13 @@ const FOCUSABLE = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"
 
 // Escritorio y móvil cambian la capa: flotante bajo el botón u hoja inferior
 const MOBILE_QUERY = "(max-width: 767px)";
+// Altura de la cabecera fija en escritorio (h-18), separación del botón (mt-3)
+// y aire mínimo hasta el borde de la pantalla
+const HEADER_HEIGHT = 72;
+const PANEL_GAP = 12;
+const VIEWPORT_MARGIN = 16;
+// Por debajo de esto, el panel se abre hacia arriba si allí cabe más
+const MIN_PANEL_HEIGHT = 384;
 const subscribeMobile = (onChange: () => void) => {
   const query = window.matchMedia(MOBILE_QUERY);
   query.addEventListener("change", onChange);
@@ -84,6 +91,18 @@ export default function PokemonFiltersBar({
   const anchorRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  // En escritorio el panel nunca pasa del borde de la pantalla: se abre hacia
+  // donde quepa y, si no cabe entero, desplaza su contenido por dentro
+  const [fit, setFit] = useState({ above: false, maxHeight: 0 });
+
+  const measure = () => {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const below = window.innerHeight - rect.bottom - PANEL_GAP - VIEWPORT_MARGIN;
+    const above = rect.top - HEADER_HEIGHT - PANEL_GAP - VIEWPORT_MARGIN;
+    const flip = below < MIN_PANEL_HEIGHT && above > below;
+    setFit({ above: flip, maxHeight: Math.max(0, flip ? above : below) });
+  };
 
   const regionName = (id: number) => filters.regionNames[id - 1];
 
@@ -101,6 +120,7 @@ export default function PokemonFiltersBar({
   const openPanel = () => {
     setDraftTypes(urlTypes);
     setDraftGen(urlGen);
+    measure();
     setOpen(true);
   };
 
@@ -119,9 +139,10 @@ export default function PokemonFiltersBar({
 
   // Abierto: foco dentro del panel, Esc y clic fuera cierran, y en móvil la
   // página no se desplaza por detrás. Al cerrar, el foco vuelve al botón.
+  // Ningún foco desplaza la página: el panel ya está a la vista
   useEffect(() => {
     if (!open) return;
-    panelRef.current?.focus();
+    panelRef.current?.focus({ preventScroll: true });
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -133,13 +154,15 @@ export default function PokemonFiltersBar({
     if (isMobile) document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("pointerdown", onPointerDown);
+    if (!isMobile) window.addEventListener("resize", measure);
 
     const button = buttonRef.current;
     return () => {
       document.body.style.overflow = overflow;
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("pointerdown", onPointerDown);
-      button?.focus();
+      window.removeEventListener("resize", measure);
+      button?.focus({ preventScroll: true });
     };
   }, [open, isMobile]);
 
@@ -152,10 +175,10 @@ export default function PokemonFiltersBar({
     const last = items[items.length - 1];
     if (e.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
       e.preventDefault();
-      last.focus();
+      last.focus({ preventScroll: true });
     } else if (!e.shiftKey && document.activeElement === last) {
       e.preventDefault();
-      first.focus();
+      first.focus({ preventScroll: true });
     }
   };
 
@@ -317,11 +340,14 @@ export default function PokemonFiltersBar({
               ) : (
                 <motion.div
                   key="panel"
-                  initial={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
+                  initial={{ opacity: 0, y: reduceMotion ? 0 : fit.above ? -8 : 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
+                  exit={{ opacity: 0, y: reduceMotion ? 0 : fit.above ? -8 : 8 }}
                   transition={{ duration: 0.25, ease: PANEL_EASE }}
-                  className={`absolute right-0 top-full mt-3 z-40 w-[35rem] max-w-[calc(100vw-2*var(--gutter))] max-h-[min(42rem,calc(100svh-11rem))] flex flex-col bg-surface text-ink rounded-surface ${PANEL_SHADOW}`}
+                  style={{ maxHeight: `min(42rem, ${fit.maxHeight}px)` }}
+                  className={`absolute right-0 z-40 w-[35rem] max-w-[calc(100vw-2*var(--gutter))] flex flex-col bg-surface text-ink rounded-surface ${
+                    fit.above ? "bottom-full mb-3" : "top-full mt-3"
+                  } ${PANEL_SHADOW}`}
                 >
                   {panelBody}
                 </motion.div>

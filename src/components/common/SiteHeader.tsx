@@ -45,6 +45,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
   const heroSearchVisible = useHeroSearchVisible();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const closeMenuRef = useRef<HTMLButtonElement>(null);
 
   const links = [
     { key: "pokedex", href: `/${locale}`, label: labels.pokedex },
@@ -91,10 +92,12 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
     const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKeyDown);
+    // Foco a mano y no con autoFocus, que desplazaría la página
+    if (menuOpen) closeMenuRef.current?.focus({ preventScroll: true });
     return () => {
       document.body.style.overflow = overflow;
       document.removeEventListener("keydown", onKeyDown);
-      returnFocus?.focus();
+      returnFocus?.focus({ preventScroll: true });
     };
   }, [layerOpen, menuOpen]);
 
@@ -251,8 +254,8 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
               <div className="flex items-center justify-between gap-4 mb-3">
                 <p className="display text-lead">{labels.menu}</p>
                 <button
+                  ref={closeMenuRef}
                   type="button"
-                  autoFocus
                   aria-label={labels.closeMenu}
                   onClick={() => setMenuOpen(false)}
                   className={`${pillButton} w-11 bg-step`}

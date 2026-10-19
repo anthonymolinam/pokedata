@@ -58,7 +58,7 @@ export default function GlobalSearchBar({
         if (!input || input.getClientRects().length === 0) return;
         if (!isOverlay && isHeroSearchVisible()) return;
         e.preventDefault();
-        input.focus();
+        input.focus({ preventScroll: true });
         input.select();
       }
     }
@@ -66,6 +66,11 @@ export default function GlobalSearchBar({
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, [isOverlay]);
+
+  // Foco al montar sin desplazar la página (el autoFocus nativo sí lo hace)
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus({ preventScroll: true });
+  }, [autoFocus]);
 
   // Cerrar y limpiar al hacer clic afuera
   useEffect(() => {
@@ -140,7 +145,7 @@ export default function GlobalSearchBar({
     setResults([]);
     setIsOpen(false);
     setSelectedIndex(-1);
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   };
 
   const handleSelect = (pokemonName: string) => {
@@ -191,7 +196,6 @@ export default function GlobalSearchBar({
         <input
           ref={inputRef}
           type="search"
-          autoFocus={autoFocus}
           value={query}
           onChange={handleInputChange}
           onFocus={() => query.trim() && results.length > 0 && setIsOpen(true)}
