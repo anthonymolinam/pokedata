@@ -201,15 +201,17 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Con filtros activos lleva un contador: un círculo blanco con el número en tinta («Filtros 3»).
   - Cuenta un filtro por cada tipo elegido más uno por la región.
 
-**Panel de filtros:** oculto por defecto. Los filtros se aplican al momento al tocarlos: no hay botón «Mostrar resultados». La selección se marca al instante, antes de que llegue la nueva URL.
-- **En escritorio (≥ 768px)** se despliega dentro de la página, a todo el ancho, justo debajo de la fila del título, y empuja los chips y las tarjetas hacia abajo. Es blanco, con radio 28px y 24px de relleno, sin sombra (está en la página, no flota). Todo se ve sin scroll interno: mide unos 305px de alto.
-  - **Fila de cabecera:** «Región» a la izquierda y, a la derecha, «Limpiar» (en `--step`) y el botón «×» de cerrar.
+**Panel de filtros:** oculto por defecto. Al abrirlo parte de los filtros aplicados; tocar tipos y regiones solo cambia esa selección, y nada se aplica hasta pulsar **«Aplicar»** («Apply» en inglés).
+- **En escritorio (≥ 768px)** se despliega dentro de la página, a todo el ancho, justo debajo de la fila del título, y empuja los chips y las tarjetas hacia abajo. Es blanco, con radio 28px y 24px de relleno, sin sombra (está en la página, no flota). Todo se ve sin scroll interno: mide unos 355px de alto.
+  - **Fila de cabecera:** «Región» a la izquierda y el botón «×» de cerrar a la derecha.
   - **Regiones:** las 9 (Kanto … Paldea) en una sola fila de pastillas compactas de 40px y ancho igual, con selección única (`?gen=`). La activa va en `--ink` con texto hueso; el resto, en `--step`.
   - **Tipos:** «Tipos» con la nota «Hasta dos» y los 18 tipos en dos filas de 9 pastillas compactas de 40px, cada una en su `field` con el nombre en `field-ink`. La elegida lleva un aro de 3px en `--ink` y una marca ✓, para no depender solo del color. Se pueden elegir hasta dos (`?types=`), porque ningún Pokémon tiene más y el filtro es la intersección; al elegir un tercero sustituye al segundo.
+  - **Pie:** «Limpiar» y «Aplicar», alineados a la derecha bajo los tipos.
   - **Tableta (768–1023px):** las regiones pasan a dos filas (5 + 4) y los tipos a tres filas de 6.
-  - Es una sección desplegable, no un diálogo: al abrir, el foco se queda en el botón «Filtros». Se cierra con el mismo botón, con «×» o con Esc.
-- **En móvil** es una hoja inferior a pantalla casi completa (un diálogo con el foco dentro), con los 18 tipos como bloques de 44px en 2 columnas y las regiones en pastillas. Si no cabe, se desplaza por dentro y «Limpiar» queda fijo abajo. Se cierra con «×», con Esc o tocando fuera.
-- **«Limpiar»** quita todos los filtros al momento, igual que «Borrar todo» en los chips.
+  - Es una sección desplegable, no un diálogo: al abrir, el foco se queda en el botón «Filtros». Se cierra con el mismo botón, con «×» o con Esc, y lo no aplicado se descarta.
+- **En móvil** es una hoja inferior a pantalla casi completa (un diálogo con el foco dentro), con los 18 tipos como bloques de 44px en 2 columnas y las regiones en pastillas. Si no cabe, se desplaza por dentro y el pie con «Limpiar» y «Aplicar» queda fijo abajo. Se cierra con «×», con Esc o tocando fuera.
+- **«Limpiar»** (en `--step`) vacía la selección del panel; no cambia nada hasta pulsar «Aplicar».
+- **«Aplicar»** es el botón secundario en `--ink`. Con cambios lleva, como el botón «Filtros», un círculo blanco con el número de Pokémon que dará la selección («Aplicar 12»), contando también la búsqueda activa (`/api/count`, con 150ms de espera entre toques). Sin cambios respecto a lo aplicado está desactivado: fondo `--step` y texto `--ink-soft`. Al pulsarlo aplica la selección a la URL y cierra el panel.
 - Al cerrar, si el foco estaba dentro del panel, vuelve al botón «Filtros» sin desplazar la página.
 
 **Chips de filtros activos:** una fila bajo la barra, que solo existe si hay filtros.
@@ -415,7 +417,7 @@ Se mantiene todo lo demás de la casa:
 3. **Pie compacto** (§4.7). Fila principal con logo, frase y enlaces; fila inferior con el aviso legal y el SHA con el punto verde.
 4. **Tarjeta.** Anatomía con zona reservada, marca de agua y «Total», más el script `artwork-bounds.json` y la normalización del artwork. Se prueba aislada con Caterpie, Venusaur, Wailord y Pikachu.
 5. **Rejilla de la portada.** Columnas, paginación, estado vacío y tarjetas fantasma de carga.
-6. **Filtros.** Botón con contador, panel (desplegable en la página en escritorio y hoja en móvil) que aplica al tocar y chips removibles, todo conectado a `?types=` y `?gen=`.
+6. **Filtros.** Botón con contador, panel (desplegable en la página en escritorio y hoja en móvil) con «Limpiar» y «Aplicar» con recuento y chips removibles, todo conectado a `?types=` y `?gen=`.
 7. **Hero.**
    - Titular y buscador grande.
    - Pokémon del día en el servidor (semilla UTC y regla de tipos distintos).

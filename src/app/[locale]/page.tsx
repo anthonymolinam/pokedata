@@ -2,11 +2,10 @@ import { Suspense } from "react";
 import {
   getPaginatedPokemonList,
   getFilteredPokemonList,
-  getFilteredPokemonIds,
   searchPokemonGlobal,
-  searchPokemonMatches,
   PokemonSummary,
 } from "@/lib/pokeapi";
+import { countResults, getSearchMatches, hasFilters, type Query } from "@/lib/home-query";
 import { GENERATIONS } from "@/constants/generations";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
@@ -26,23 +25,6 @@ interface PageProps {
 }
 
 const PAGE_SIZE = 24;
-const TOTAL_POKEMON = 1025;
-
-interface Query {
-  types: string[];
-  genId: number | null;
-  q: string;
-}
-
-const hasFilters = ({ types, genId }: Query) => types.length > 0 || genId !== null;
-
-// Búsqueda por nombre o número, dentro de los filtros activos si los hay
-async function getSearchMatches(query: Query) {
-  const matches = await searchPokemonMatches(query.q);
-  if (!hasFilters(query)) return matches;
-  const allowed = new Set(await getFilteredPokemonIds(query));
-  return matches.filter((m) => allowed.has(m.id));
-}
 
 export default async function HomePage({ params, searchParams }: PageProps) {
   const { locale: rawLocale } = await params;
@@ -157,9 +139,5 @@ async function HomeResults({
 
 // «151 Pokémon»: sin filtros ni búsqueda son todos; si no, los que cumplen
 async function ResultCount({ query }: { query: Query }) {
-  let total = TOTAL_POKEMON;
-  if (query.q) total = (await getSearchMatches(query)).length;
-  else if (hasFilters(query)) total = (await getFilteredPokemonIds(query)).length;
-
-  return <>{total} Pokémon</>;
+  return <>{await countResults(query)} Pokémon</>;
 }

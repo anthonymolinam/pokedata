@@ -60,7 +60,7 @@ interface PokemonFiltersBarProps {
 // Barra de filtros (§4.3): título y recuento a la izquierda, botón «Filtros»
 // con contador a la derecha, panel con regiones y tipos y una fila de chips
 // removibles. Todo vive en la URL: ?types=fire,flying y ?gen=1, junto a la
-// búsqueda del hero (?q=), que se conserva. Cada toque se aplica al momento.
+// búsqueda del hero (?q=), que se conserva. El panel se aplica con «Aplicar».
 export default function PokemonFiltersBar({
   locale,
   title,
@@ -84,7 +84,7 @@ export default function PokemonFiltersBar({
   const genParam = Number(searchParams.get("gen"));
   const urlGen = GENERATIONS.some((g) => g.id === genParam) ? genParam : null;
 
-  // La selección cambia al tocar, sin esperar a que llegue la nueva URL
+  // Los filtros aplicados cambian al momento, sin esperar a la nueva URL
   const [, startTransition] = useTransition();
   const [selection, setSelection] = useOptimistic({ types: urlTypes, gen: urlGen });
   const activeTypes = selection.types;
@@ -92,8 +92,43 @@ export default function PokemonFiltersBar({
   const activeCount = activeTypes.length + (activeGen !== null ? 1 : 0);
 
   const [open, setOpen] = useState(false);
+  // En el panel se elige un borrador, que solo se aplica con «Aplicar»
+  const [draftTypes, setDraftTypes] = useState<PokemonType[]>([]);
+  const [draftGen, setDraftGen] = useState<number | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  const search = searchParams.get("q") ?? "";
+  const draftKey = `${[...draftTypes].sort().join(",")}|${draftGen ?? ""}`;
+  const appliedKey = `${[...activeTypes].sort().join(",")}|${activeGen ?? ""}`;
+  const dirty = open && draftKey !== appliedKey;
+
+  // Recuento del borrador para «Aplicar», con la búsqueda activa incluida.
+  // Se guarda con su clave, así un recuento viejo nunca se muestra.
+  const [preview, setPreview] = useState<{ key: string; total: number } | null>(null);
+  const previewTotal = preview?.key === `${draftKey}|${search}` ? preview.total : null;
+
+  useEffect(() => {
+    if (!dirty) return;
+    const key = `${draftKey}|${search}`;
+    const params = new URLSearchParams();
+    if (draftTypes.length > 0) params.set("types", draftTypes.join(","));
+    if (draftGen !== null) params.set("gen", String(draftGen));
+    if (search) params.set("q", search);
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/count?${params}`, { signal: controller.signal });
+        if (res.ok) setPreview({ key, total: (await res.json()).total });
+      } catch {
+        // Sin recuento, «Aplicar» sigue funcionando
+      }
+    }, 150);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [dirty, draftKey, draftTypes, draftGen, search]);
 
   const regionName = (id: number) => filters.regionNames[id - 1];
 
@@ -102,7 +137,6 @@ export default function PokemonFiltersBar({
     if (types.length > 0) params.set("types", types.join(","));
     if (gen !== null) params.set("gen", String(gen));
     // La búsqueda del hero se mantiene al cambiar los filtros
-    const search = searchParams.get("q");
     if (search) params.set("q", search);
     const query = params.toString();
     startTransition(() => {
@@ -111,16 +145,27 @@ export default function PokemonFiltersBar({
     });
   };
 
+  const openPanel = () => {
+    setDraftTypes(activeTypes);
+    setDraftGen(activeGen);
+    setOpen(true);
+  };
+
   const toggleType = (type: PokemonType) => {
-    let types: PokemonType[];
-    if (activeTypes.includes(type)) types = activeTypes.filter((t) => t !== type);
-    else if (activeTypes.length >= MAX_TYPES) types = [activeTypes[0], type];
-    else types = [...activeTypes, type];
-    navigate(types, activeGen);
+    setDraftTypes((current) => {
+      if (current.includes(type)) return current.filter((t) => t !== type);
+      if (current.length >= MAX_TYPES) return [current[0], type];
+      return [...current, type];
+    });
   };
 
   const toggleGen = (id: number) =>
-    navigate(activeTypes, activeGen === id ? null : id);
+    setDraftGen((current) => (current === id ? null : id));
+
+  const apply = () => {
+    navigate(draftTypes, draftGen);
+    setOpen(false);
+  };
 
   // Abierto: Esc cierra. En móvil la hoja toma el foco sin desplazar la
   // página, que no se mueve por detrás. Al cerrar, el foco vuelve al botón
@@ -174,14 +219,35 @@ export default function PokemonFiltersBar({
     </button>
   );
 
-  const clearButton = (
-    <button
-      type="button"
-      onClick={() => navigate([], null)}
-      className={`${pill} bg-step text-ink`}
-    >
-      {filters.clear}
-    </button>
+  // «Limpiar» vacía el borrador; «Aplicar» lleva el número de resultados que
+  // dará y está desactivado mientras el borrador no cambie nada
+  const actions = (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setDraftTypes([]);
+          setDraftGen(null);
+        }}
+        className={`${pill} bg-step text-ink`}
+      >
+        {filters.clear}
+      </button>
+      <button
+        type="button"
+        onClick={apply}
+        disabled={!dirty}
+        className={`${secondary} disabled:bg-step disabled:text-ink-soft disabled:cursor-not-allowed disabled:active:scale-100`}
+      >
+        {filters.apply}
+        {dirty && previewTotal !== null && (
+          <span className="grid place-items-center min-w-6 h-6 px-1.5 -mr-2 rounded-pill bg-surface text-ink font-black num">
+            {previewTotal}
+            <span className="sr-only"> Pokémon</span>
+          </span>
+        )}
+      </button>
+    </>
   );
 
   const typesHeading = (
@@ -203,14 +269,11 @@ export default function PokemonFiltersBar({
           <h3 id="filters-region" className="font-extrabold">
             {filters.region}
           </h3>
-          <div className="flex items-center gap-2">
-            {clearButton}
-            {closeButton}
-          </div>
+          {closeButton}
         </div>
         <ul className="grid grid-cols-5 lg:grid-cols-9 gap-2">
           {GENERATIONS.map((gen) => {
-            const selected = activeGen === gen.id;
+            const selected = draftGen === gen.id;
             return (
               <li key={gen.id}>
                 <button
@@ -231,7 +294,7 @@ export default function PokemonFiltersBar({
         {typesHeading}
         <ul className="grid grid-cols-6 lg:grid-cols-9 gap-2">
           {POKEMON_TYPES.map((type) => {
-            const selected = activeTypes.includes(type);
+            const selected = draftTypes.includes(type);
             return (
               <li key={type}>
                 <button
@@ -251,6 +314,8 @@ export default function PokemonFiltersBar({
           })}
         </ul>
       </section>
+
+      <div className="flex items-center justify-end gap-2 mt-6">{actions}</div>
     </div>
   );
 
@@ -277,7 +342,7 @@ export default function PokemonFiltersBar({
           {typesHeading}
           <ul className="grid grid-cols-2 gap-2">
             {POKEMON_TYPES.map((type) => {
-              const selected = activeTypes.includes(type);
+              const selected = draftTypes.includes(type);
               return (
                 <li key={type}>
                   <button
@@ -304,7 +369,7 @@ export default function PokemonFiltersBar({
           </h3>
           <ul className="flex flex-wrap gap-2">
             {GENERATIONS.map((gen) => {
-              const selected = activeGen === gen.id;
+              const selected = draftGen === gen.id;
               return (
                 <li key={gen.id}>
                   <button
@@ -322,8 +387,8 @@ export default function PokemonFiltersBar({
         </section>
       </div>
 
-      <div className="flex items-center justify-end px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-surface rounded-b-[inherit]">
-        {clearButton}
+      <div className="flex items-center justify-end gap-2 px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-surface rounded-b-[inherit]">
+        {actions}
       </div>
     </div>
   );
@@ -344,7 +409,7 @@ export default function PokemonFiltersBar({
           aria-haspopup={isMobile ? "dialog" : undefined}
           aria-expanded={open}
           aria-controls={open ? "filters-panel" : undefined}
-          onClick={() => setOpen(!open)}
+          onClick={() => (open ? setOpen(false) : openPanel())}
           className={secondary}
         >
           <SlidersHorizontal aria-hidden="true" strokeWidth={2.5} className="size-4 -ml-1" />
