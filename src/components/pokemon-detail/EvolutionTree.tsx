@@ -589,8 +589,8 @@ function evolutionRequirements(
 const REGIONAL_FORM = /-(alola|galar|hisui|paldea)$/;
 
 // Cuatro o más evoluciones finales desde una misma etapa (Eevee) van en abanico:
-// una sola flecha hacia un bloque con todas ellas y la condición encima de
-// cada tarjeta. Las ramas con su propia cadena (Silcoon → Beautifly) van en
+// una sola flecha hacia un bloque con todas ellas y la condición pegada debajo
+// de cada tarjeta, para que en la segunda fila no parezca de la de arriba. Las ramas con su propia cadena (Silcoon → Beautifly) van en
 // filas, cada una con su flecha.
 const isLeaf = (node: EvolutionStage) => node.evolvesTo.length === 0;
 
@@ -687,16 +687,16 @@ function Branch({ node, currentLower, locale }: BranchProps) {
           <Arrow requirements={[]} />
           {/* En móvil, sin bloque: la única flecha ya baja hacia la rejilla y
               las tarjetas ganan ancho */}
-          <ul className="grid w-full grid-cols-2 gap-x-3 sm:w-auto sm:grid-cols-4 sm:rounded-surface sm:bg-ground sm:px-3 sm:pb-4 lg:grid-cols-2 lg:gap-x-5 lg:px-5 lg:pb-5 xl:grid-cols-4">
+          <ul className="grid w-full grid-cols-2 gap-x-3 gap-y-4 sm:w-auto sm:grid-cols-4 sm:rounded-surface sm:bg-ground sm:px-3 sm:pb-4 lg:grid-cols-2 lg:gap-x-5 lg:px-5 lg:pb-5 xl:grid-cols-4">
             {children.map((child, index) => (
               <li
                 key={`${child.name}-${index}`}
-                className="flex min-w-0 flex-col items-center justify-between sm:w-40 lg:w-auto"
+                className="flex min-w-0 flex-col items-center sm:w-40 lg:w-auto"
               >
-                <p className="pt-4 text-center text-small font-extrabold text-balance">
+                <Branch node={child} currentLower={currentLower} locale={locale} />
+                <p className="mt-2 text-center text-small font-extrabold text-balance">
                   {requirementsOf(child).join(" · ")}
                 </p>
-                <Branch node={child} currentLower={currentLower} locale={locale} />
               </li>
             ))}
           </ul>
