@@ -144,7 +144,7 @@ Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon
 
 Los valores salen de un script que mezcla con blanco en pasos del 1 % hasta llegar al umbral; si se toca un token, se recalcula la fila entera.
 
-**Lo que cambia en oscuro y nada más:**
+**Lo que cambia en oscuro y nada más.** Casi todo sale de los tokens; lo poco que no, usa la variante `dark:` de Tailwind (definida en `globals.css`), que cubre el tema forzado y el automático:
 - **Brillo de hover de las tarjetas** (§4.3): mismo alcance, más intensidad. Sobre fondo oscuro el color de tipo luce de verdad, y se aprovecha: dos capas en lugar de una.
 - **Sombras:** las de claro no se ven sobre `#14161D`. La cabecera al desplazar usa `0 6px 20px rgba(0,0,0,.45)` y las capas flotantes van en `--raised` con `0 16px 40px rgba(0,0,0,.55)`. La separación la da sobre todo el escalón de tono.
 - **Pokébola del logo:** contorno, banda y botón en `--on-light`, mitad inferior y centro en `--pokeball-white`, mitad superior en `--accent`. Con colores fijos el logo es el mismo en los dos temas; sobre el fondo oscuro la silueta la dibujan el rojo y el blanco (18.07:1).
@@ -511,7 +511,7 @@ La dirección «Pop» ya está construida (merge 99fcfce); su orden de trabajo q
 5. **Selector de escritorio** (§4.1). Grupo de radios con sol, luna y monitor, tooltip, marca del activo por `data-theme-pref`, guardado, evento `storage` y textos en `translations.ts` en los dos idiomas. A 768px no cabía: entre 768 y 1023px el buscador compacto se queda en su lupa de 44px (§4.1).
 6. **Selector en la hoja móvil.** El mismo control dentro de «Menú», con iconos y nombres visibles.
 7. **Ajustes propios del oscuro.**
-   - Brillo de hover de dos capas (§4.3) en tarjetas, columnas del día, mini tarjetas y anterior/siguiente.
+   - Brillo de hover de dos capas (§4.3) en todo lo que ya lo tiene en claro: tarjetas, mini tarjetas de la evolución y del comparador, y anterior/siguiente. Las columnas del día no llevan brillo en ningún tema (§4.2).
    - Anillos de selección de las pastillas de tipo del panel de filtros en `field-ink` (§2.3, regla 8).
    - Etiquetas de tipo en `--ground` al 80 % y pastilla «Total» estrecha sobre `--on-light`.
    - Tinte de la fila o columna seleccionada de la tabla de tipos mezclado con `--surface`.

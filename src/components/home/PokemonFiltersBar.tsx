@@ -40,6 +40,9 @@ const iconButton =
 // Selección igual en tipos y regiones: ✓ y un borde de 3px en tinta por
 // dentro de la pastilla, que no cambia su tamaño ni toca a las vecinas
 const selectedRing = "inset-ring-3 inset-ring-ink";
+// Sobre un campo de tipo, en oscuro el aro va en su tinta: en --ink (clara)
+// desaparecería sobre Eléctrico o Hielo (§2.3, regla 8)
+const selectedTypeRing = `${selectedRing} dark:inset-ring-field-ink`;
 
 const FOCUSABLE = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
@@ -274,7 +277,7 @@ export default function PokemonFiltersBar({
                   data-type={type}
                   aria-pressed={selected}
                   onClick={() => toggleType(type)}
-                  className={`${compactPill} bg-field text-field-ink ${selected ? selectedRing : ""}`}
+                  className={`${compactPill} bg-field text-field-ink ${selected ? selectedTypeRing : ""}`}
                 >
                   {selected && (
                     <Check aria-hidden="true" strokeWidth={3.5} className="size-3.5 shrink-0 -ml-0.5" />
@@ -322,7 +325,7 @@ export default function PokemonFiltersBar({
                     data-type={type}
                     aria-pressed={selected}
                     onClick={() => toggleType(type)}
-                    className={`${pill} w-full bg-field text-field-ink ${selected ? selectedRing : ""}`}
+                    className={`${pill} w-full bg-field text-field-ink ${selected ? selectedTypeRing : ""}`}
                   >
                     {selected && (
                       <Check aria-hidden="true" strokeWidth={3.5} className="size-4 -ml-1" />

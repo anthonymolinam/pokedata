@@ -247,7 +247,7 @@ function CompareStage({
             {types.map((type) => (
               <li
                 key={type}
-                className="rounded-pill bg-surface/80 px-3.5 py-1 text-small font-extrabold text-ink"
+                className="rounded-pill bg-surface/80 dark:bg-ground/80 px-3.5 py-1 text-small font-extrabold text-ink"
               >
                 {typeNames[type]}
               </li>

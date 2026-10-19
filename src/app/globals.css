@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Variante dark: para lo poco que cambia en oscuro además de los tokens
+   (§2.4). Cubre el tema forzado y el automático con el sistema en oscuro. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
 /* =========================================================================
    Tokens de la dirección «Pop» (DESIGN.md §2, §3 y §4.0). Ningún otro archivo
    escribe a mano un color de tipo: todo sale de aquí o de src/constants/typeColors.ts.
@@ -494,6 +507,24 @@ body {
 .type-glow:hover::before,
 .type-glow:focus-visible::before {
   opacity: 1;
+}
+
+/* En oscuro el color de tipo luce de verdad (§4.3): la capa de abajo sube al
+   90 % y se suma un halo alrededor. El alcance no crece (46px por abajo y
+   28px por los lados), así que los rellenos de la cadena evolutiva y del modal
+   siguen valiendo. Siniestro ya llega con su field-dark en --field. */
+:root[data-theme="dark"] .type-glow::before {
+  box-shadow: /* taste-skill-ignore: brillo de hover (§4.0) */
+    0 18px 40px -12px color-mix(in srgb, var(--field) 90%, transparent),
+    0 0 28px 0 color-mix(in srgb, var(--field) 40%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .type-glow::before {
+    box-shadow: /* taste-skill-ignore: brillo de hover (§4.0) */
+      0 18px 40px -12px color-mix(in srgb, var(--field) 90%, transparent),
+      0 0 28px 0 color-mix(in srgb, var(--field) 40%, transparent);
+  }
 }
 
 /* Entrada «pop» de las tarjetas (§6): suben 30px y crecen desde 0.94, con
