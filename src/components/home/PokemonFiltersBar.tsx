@@ -2,9 +2,11 @@
 
 import {
   useEffect,
+  useOptimistic,
   useRef,
   useState,
   useSyncExternalStore,
+  useTransition,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
@@ -21,28 +23,26 @@ import { Locale } from "@/proxy";
 // elegir un tercero, sustituye al segundo
 const MAX_TYPES = 2;
 
-// Capas flotantes (DESIGN.md §4.0): las únicas con sombra
-const PANEL_SHADOW = "shadow-[0_18px_48px_rgb(21_22_28/0.16)]"; // taste-skill-ignore
+// La hoja móvil flota sobre la página y es la única capa de los filtros con
+// sombra (DESIGN.md §4.0); el panel de escritorio va en la página, sin ella
 const SHEET_SHADOW = "shadow-[0_-12px_32px_rgb(21_22_28/0.18)]"; // taste-skill-ignore
 const PANEL_EASE = [0.22, 0.8, 0.24, 1] as const;
 
 const pill =
   "inline-flex items-center justify-center gap-2 h-11 px-5 rounded-pill font-extrabold text-small cursor-pointer active:scale-[0.96] motion-safe:transition-transform duration-150";
+// Pastillas compactas del panel de escritorio (40px), para que todo quepa
+// sin scroll
+const compactPill =
+  "inline-flex items-center justify-center gap-1.5 w-full h-10 px-3 rounded-pill font-extrabold text-small whitespace-nowrap cursor-pointer active:scale-[0.96] motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5";
 const secondary = `${pill} bg-ink text-bone`;
 const iconButton =
   "grid place-items-center size-11 rounded-pill bg-step cursor-pointer active:scale-[0.96] motion-safe:transition-transform duration-150";
+const selectedRing = "ring-3 ring-ink ring-offset-2 ring-offset-surface";
 
 const FOCUSABLE = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
-// Escritorio y móvil cambian la capa: flotante bajo el botón u hoja inferior
+// Escritorio y móvil cambian la capa: panel dentro de la página u hoja inferior
 const MOBILE_QUERY = "(max-width: 767px)";
-// Altura de la cabecera fija en escritorio (h-18), separación del botón (mt-3)
-// y aire mínimo hasta el borde de la pantalla
-const HEADER_HEIGHT = 72;
-const PANEL_GAP = 12;
-const VIEWPORT_MARGIN = 16;
-// Por debajo de esto, el panel se abre hacia arriba si allí cabe más
-const MIN_PANEL_HEIGHT = 384;
 const subscribeMobile = (onChange: () => void) => {
   const query = window.matchMedia(MOBILE_QUERY);
   query.addEventListener("change", onChange);
@@ -58,9 +58,9 @@ interface PokemonFiltersBarProps {
 }
 
 // Barra de filtros (§4.3): título y recuento a la izquierda, botón «Filtros»
-// con contador a la derecha, panel con tipos y regiones y una fila de chips
+// con contador a la derecha, panel con regiones y tipos y una fila de chips
 // removibles. Todo vive en la URL: ?types=fire,flying y ?gen=1, junto a la
-// búsqueda del hero (?q=), que se conserva.
+// búsqueda del hero (?q=), que se conserva. Cada toque se aplica al momento.
 export default function PokemonFiltersBar({
   locale,
   title,
@@ -83,30 +83,21 @@ export default function PokemonFiltersBar({
     .slice(0, MAX_TYPES);
   const genParam = Number(searchParams.get("gen"));
   const urlGen = GENERATIONS.some((g) => g.id === genParam) ? genParam : null;
-  const activeCount = urlTypes.length + (urlGen !== null ? 1 : 0);
+
+  // La selección cambia al tocar, sin esperar a que llegue la nueva URL
+  const [, startTransition] = useTransition();
+  const [selection, setSelection] = useOptimistic({ types: urlTypes, gen: urlGen });
+  const activeTypes = selection.types;
+  const activeGen = selection.gen;
+  const activeCount = activeTypes.length + (activeGen !== null ? 1 : 0);
 
   const [open, setOpen] = useState(false);
-  const [draftTypes, setDraftTypes] = useState<PokemonType[]>([]);
-  const [draftGen, setDraftGen] = useState<number | null>(null);
-  const anchorRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  // En escritorio el panel nunca pasa del borde de la pantalla: se abre hacia
-  // donde quepa y, si no cabe entero, desplaza su contenido por dentro
-  const [fit, setFit] = useState({ above: false, maxHeight: 0 });
-
-  const measure = () => {
-    const rect = buttonRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const below = window.innerHeight - rect.bottom - PANEL_GAP - VIEWPORT_MARGIN;
-    const above = rect.top - HEADER_HEIGHT - PANEL_GAP - VIEWPORT_MARGIN;
-    const flip = below < MIN_PANEL_HEIGHT && above > below;
-    setFit({ above: flip, maxHeight: Math.max(0, flip ? above : below) });
-  };
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   const regionName = (id: number) => filters.regionNames[id - 1];
 
-  const navigate = (types: string[], gen: number | null) => {
+  const navigate = (types: PokemonType[], gen: number | null) => {
     const params = new URLSearchParams();
     if (types.length > 0) params.set("types", types.join(","));
     if (gen !== null) params.set("gen", String(gen));
@@ -114,66 +105,56 @@ export default function PokemonFiltersBar({
     const search = searchParams.get("q");
     if (search) params.set("q", search);
     const query = params.toString();
-    router.push(`/${locale}${query ? `?${query}` : ""}`, { scroll: false });
-  };
-
-  const openPanel = () => {
-    setDraftTypes(urlTypes);
-    setDraftGen(urlGen);
-    measure();
-    setOpen(true);
-  };
-
-  const toggleType = (type: PokemonType) => {
-    setDraftTypes((current) => {
-      if (current.includes(type)) return current.filter((t) => t !== type);
-      if (current.length >= MAX_TYPES) return [current[0], type];
-      return [...current, type];
+    startTransition(() => {
+      setSelection({ types, gen });
+      router.push(`/${locale}${query ? `?${query}` : ""}`, { scroll: false });
     });
   };
 
-  const apply = () => {
-    navigate(draftTypes, draftGen);
-    setOpen(false);
+  const toggleType = (type: PokemonType) => {
+    let types: PokemonType[];
+    if (activeTypes.includes(type)) types = activeTypes.filter((t) => t !== type);
+    else if (activeTypes.length >= MAX_TYPES) types = [activeTypes[0], type];
+    else types = [...activeTypes, type];
+    navigate(types, activeGen);
   };
 
-  // Abierto: foco dentro del panel, Esc y clic fuera cierran, y en móvil la
-  // página no se desplaza por detrás. Al cerrar, el foco vuelve al botón.
-  // Ningún foco desplaza la página: el panel ya está a la vista
+  const toggleGen = (id: number) =>
+    navigate(activeTypes, activeGen === id ? null : id);
+
+  // Abierto: Esc cierra. En móvil la hoja toma el foco sin desplazar la
+  // página, que no se mueve por detrás. Al cerrar, el foco vuelve al botón
+  // si estaba dentro del panel.
   useEffect(() => {
     if (!open) return;
-    panelRef.current?.focus({ preventScroll: true });
+    if (isMobile) sheetRef.current?.focus({ preventScroll: true });
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
-    const onPointerDown = (e: PointerEvent) => {
-      if (!anchorRef.current?.contains(e.target as Node)) setOpen(false);
-    };
     const { overflow } = document.body.style;
     if (isMobile) document.body.style.overflow = "hidden";
     document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointerdown", onPointerDown);
-    if (!isMobile) window.addEventListener("resize", measure);
 
     const button = buttonRef.current;
     return () => {
       document.body.style.overflow = overflow;
       document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("resize", measure);
-      button?.focus({ preventScroll: true });
+      const focused = document.activeElement;
+      if (focused === document.body || document.getElementById("filters-panel")?.contains(focused)) {
+        button?.focus({ preventScroll: true });
+      }
     };
   }, [open, isMobile]);
 
-  // El Tab no sale del panel mientras está abierto
+  // El Tab no sale de la hoja mientras está abierta
   const trapFocus = (e: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== "Tab" || !panelRef.current) return;
-    const items = panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
+    if (e.key !== "Tab" || !sheetRef.current) return;
+    const items = sheetRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
     if (items.length === 0) return;
     const first = items[0];
     const last = items[items.length - 1];
-    if (e.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === sheetRef.current)) {
       e.preventDefault();
       last.focus({ preventScroll: true });
     } else if (!e.shiftKey && document.activeElement === last) {
@@ -182,12 +163,103 @@ export default function PokemonFiltersBar({
     }
   };
 
-  const panelBody = (
+  const closeButton = (
+    <button
+      type="button"
+      aria-label={filters.close}
+      onClick={() => setOpen(false)}
+      className={iconButton}
+    >
+      <X aria-hidden="true" strokeWidth={2.5} className="size-5" />
+    </button>
+  );
+
+  const clearButton = (
+    <button
+      type="button"
+      onClick={() => navigate([], null)}
+      className={`${pill} bg-step text-ink`}
+    >
+      {filters.clear}
+    </button>
+  );
+
+  const typesHeading = (
+    <div className="flex items-baseline gap-3 mb-3">
+      <h3 id="filters-types" className="font-extrabold">
+        {filters.types}
+      </h3>
+      <p className="text-small text-ink-soft">{filters.typesHint}</p>
+    </div>
+  );
+
+  // Escritorio: panel blanco dentro de la página, a todo el ancho, que empuja
+  // las tarjetas. Las 9 regiones en una fila y los 18 tipos en dos (en
+  // tableta, las regiones pasan a dos filas y los tipos a tres).
+  const desktopPanel = (
+    <div className="mt-4 rounded-surface bg-surface text-ink p-6">
+      <section aria-labelledby="filters-region">
+        <div className="flex items-center justify-between gap-4 -mt-1.5 mb-3">
+          <h3 id="filters-region" className="font-extrabold">
+            {filters.region}
+          </h3>
+          <div className="flex items-center gap-2">
+            {clearButton}
+            {closeButton}
+          </div>
+        </div>
+        <ul className="grid grid-cols-5 lg:grid-cols-9 gap-2">
+          {GENERATIONS.map((gen) => {
+            const selected = activeGen === gen.id;
+            return (
+              <li key={gen.id}>
+                <button
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => toggleGen(gen.id)}
+                  className={`${compactPill} ${selected ? "bg-ink text-bone" : "bg-step text-ink"}`}
+                >
+                  {regionName(gen.id)}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section aria-labelledby="filters-types" className="mt-6">
+        {typesHeading}
+        <ul className="grid grid-cols-6 lg:grid-cols-9 gap-2">
+          {POKEMON_TYPES.map((type) => {
+            const selected = activeTypes.includes(type);
+            return (
+              <li key={type}>
+                <button
+                  type="button"
+                  data-type={type}
+                  aria-pressed={selected}
+                  onClick={() => toggleType(type)}
+                  className={`${compactPill} bg-field text-field-ink ${selected ? selectedRing : ""}`}
+                >
+                  {selected && (
+                    <Check aria-hidden="true" strokeWidth={3.5} className="size-3.5 shrink-0 -ml-0.5" />
+                  )}
+                  {typeNames[type]}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    </div>
+  );
+
+  // Móvil: hoja inferior con bloques grandes, a dedo
+  const sheetBody = (
     <div
-      ref={panelRef}
-      id="filters-panel"
+      ref={sheetRef}
       role="dialog"
-      aria-modal={isMobile || undefined}
+      aria-modal="true"
       aria-labelledby="filters-title"
       tabIndex={-1}
       onKeyDown={trapFocus}
@@ -197,27 +269,15 @@ export default function PokemonFiltersBar({
         <h2 id="filters-title" className="text-lead font-black">
           {filters.title}
         </h2>
-        <button
-          type="button"
-          aria-label={filters.close}
-          onClick={() => setOpen(false)}
-          className={iconButton}
-        >
-          <X aria-hidden="true" strokeWidth={2.5} className="size-5" />
-        </button>
+        {closeButton}
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar px-6 pb-6">
         <section aria-labelledby="filters-types">
-          <div className="flex items-baseline justify-between gap-4 mb-3">
-            <h3 id="filters-types" className="font-extrabold">
-              {filters.types}
-            </h3>
-            <p className="text-small text-ink-soft">{filters.typesHint}</p>
-          </div>
-          <ul className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {typesHeading}
+          <ul className="grid grid-cols-2 gap-2">
             {POKEMON_TYPES.map((type) => {
-              const selected = draftTypes.includes(type);
+              const selected = activeTypes.includes(type);
               return (
                 <li key={type}>
                   <button
@@ -225,9 +285,7 @@ export default function PokemonFiltersBar({
                     data-type={type}
                     aria-pressed={selected}
                     onClick={() => toggleType(type)}
-                    className={`${pill} w-full bg-field text-field-ink ${
-                      selected ? "ring-3 ring-ink ring-offset-2 ring-offset-surface" : ""
-                    }`}
+                    className={`${pill} w-full bg-field text-field-ink ${selected ? selectedRing : ""}`}
                   >
                     {selected && (
                       <Check aria-hidden="true" strokeWidth={3.5} className="size-4 -ml-1" />
@@ -246,14 +304,14 @@ export default function PokemonFiltersBar({
           </h3>
           <ul className="flex flex-wrap gap-2">
             {GENERATIONS.map((gen) => {
-              const selected = draftGen === gen.id;
+              const selected = activeGen === gen.id;
               return (
                 <li key={gen.id}>
                   <button
                     type="button"
                     aria-pressed={selected}
-                    onClick={() => setDraftGen(selected ? null : gen.id)}
-                    className={`${pill} ${selected ? "bg-ink text-bone" : "bg-step text-ink motion-safe:hover:-translate-y-0.5"}`}
+                    onClick={() => toggleGen(gen.id)}
+                    className={`${pill} ${selected ? "bg-ink text-bone" : "bg-step text-ink"}`}
                   >
                     {regionName(gen.id)}
                   </button>
@@ -264,20 +322,8 @@ export default function PokemonFiltersBar({
         </section>
       </div>
 
-      <div className="flex items-center justify-end gap-2 px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-surface rounded-b-[inherit]">
-        <button
-          type="button"
-          onClick={() => {
-            setDraftTypes([]);
-            setDraftGen(null);
-          }}
-          className={`${pill} bg-step text-ink`}
-        >
-          {filters.clear}
-        </button>
-        <button type="button" onClick={apply} className={secondary}>
-          {filters.show}
-        </button>
+      <div className="flex items-center justify-end px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-surface rounded-b-[inherit]">
+        {clearButton}
       </div>
     </div>
   );
@@ -292,75 +338,74 @@ export default function PokemonFiltersBar({
           <p className="text-body num">{count}</p>
         </div>
 
-        <div ref={anchorRef} className="relative">
-          <button
-            ref={buttonRef}
-            type="button"
-            aria-haspopup="dialog"
-            aria-expanded={open}
-            aria-controls={open ? "filters-panel" : undefined}
-            onClick={() => (open ? setOpen(false) : openPanel())}
-            className={secondary}
-          >
-            <SlidersHorizontal aria-hidden="true" strokeWidth={2.5} className="size-4 -ml-1" />
-            {filters.button}
-            {activeCount > 0 && (
-              <span className="grid place-items-center min-w-6 h-6 px-1.5 -mr-2 rounded-pill bg-surface text-ink font-black num">
-                {activeCount}
-              </span>
-            )}
-          </button>
-
-          <AnimatePresence>
-            {open &&
-              (isMobile ? (
-                <motion.div
-                  key="sheet"
-                  className="fixed inset-0 z-60"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <div
-                    aria-hidden="true"
-                    onClick={() => setOpen(false)}
-                    className="absolute inset-0 bg-ink/40"
-                  />
-                  <motion.div
-                    initial={{ y: reduceMotion ? 0 : "100%" }}
-                    animate={{ y: 0 }}
-                    exit={{ y: reduceMotion ? 0 : "100%" }}
-                    transition={{ duration: 0.25, ease: PANEL_EASE }}
-                    className={`absolute inset-x-0 bottom-0 max-h-[92svh] flex flex-col bg-surface text-ink rounded-t-surface ${SHEET_SHADOW}`}
-                  >
-                    {panelBody}
-                  </motion.div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="panel"
-                  initial={{ opacity: 0, y: reduceMotion ? 0 : fit.above ? -8 : 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: reduceMotion ? 0 : fit.above ? -8 : 8 }}
-                  transition={{ duration: 0.25, ease: PANEL_EASE }}
-                  style={{ maxHeight: `min(42rem, ${fit.maxHeight}px)` }}
-                  className={`absolute right-0 z-40 w-[35rem] max-w-[calc(100vw-2*var(--gutter))] flex flex-col bg-surface text-ink rounded-surface ${
-                    fit.above ? "bottom-full mb-3" : "top-full mt-3"
-                  } ${PANEL_SHADOW}`}
-                >
-                  {panelBody}
-                </motion.div>
-              ))}
-          </AnimatePresence>
-        </div>
+        <button
+          ref={buttonRef}
+          type="button"
+          aria-haspopup={isMobile ? "dialog" : undefined}
+          aria-expanded={open}
+          aria-controls={open ? "filters-panel" : undefined}
+          onClick={() => setOpen(!open)}
+          className={secondary}
+        >
+          <SlidersHorizontal aria-hidden="true" strokeWidth={2.5} className="size-4 -ml-1" />
+          {filters.button}
+          {activeCount > 0 && (
+            <span className="grid place-items-center min-w-6 h-6 px-1.5 -mr-2 rounded-pill bg-surface text-ink font-black num">
+              {activeCount}
+            </span>
+          )}
+        </button>
       </div>
+
+      <AnimatePresence initial={false}>
+        {open &&
+          (isMobile ? (
+            <motion.div
+              key="sheet"
+              id="filters-panel"
+              className="fixed inset-0 z-60"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div
+                aria-hidden="true"
+                onClick={() => setOpen(false)}
+                className="absolute inset-0 bg-ink/40"
+              />
+              <motion.div
+                initial={{ y: reduceMotion ? 0 : "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: reduceMotion ? 0 : "100%" }}
+                transition={{ duration: 0.25, ease: PANEL_EASE }}
+                className={`absolute inset-x-0 bottom-0 max-h-[92svh] flex flex-col bg-surface text-ink rounded-t-surface ${SHEET_SHADOW}`}
+              >
+                {sheetBody}
+              </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="panel"
+              id="filters-panel"
+              role="region"
+              aria-label={filters.title}
+              initial={{ height: reduceMotion ? "auto" : 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: reduceMotion ? "auto" : 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: PANEL_EASE }}
+              className="overflow-hidden"
+            >
+              {desktopPanel}
+            </motion.div>
+          ))}
+      </AnimatePresence>
 
       {/* Chips de filtros activos: la fila solo existe con filtros */}
       {activeCount > 0 && (
         <ul aria-label={filters.active} className="mt-4 flex flex-wrap items-center gap-2">
           <AnimatePresence initial={false}>
-            {urlTypes.map((type) => (
+            {activeTypes.map((type) => (
               <motion.li
                 key={type}
                 data-type={type}
@@ -376,8 +421,8 @@ export default function PokemonFiltersBar({
                   aria-label={`${filters.remove} ${typeNames[type]}`}
                   onClick={() =>
                     navigate(
-                      urlTypes.filter((t) => t !== type),
-                      urlGen,
+                      activeTypes.filter((t) => t !== type),
+                      activeGen,
                     )
                   }
                   className="relative grid place-items-center size-8 ml-1 rounded-pill cursor-pointer active:scale-[0.9] motion-safe:transition-transform duration-150 after:absolute after:-inset-1.5"
@@ -386,7 +431,7 @@ export default function PokemonFiltersBar({
                 </button>
               </motion.li>
             ))}
-            {urlGen !== null && (
+            {activeGen !== null && (
               <motion.li
                 key="region"
                 initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
@@ -395,11 +440,11 @@ export default function PokemonFiltersBar({
                 transition={{ duration: 0.2 }}
                 className="inline-flex items-center h-10 pl-4 pr-1 rounded-pill bg-surface text-ink font-extrabold text-small"
               >
-                {regionName(urlGen)}
+                {regionName(activeGen)}
                 <button
                   type="button"
-                  aria-label={`${filters.remove} ${regionName(urlGen)}`}
-                  onClick={() => navigate(urlTypes, null)}
+                  aria-label={`${filters.remove} ${regionName(activeGen)}`}
+                  onClick={() => navigate(activeTypes, null)}
                   className="relative grid place-items-center size-8 ml-1 rounded-pill cursor-pointer active:scale-[0.9] motion-safe:transition-transform duration-150 after:absolute after:-inset-1.5"
                 >
                   <X aria-hidden="true" strokeWidth={3} className="size-4" />
