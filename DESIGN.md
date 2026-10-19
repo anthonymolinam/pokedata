@@ -500,7 +500,7 @@ La dirección «Pop» ya está construida (merge 99fcfce); su orden de trabajo q
    - Añadir `--raised`, `--footer`, `--on-light`, `--on-dark` y `--on-dark-soft` en `globals.css`, con los valores claros.
    - Las variables `--type-*-ink` pasan a apuntar a `--on-light` / `--on-dark` en vez de a `--ink` / `--bone`.
    - Añadir `--type-*-text` (de momento igual a `deep`) y `--type-dark-field-dark`.
-   - Sustituir el único color fijo que queda en componentes (`bg-white`, `#fff` o `rgba(21,22,28,…)`) por su token.
+   - Pasar a tokens (`--shadow-header`, `--shadow-sheet`, `--shadow-overlay`, `--shadow-modal`, `--shadow-tooltip`) las cinco sombras que los componentes escribían con color fijo. No queda ningún `bg-white` ni `#fff` fuera de `globals.css`.
    - Comprobar con capturas que el modo claro no ha cambiado ni un píxel.
 2. **Repaso de usos.** Cada componente que pinta sobre un campo de tipo usa `field-ink` o las constantes `--on-*`; cada texto de tipo, `--type-*-text`; cada capa flotante, `--raised`. La Pokébola pasa a colores fijos (§2.4). Así el paso 3 cambia solo variables.
 3. **Valores oscuros.** El bloque oscuro de `globals.css`, en `:root[data-theme="dark"]` y en `@media (prefers-color-scheme: dark)` con `:not([data-theme="light"])`. Incluye `color-scheme`, `field-dark` de Siniestro, `glow` como `--type-*-text` y las sombras oscuras. Se prueba con el modo oscuro del sistema, sin selector todavía.

@@ -25,7 +25,7 @@ const MAX_TYPES = 2;
 
 // La hoja móvil flota sobre la página y es la única capa de los filtros con
 // sombra (DESIGN.md §4.0); el panel de escritorio va en la página, sin ella
-const SHEET_SHADOW = "shadow-[0_-12px_32px_rgb(21_22_28/0.18)]"; // taste-skill-ignore
+const SHEET_SHADOW = "shadow-(--shadow-sheet)";
 const PANEL_EASE = [0.22, 0.8, 0.24, 1] as const;
 
 const pill =

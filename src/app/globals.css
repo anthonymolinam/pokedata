@@ -14,8 +14,23 @@
   --ink-soft: #5c6070;
   --bone: #f7f5f0;
   --bone-soft: #b9bcc8;
+  --raised: #ffffff;
+  --footer: #15161c;
   --accent: #cc2e0b;
   --ok: #3fb950;
+
+  /* Constantes (§2.1): no cambian con el tema. Todo lo que se pinta sobre un
+     campo de tipo las usa, porque el campo es el mismo en los dos temas. */
+  --on-light: #15161c;
+  --on-dark: #f7f5f0;
+  --on-dark-soft: #b9bcc8;
+
+  /* Sombras (§4.0 y §2.4): solo cabecera desplazada y capas flotantes */
+  --shadow-header: 0 6px 20px rgb(21 22 28 / 0.08); /* taste-skill-ignore: cabecera desplazada */
+  --shadow-sheet: 0 -12px 32px rgb(21 22 28 / 0.18); /* taste-skill-ignore: hoja inferior */
+  --shadow-overlay: 0 12px 32px rgb(10 10 10 / 0.18); /* taste-skill-ignore: desplegable del buscador */
+  --shadow-modal: 0 24px 64px rgb(21 22 28 / 0.24); /* taste-skill-ignore: modal */
+  --shadow-tooltip: 0 6px 16px -6px color-mix(in srgb, var(--ink) 45%, transparent); /* taste-skill-ignore: tooltip */
 
   /* Margen lateral (§4.0): 20px en móvil, 32px en escritorio */
   --gutter: 1.25rem;
@@ -24,102 +39,123 @@
   --surface-radius: 1.375rem;
   --pill-radius: 999px;
 
-  /* Tipos (§2.2): field · field-ink · step (field −14 %) · deep (≥ 4.9:1 sobre blanco) */
+  /* Tipos (§2.2): field · field-ink · step (field −14 %) · deep (≥ 4.9:1 sobre blanco)
+     · text (el tipo como texto: deep en claro, glow en oscuro, §2.4) */
   --type-normal: #a8a77a;
-  --type-normal-ink: var(--ink);
+  --type-normal-ink: var(--on-light);
   --type-normal-step: #909069;
   --type-normal-deep: #727253;
+  --type-normal-text: var(--type-normal-deep);
 
   --type-fire: #ee8130;
-  --type-fire-ink: var(--ink);
+  --type-fire-ink: var(--on-light);
   --type-fire-step: #cd6f29;
   --type-fire-deep: #a95c22;
+  --type-fire-text: var(--type-fire-deep);
 
   --type-water: #6390f0;
-  --type-water-ink: var(--ink);
+  --type-water-ink: var(--on-light);
   --type-water-step: #557cce;
   --type-water-deep: #4c6fb9;
+  --type-water-text: var(--type-water-deep);
 
   --type-electric: #f7d02c;
-  --type-electric-ink: var(--ink);
+  --type-electric-ink: var(--on-light);
   --type-electric-step: #d4b326;
   --type-electric-deep: #836e17;
+  --type-electric-text: var(--type-electric-deep);
 
   --type-grass: #7ac74c;
-  --type-grass-ink: var(--ink);
+  --type-grass-ink: var(--on-light);
   --type-grass-step: #69ab41;
   --type-grass-deep: #4c7b2f;
+  --type-grass-text: var(--type-grass-deep);
 
   --type-ice: #96d9d6;
-  --type-ice-ink: var(--ink);
+  --type-ice-ink: var(--on-light);
   --type-ice-step: #81bbb8;
   --type-ice-deep: #527776;
+  --type-ice-text: var(--type-ice-deep);
 
   --type-fighting: #c22e28;
-  --type-fighting-ink: var(--bone);
+  --type-fighting-ink: var(--on-dark);
   --type-fighting-step: #a72822;
   --type-fighting-deep: #c22e28;
+  --type-fighting-text: var(--type-fighting-deep);
 
   --type-poison: #a33ea1; /* taste-skill-ignore: violeta canónico del tipo */
-  --type-poison-ink: var(--bone);
+  --type-poison-ink: var(--on-dark);
   --type-poison-step: #8c358a; /* taste-skill-ignore */
   --type-poison-deep: #a33ea1; /* taste-skill-ignore */
+  --type-poison-text: var(--type-poison-deep);
 
   --type-ground: #e2bf65;
-  --type-ground-ink: var(--ink);
+  --type-ground-ink: var(--on-light);
   --type-ground-step: #c2a457;
   --type-ground-deep: #816d3a;
+  --type-ground-text: var(--type-ground-deep);
 
   --type-flying: #a98ff3;
-  --type-flying-ink: var(--ink);
+  --type-flying-ink: var(--on-light);
   --type-flying-step: #917bd1;
   --type-flying-deep: #7664aa;
+  --type-flying-text: var(--type-flying-deep);
 
   --type-psychic: #f95587;
-  --type-psychic-ink: var(--ink);
+  --type-psychic-ink: var(--on-light);
   --type-psychic-step: #d64974;
   --type-psychic-deep: #c24269;
+  --type-psychic-text: var(--type-psychic-deep);
 
   --type-bug: #a6b91a;
-  --type-bug-ink: var(--ink);
+  --type-bug-ink: var(--on-light);
   --type-bug-step: #8f9f16;
   --type-bug-deep: #6a7611;
+  --type-bug-text: var(--type-bug-deep);
 
   --type-rock: #b6a136;
-  --type-rock-ink: var(--ink);
+  --type-rock-ink: var(--on-light);
   --type-rock-step: #9d8a2e;
   --type-rock-deep: #7e6f25;
+  --type-rock-text: var(--type-rock-deep);
 
   --type-ghost: #735797; /* taste-skill-ignore: violeta canónico del tipo */
-  --type-ghost-ink: var(--bone);
+  --type-ghost-ink: var(--on-dark);
   --type-ghost-step: #634b82; /* taste-skill-ignore */
   --type-ghost-deep: #735797; /* taste-skill-ignore */
+  --type-ghost-text: var(--type-ghost-deep);
 
   --type-dragon: #6f35fc; /* taste-skill-ignore: violeta canónico del tipo */
-  --type-dragon-ink: var(--bone);
+  --type-dragon-ink: var(--on-dark);
   --type-dragon-step: #5f2ed9; /* taste-skill-ignore */
   --type-dragon-deep: #6f35fc; /* taste-skill-ignore */
+  --type-dragon-text: var(--type-dragon-deep);
 
   --type-dark: #705746;
-  --type-dark-ink: var(--bone);
+  --type-dark-ink: var(--on-dark);
   --type-dark-step: #604b3c;
   --type-dark-deep: #705746;
+  --type-dark-text: var(--type-dark-deep);
+  --type-dark-field-dark: var(--type-dark);
 
   --type-steel: #b7b7ce;
-  --type-steel-ink: var(--ink);
+  --type-steel-ink: var(--on-light);
   --type-steel-step: #9d9db1;
   --type-steel-deep: #6e6e7c;
+  --type-steel-text: var(--type-steel-deep);
 
   --type-fairy: #d685ad;
-  --type-fairy-ink: var(--ink);
+  --type-fairy-ink: var(--on-light);
   --type-fairy-step: #b87295;
   --type-fairy-deep: #985e7b;
+  --type-fairy-text: var(--type-fairy-deep);
 
   /* Campo de contexto: por defecto, el fondo. [data-type] lo sustituye (ver abajo). */
   --field: var(--ground);
   --field-ink: var(--ink);
   --field-step: var(--step);
   --field-deep: var(--ink);
+  --field-text: var(--ink);
 
   /* Escala tipográfica (§3): cinco tamaños, ninguno más */
   --step-small: 0.875rem;
@@ -140,29 +176,29 @@
    interior con bg-field / text-field-ink / bg-field-step / text-field-deep.
    Es la base de las tarjetas, las columnas del día, el escenario de la ficha
    y el cambio de forma. */
-[data-type="normal"] { --field: var(--type-normal); --field-ink: var(--type-normal-ink); --field-step: var(--type-normal-step); --field-deep: var(--type-normal-deep); }
-[data-type="fire"] { --field: var(--type-fire); --field-ink: var(--type-fire-ink); --field-step: var(--type-fire-step); --field-deep: var(--type-fire-deep); }
-[data-type="water"] { --field: var(--type-water); --field-ink: var(--type-water-ink); --field-step: var(--type-water-step); --field-deep: var(--type-water-deep); }
-[data-type="electric"] { --field: var(--type-electric); --field-ink: var(--type-electric-ink); --field-step: var(--type-electric-step); --field-deep: var(--type-electric-deep); }
-[data-type="grass"] { --field: var(--type-grass); --field-ink: var(--type-grass-ink); --field-step: var(--type-grass-step); --field-deep: var(--type-grass-deep); }
-[data-type="ice"] { --field: var(--type-ice); --field-ink: var(--type-ice-ink); --field-step: var(--type-ice-step); --field-deep: var(--type-ice-deep); }
-[data-type="fighting"] { --field: var(--type-fighting); --field-ink: var(--type-fighting-ink); --field-step: var(--type-fighting-step); --field-deep: var(--type-fighting-deep); }
-[data-type="poison"] { --field: var(--type-poison); --field-ink: var(--type-poison-ink); --field-step: var(--type-poison-step); --field-deep: var(--type-poison-deep); }
-[data-type="ground"] { --field: var(--type-ground); --field-ink: var(--type-ground-ink); --field-step: var(--type-ground-step); --field-deep: var(--type-ground-deep); }
-[data-type="flying"] { --field: var(--type-flying); --field-ink: var(--type-flying-ink); --field-step: var(--type-flying-step); --field-deep: var(--type-flying-deep); }
-[data-type="psychic"] { --field: var(--type-psychic); --field-ink: var(--type-psychic-ink); --field-step: var(--type-psychic-step); --field-deep: var(--type-psychic-deep); }
-[data-type="bug"] { --field: var(--type-bug); --field-ink: var(--type-bug-ink); --field-step: var(--type-bug-step); --field-deep: var(--type-bug-deep); }
-[data-type="rock"] { --field: var(--type-rock); --field-ink: var(--type-rock-ink); --field-step: var(--type-rock-step); --field-deep: var(--type-rock-deep); }
-[data-type="ghost"] { --field: var(--type-ghost); --field-ink: var(--type-ghost-ink); --field-step: var(--type-ghost-step); --field-deep: var(--type-ghost-deep); }
-[data-type="dragon"] { --field: var(--type-dragon); --field-ink: var(--type-dragon-ink); --field-step: var(--type-dragon-step); --field-deep: var(--type-dragon-deep); }
-[data-type="dark"] { --field: var(--type-dark); --field-ink: var(--type-dark-ink); --field-step: var(--type-dark-step); --field-deep: var(--type-dark-deep); }
-[data-type="steel"] { --field: var(--type-steel); --field-ink: var(--type-steel-ink); --field-step: var(--type-steel-step); --field-deep: var(--type-steel-deep); }
-[data-type="fairy"] { --field: var(--type-fairy); --field-ink: var(--type-fairy-ink); --field-step: var(--type-fairy-step); --field-deep: var(--type-fairy-deep); }
+[data-type="normal"] { --field: var(--type-normal); --field-ink: var(--type-normal-ink); --field-step: var(--type-normal-step); --field-deep: var(--type-normal-deep); --field-text: var(--type-normal-text); }
+[data-type="fire"] { --field: var(--type-fire); --field-ink: var(--type-fire-ink); --field-step: var(--type-fire-step); --field-deep: var(--type-fire-deep); --field-text: var(--type-fire-text); }
+[data-type="water"] { --field: var(--type-water); --field-ink: var(--type-water-ink); --field-step: var(--type-water-step); --field-deep: var(--type-water-deep); --field-text: var(--type-water-text); }
+[data-type="electric"] { --field: var(--type-electric); --field-ink: var(--type-electric-ink); --field-step: var(--type-electric-step); --field-deep: var(--type-electric-deep); --field-text: var(--type-electric-text); }
+[data-type="grass"] { --field: var(--type-grass); --field-ink: var(--type-grass-ink); --field-step: var(--type-grass-step); --field-deep: var(--type-grass-deep); --field-text: var(--type-grass-text); }
+[data-type="ice"] { --field: var(--type-ice); --field-ink: var(--type-ice-ink); --field-step: var(--type-ice-step); --field-deep: var(--type-ice-deep); --field-text: var(--type-ice-text); }
+[data-type="fighting"] { --field: var(--type-fighting); --field-ink: var(--type-fighting-ink); --field-step: var(--type-fighting-step); --field-deep: var(--type-fighting-deep); --field-text: var(--type-fighting-text); }
+[data-type="poison"] { --field: var(--type-poison); --field-ink: var(--type-poison-ink); --field-step: var(--type-poison-step); --field-deep: var(--type-poison-deep); --field-text: var(--type-poison-text); }
+[data-type="ground"] { --field: var(--type-ground); --field-ink: var(--type-ground-ink); --field-step: var(--type-ground-step); --field-deep: var(--type-ground-deep); --field-text: var(--type-ground-text); }
+[data-type="flying"] { --field: var(--type-flying); --field-ink: var(--type-flying-ink); --field-step: var(--type-flying-step); --field-deep: var(--type-flying-deep); --field-text: var(--type-flying-text); }
+[data-type="psychic"] { --field: var(--type-psychic); --field-ink: var(--type-psychic-ink); --field-step: var(--type-psychic-step); --field-deep: var(--type-psychic-deep); --field-text: var(--type-psychic-text); }
+[data-type="bug"] { --field: var(--type-bug); --field-ink: var(--type-bug-ink); --field-step: var(--type-bug-step); --field-deep: var(--type-bug-deep); --field-text: var(--type-bug-text); }
+[data-type="rock"] { --field: var(--type-rock); --field-ink: var(--type-rock-ink); --field-step: var(--type-rock-step); --field-deep: var(--type-rock-deep); --field-text: var(--type-rock-text); }
+[data-type="ghost"] { --field: var(--type-ghost); --field-ink: var(--type-ghost-ink); --field-step: var(--type-ghost-step); --field-deep: var(--type-ghost-deep); --field-text: var(--type-ghost-text); }
+[data-type="dragon"] { --field: var(--type-dragon); --field-ink: var(--type-dragon-ink); --field-step: var(--type-dragon-step); --field-deep: var(--type-dragon-deep); --field-text: var(--type-dragon-text); }
+[data-type="dark"] { --field: var(--type-dark); --field-ink: var(--type-dark-ink); --field-step: var(--type-dark-step); --field-deep: var(--type-dark-deep); --field-text: var(--type-dark-text); }
+[data-type="steel"] { --field: var(--type-steel); --field-ink: var(--type-steel-ink); --field-step: var(--type-steel-step); --field-deep: var(--type-steel-deep); --field-text: var(--type-steel-text); }
+[data-type="fairy"] { --field: var(--type-fairy); --field-ink: var(--type-fairy-ink); --field-step: var(--type-fairy-step); --field-deep: var(--type-fairy-deep); --field-text: var(--type-fairy-text); }
 
 /* Campos fijos: blanco para paneles y capas flotantes (vuelven a blanco aunque
    estén dentro de un campo de tipo) y tinta para el pie. */
-[data-field="surface"] { --field: var(--surface); --field-ink: var(--ink); --field-step: var(--step); --field-deep: var(--ink); }
-[data-field="ink"] { --field: var(--ink); --field-ink: var(--bone); --field-step: var(--ink-soft); --field-deep: var(--bone); }
+[data-field="surface"] { --field: var(--surface); --field-ink: var(--ink); --field-step: var(--step); --field-deep: var(--ink); --field-text: var(--ink); }
+[data-field="ink"] { --field: var(--ink); --field-ink: var(--bone); --field-step: var(--ink-soft); --field-deep: var(--bone); --field-text: var(--bone); }
 
 /* Utilidades de Tailwind: bg-ground, bg-surface, text-ink, bg-type-fire,
    text-type-fire-ink, bg-type-fire-step, text-type-fire-deep, bg-field,
@@ -178,84 +214,108 @@
   --color-bone-soft: var(--bone-soft);
   --color-accent: var(--accent);
   --color-ok: var(--ok);
+  --color-raised: var(--raised);
+  --color-footer: var(--footer);
+  --color-on-light: var(--on-light);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-soft: var(--on-dark-soft);
 
   --color-field: var(--field);
   --color-field-ink: var(--field-ink);
   --color-field-step: var(--field-step);
   --color-field-deep: var(--field-deep);
+  --color-field-text: var(--field-text);
 
   --color-type-normal: var(--type-normal);
   --color-type-normal-ink: var(--type-normal-ink);
   --color-type-normal-step: var(--type-normal-step);
   --color-type-normal-deep: var(--type-normal-deep);
+  --color-type-normal-text: var(--type-normal-text);
   --color-type-fire: var(--type-fire);
   --color-type-fire-ink: var(--type-fire-ink);
   --color-type-fire-step: var(--type-fire-step);
   --color-type-fire-deep: var(--type-fire-deep);
+  --color-type-fire-text: var(--type-fire-text);
   --color-type-water: var(--type-water);
   --color-type-water-ink: var(--type-water-ink);
   --color-type-water-step: var(--type-water-step);
   --color-type-water-deep: var(--type-water-deep);
+  --color-type-water-text: var(--type-water-text);
   --color-type-electric: var(--type-electric);
   --color-type-electric-ink: var(--type-electric-ink);
   --color-type-electric-step: var(--type-electric-step);
   --color-type-electric-deep: var(--type-electric-deep);
+  --color-type-electric-text: var(--type-electric-text);
   --color-type-grass: var(--type-grass);
   --color-type-grass-ink: var(--type-grass-ink);
   --color-type-grass-step: var(--type-grass-step);
   --color-type-grass-deep: var(--type-grass-deep);
+  --color-type-grass-text: var(--type-grass-text);
   --color-type-ice: var(--type-ice);
   --color-type-ice-ink: var(--type-ice-ink);
   --color-type-ice-step: var(--type-ice-step);
   --color-type-ice-deep: var(--type-ice-deep);
+  --color-type-ice-text: var(--type-ice-text);
   --color-type-fighting: var(--type-fighting);
   --color-type-fighting-ink: var(--type-fighting-ink);
   --color-type-fighting-step: var(--type-fighting-step);
   --color-type-fighting-deep: var(--type-fighting-deep);
+  --color-type-fighting-text: var(--type-fighting-text);
   --color-type-poison: var(--type-poison);
   --color-type-poison-ink: var(--type-poison-ink);
   --color-type-poison-step: var(--type-poison-step);
   --color-type-poison-deep: var(--type-poison-deep);
+  --color-type-poison-text: var(--type-poison-text);
   --color-type-ground: var(--type-ground);
   --color-type-ground-ink: var(--type-ground-ink);
   --color-type-ground-step: var(--type-ground-step);
   --color-type-ground-deep: var(--type-ground-deep);
+  --color-type-ground-text: var(--type-ground-text);
   --color-type-flying: var(--type-flying);
   --color-type-flying-ink: var(--type-flying-ink);
   --color-type-flying-step: var(--type-flying-step);
   --color-type-flying-deep: var(--type-flying-deep);
+  --color-type-flying-text: var(--type-flying-text);
   --color-type-psychic: var(--type-psychic);
   --color-type-psychic-ink: var(--type-psychic-ink);
   --color-type-psychic-step: var(--type-psychic-step);
   --color-type-psychic-deep: var(--type-psychic-deep);
+  --color-type-psychic-text: var(--type-psychic-text);
   --color-type-bug: var(--type-bug);
   --color-type-bug-ink: var(--type-bug-ink);
   --color-type-bug-step: var(--type-bug-step);
   --color-type-bug-deep: var(--type-bug-deep);
+  --color-type-bug-text: var(--type-bug-text);
   --color-type-rock: var(--type-rock);
   --color-type-rock-ink: var(--type-rock-ink);
   --color-type-rock-step: var(--type-rock-step);
   --color-type-rock-deep: var(--type-rock-deep);
+  --color-type-rock-text: var(--type-rock-text);
   --color-type-ghost: var(--type-ghost);
   --color-type-ghost-ink: var(--type-ghost-ink);
   --color-type-ghost-step: var(--type-ghost-step);
   --color-type-ghost-deep: var(--type-ghost-deep);
+  --color-type-ghost-text: var(--type-ghost-text);
   --color-type-dragon: var(--type-dragon);
   --color-type-dragon-ink: var(--type-dragon-ink);
   --color-type-dragon-step: var(--type-dragon-step);
   --color-type-dragon-deep: var(--type-dragon-deep);
+  --color-type-dragon-text: var(--type-dragon-text);
   --color-type-dark: var(--type-dark);
   --color-type-dark-ink: var(--type-dark-ink);
   --color-type-dark-step: var(--type-dark-step);
   --color-type-dark-deep: var(--type-dark-deep);
+  --color-type-dark-text: var(--type-dark-text);
   --color-type-steel: var(--type-steel);
   --color-type-steel-ink: var(--type-steel-ink);
   --color-type-steel-step: var(--type-steel-step);
   --color-type-steel-deep: var(--type-steel-deep);
+  --color-type-steel-text: var(--type-steel-text);
   --color-type-fairy: var(--type-fairy);
   --color-type-fairy-ink: var(--type-fairy-ink);
   --color-type-fairy-step: var(--type-fairy-step);
   --color-type-fairy-deep: var(--type-fairy-deep);
+  --color-type-fairy-text: var(--type-fairy-text);
 
   /* Nunito es la única familia; no hay monoespaciada en ningún sitio (§3) */
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
@@ -505,7 +565,7 @@ body {
     line-height: 1.45;
     white-space: nowrap;
     pointer-events: none;
-    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--ink) 45%, transparent); /* taste-skill-ignore: capa flotante */
+    box-shadow: var(--shadow-tooltip); /* taste-skill-ignore: capa flotante */
     animation: tip-in 120ms ease-out;
   }
 

@@ -10,7 +10,7 @@ import { Locale } from "@/proxy";
 import PokemonCard from "@/components/pokemon/PokemonCard";
 
 // Capa flotante: una de las sombras permitidas (DESIGN.md §4.0)
-const LAYER_SHADOW = "shadow-[0_24px_64px_rgb(21_22_28/0.24)]"; // taste-skill-ignore
+const LAYER_SHADOW = "shadow-(--shadow-modal)";
 
 interface PokemonSelectModalProps {
   triggerLabel: string;

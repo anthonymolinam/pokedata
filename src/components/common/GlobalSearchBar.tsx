@@ -10,7 +10,7 @@ import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { isHeroSearchVisible } from "@/lib/hero-search-visibility";
 
 // El desplegable es una capa flotante: la única sombra permitida en la barra (DESIGN.md §4.1)
-const OVERLAY_SHADOW = "shadow-[0_12px_32px_rgb(10_10_10/0.18)]"; // taste-skill-ignore
+const OVERLAY_SHADOW = "shadow-(--shadow-overlay)";
 
 interface GlobalSearchBarProps {
   locale?: string;

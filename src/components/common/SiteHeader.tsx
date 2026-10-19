@@ -13,8 +13,8 @@ import { useHeroSearchVisible } from "@/lib/hero-search-visibility";
 import { Locale } from "@/proxy";
 
 // Sombra de la cabecera desplazada y de las capas flotantes (DESIGN.md §4.0)
-const SCROLLED_SHADOW = "shadow-[0_6px_20px_rgb(21_22_28/0.08)]"; // taste-skill-ignore
-const SHEET_SHADOW = "shadow-[0_-12px_32px_rgb(21_22_28/0.18)]"; // taste-skill-ignore
+const SCROLLED_SHADOW = "shadow-(--shadow-header)";
+const SHEET_SHADOW = "shadow-(--shadow-sheet)";
 
 const SHEET_EASE = [0.22, 0.8, 0.24, 1] as const;
 
