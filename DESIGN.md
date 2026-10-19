@@ -257,7 +257,6 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Aquí «zona superior» es la zona del artwork completa: la parte de la tarjeta por encima de la zona reservada (62 % del ancho de la tarjeta) más la franja de salida por arriba, del 25 % de la zona. La figura se apoya un poco por encima de la zona reservada y no pasa del 88 % del ancho. Las medidas viven en `src/lib/artwork.ts`.
   - El script es `npm run artwork-bounds`; guarda `src/data/artwork-bounds.json`, que se versiona. Solo hay que repetirlo si PokéAPI cambia el artwork o se añaden Pokémon.
   - Sin datos (formas alternativas), se cae a `object-fit: contain`.
-  - Banco de pruebas en desarrollo: `/es/lab/tarjeta`, con los Pokémon del paso 4 y los de contraste del §2.3. En producción da 404.
 - **Hover y foco:**
   - La tarjeta sube 6px.
   - El artwork crece a `scale(1.08)`.
