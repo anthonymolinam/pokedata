@@ -197,7 +197,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
             transition={{ duration: 0.2, ease: SHEET_EASE }}
-            className="fixed inset-0 z-60 bg-surface md:hidden"
+            className="fixed inset-0 z-60 bg-raised md:hidden"
           >
             <div className="shell flex items-center gap-2 pt-2.5">
               <div className="flex-1 min-w-0">
@@ -249,7 +249,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
               animate={{ y: 0 }}
               exit={{ y: reduceMotion ? 0 : "100%" }}
               transition={{ duration: 0.25, ease: SHEET_EASE }}
-              className={`absolute inset-x-0 bottom-0 bg-surface text-ink rounded-t-surface ${SHEET_SHADOW} px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]`}
+              className={`absolute inset-x-0 bottom-0 bg-raised text-ink rounded-t-surface ${SHEET_SHADOW} px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]`}
             >
               <div className="flex items-center justify-between gap-4 mb-3">
                 <p className="display text-lead">{labels.menu}</p>

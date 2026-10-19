@@ -24,6 +24,7 @@
   --on-light: #15161c;
   --on-dark: #f7f5f0;
   --on-dark-soft: #b9bcc8;
+  --pokeball-white: #ffffff;
 
   /* Sombras (§4.0 y §2.4): solo cabecera desplazada y capas flotantes */
   --shadow-header: 0 6px 20px rgb(21 22 28 / 0.08); /* taste-skill-ignore: cabecera desplazada */
@@ -195,10 +196,12 @@
 [data-type="steel"] { --field: var(--type-steel); --field-ink: var(--type-steel-ink); --field-step: var(--type-steel-step); --field-deep: var(--type-steel-deep); --field-text: var(--type-steel-text); }
 [data-type="fairy"] { --field: var(--type-fairy); --field-ink: var(--type-fairy-ink); --field-step: var(--type-fairy-step); --field-deep: var(--type-fairy-deep); --field-text: var(--type-fairy-text); }
 
-/* Campos fijos: blanco para paneles y capas flotantes (vuelven a blanco aunque
-   estén dentro de un campo de tipo) y tinta para el pie. */
+/* Campos fijos: superficie para paneles y raised para capas flotantes (vuelven
+   a su tono aunque estén dentro de un campo de tipo), y el pie, con tinta
+   hueso fija. */
 [data-field="surface"] { --field: var(--surface); --field-ink: var(--ink); --field-step: var(--step); --field-deep: var(--ink); --field-text: var(--ink); }
-[data-field="ink"] { --field: var(--ink); --field-ink: var(--bone); --field-step: var(--ink-soft); --field-deep: var(--bone); --field-text: var(--bone); }
+[data-field="raised"] { --field: var(--raised); --field-ink: var(--ink); --field-step: var(--step); --field-deep: var(--ink); --field-text: var(--ink); }
+[data-field="footer"] { --field: var(--footer); --field-ink: var(--on-dark); --field-step: var(--ink-soft); --field-deep: var(--on-dark); --field-text: var(--on-dark); }
 
 /* Utilidades de Tailwind: bg-ground, bg-surface, text-ink, bg-type-fire,
    text-type-fire-ink, bg-type-fire-step, text-type-fire-deep, bg-field,

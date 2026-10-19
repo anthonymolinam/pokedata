@@ -32,7 +32,7 @@ function valueClass(wins: boolean, base: "body" | "lead"): string {
 }
 
 // Estadísticas enfrentadas (DESIGN.md §4.6): panel blanco con las barras que
-// crecen desde el eje central, cada una en el deep de su Pokémon, sobre 255.
+// crecen desde el eje central, cada una en el color de texto de su Pokémon (deep en claro, glow en oscuro), sobre 255.
 export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareStatBarsProps) {
   const { compare, detail } = getDictionary(locale);
   const ref = useReveal<HTMLElement>();
@@ -93,7 +93,7 @@ export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareS
                 className="flex h-3 justify-end overflow-hidden rounded-pill bg-step md:col-start-2 md:row-start-1"
               >
                 <span
-                  className="stat-bar stat-bar-end block h-full w-full rounded-pill bg-field-deep"
+                  className="stat-bar stat-bar-end block h-full w-full rounded-pill bg-field-text"
                   style={{ "--v": Math.min(a / 255, 1), "--i": i } as React.CSSProperties}
                 />
               </dd>
@@ -103,7 +103,7 @@ export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareS
                 className="h-3 overflow-hidden rounded-pill bg-step md:col-start-4 md:row-start-1"
               >
                 <span
-                  className="stat-bar block h-full w-full rounded-pill bg-field-deep"
+                  className="stat-bar block h-full w-full rounded-pill bg-field-text"
                   style={{ "--v": Math.min(b / 255, 1), "--i": i } as React.CSSProperties}
                 />
               </dd>

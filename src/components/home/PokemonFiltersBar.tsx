@@ -362,7 +362,7 @@ export default function PokemonFiltersBar({
         </section>
       </div>
 
-      <div className="flex items-center justify-end gap-2 px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-surface rounded-b-[inherit]">
+      <div className="flex items-center justify-end gap-2 px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-raised rounded-b-[inherit]">
         {actions}
       </div>
     </div>
@@ -419,7 +419,7 @@ export default function PokemonFiltersBar({
                 animate={{ y: 0 }}
                 exit={{ y: reduceMotion ? 0 : "100%" }}
                 transition={{ duration: 0.25, ease: PANEL_EASE }}
-                className={`absolute inset-x-0 bottom-0 max-h-[92svh] flex flex-col bg-surface text-ink rounded-t-surface ${SHEET_SHADOW}`}
+                className={`absolute inset-x-0 bottom-0 max-h-[92svh] flex flex-col bg-raised text-ink rounded-t-surface ${SHEET_SHADOW}`}
               >
                 {sheetBody}
               </motion.div>

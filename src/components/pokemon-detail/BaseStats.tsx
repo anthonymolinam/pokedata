@@ -11,7 +11,7 @@ interface BaseStatsProps {
 }
 
 // Estadísticas base (DESIGN.md §4.4): seis filas con el nombre, el valor y la
-// barra sobre 255, en el deep del tipo principal sobre una pista --step. Las
+// barra sobre 255, en el color de texto del tipo principal (deep en claro, glow en oscuro) sobre una pista --step. Las
 // barras crecen una vez al entrar en pantalla; sin JavaScript o con movimiento
 // reducido se ven ya llenas.
 export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps) {
@@ -45,7 +45,7 @@ export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps
             <dd className="text-body font-black num text-right">{stat.value}</dd>
             <dd aria-hidden="true" className="h-3 overflow-hidden rounded-pill bg-step">
               <span
-                className="stat-bar block h-full bg-field-deep"
+                className="stat-bar block h-full bg-field-text"
                 style={
                   {
                     "--v": Math.min(stat.value / 255, 1),

@@ -47,6 +47,7 @@ Cada token tiene un valor por tema. El código usa siempre el token, nunca el va
 | `--on-light` | `#15161C` | Tinta sobre campos claros, contorno y banda de la Pokébola, base translúcida de la pastilla «Total» estrecha |
 | `--on-dark` | `#F7F5F0` | Tinta sobre campos oscuros, mitad inferior de la Pokébola, texto del pie |
 | `--on-dark-soft` | `#B9BCC8` | Texto secundario del pie (antes `--bone-soft`) |
+| `--pokeball-white` | `#FFFFFF` | Mitad inferior y centro de la Pokébola del logo |
 
 En oscuro, `--ink` y `--bone` intercambian su papel: la tinta es clara y los rellenos en tinta (botón secundario, «Total», navegación activa, tooltips, celdas ×2 de la tabla) pasan a ser pastillas claras con texto oscuro. Es intencionado: el elemento más fuerte de cada pantalla sigue siendo el de más contraste.
 
@@ -146,7 +147,7 @@ Los valores salen de un script que mezcla con blanco en pasos del 1 % hasta lleg
 **Lo que cambia en oscuro y nada más:**
 - **Brillo de hover de las tarjetas** (§4.3): mismo alcance, más intensidad. Sobre fondo oscuro el color de tipo luce de verdad, y se aprovecha: dos capas en lugar de una.
 - **Sombras:** las de claro no se ven sobre `#14161D`. La cabecera al desplazar usa `0 6px 20px rgba(0,0,0,.45)` y las capas flotantes van en `--raised` con `0 16px 40px rgba(0,0,0,.55)`. La separación la da sobre todo el escalón de tono.
-- **Pokébola del logo:** contorno, banda y botón en `--on-light`, mitad inferior y centro en `--on-dark`, mitad superior en `--accent`. Con colores fijos el logo es el mismo en los dos temas; sobre el fondo oscuro la silueta la dibujan el rojo y el hueso (16.6:1).
+- **Pokébola del logo:** contorno, banda y botón en `--on-light`, mitad inferior y centro en `--pokeball-white`, mitad superior en `--accent`. Con colores fijos el logo es el mismo en los dos temas; sobre el fondo oscuro la silueta la dibujan el rojo y el blanco (18.07:1).
 - **Tabla de tipos:** la fila o columna seleccionada se tiñe con su `field` mezclado con `--surface` (en claro, que es blanco, queda igual que ahora). La guía de hover usa `--ink` al 5 %, que en oscuro aclara.
 - **Pastilla «Total» estrecha:** base `--on-light` al 15 % en los dos temas, con texto en `field-ink`. Con `--ink` se aclararía en oscuro y bajaría el contraste de la tinta hueso.
 - **Controles nativos y barras de scroll:** `color-scheme: light` o `dark` en `:root`, según el tema activo.
