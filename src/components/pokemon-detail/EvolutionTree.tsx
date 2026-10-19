@@ -787,7 +787,7 @@ function Arrow({
 }) {
   const DesktopArrow = DESKTOP_ARROW[direction];
   return (
-    <div className="flex flex-col items-center justify-end gap-1.5 pt-4 text-center lg:grid lg:w-36 lg:shrink-0 lg:grid-rows-[1fr_auto_1fr] lg:justify-items-center lg:px-3 lg:pt-12">
+    <div className="flex flex-col items-center justify-end gap-1.5 pt-4 text-center lg:grid lg:w-36 lg:shrink-0 lg:grid-rows-[1fr_auto_1fr] lg:justify-center lg:justify-items-center lg:px-3 lg:pt-12">
       {requirements.length > 0 && (
         <p className="max-w-40 text-small font-extrabold text-balance lg:max-w-none lg:self-end">
           {requirements.join(" · ")}
