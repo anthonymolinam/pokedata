@@ -164,22 +164,24 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
           </ul>
         </nav>
 
-        {/* Oculto conserva su hueco: la cabecera no se mueve cuando entra. Entre 768
-            y 1023px no cabe junto al selector de tema y queda solo la lupa (§4.1) */}
-        <div
-          inert={hideCompactSearch}
-          className={`hidden lg:block ml-auto w-full max-w-60 min-w-0 transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:translate-y-0 ${
-            hideCompactSearch ? "invisible opacity-0 translate-y-2" : "visible opacity-100 translate-y-0"
-          }`}
-        >
-          <GlobalSearchBar
-            locale={locale}
-            placeholder={labels.search}
-            label={labels.searchLabel}
-          />
-        </div>
+        <div className="ml-auto flex items-center gap-1.5 md:gap-2 shrink-0">
+          {/* Va en el mismo grupo que ES/EN y el selector de tema, para que los tres
+              queden a la misma distancia. Oculto conserva su hueco: la cabecera no se
+              mueve cuando entra. Entre 768 y 1023px no cabe junto al selector de tema
+              y queda solo la lupa (§4.1) */}
+          <div
+            inert={hideCompactSearch}
+            className={`hidden lg:block w-60 transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:translate-y-0 ${
+              hideCompactSearch ? "invisible opacity-0 translate-y-2" : "visible opacity-100 translate-y-0"
+            }`}
+          >
+            <GlobalSearchBar
+              locale={locale}
+              placeholder={labels.search}
+              label={labels.searchLabel}
+            />
+          </div>
 
-        <div className="ml-auto lg:ml-0 flex items-center gap-1.5 md:gap-2 shrink-0">
           <button
             ref={searchButtonRef}
             type="button"
