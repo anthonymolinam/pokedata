@@ -206,7 +206,8 @@ function CompareStage({
               alt=""
               fill
               priority
-              sizes="(min-width: 768px) 360px, 66vw"
+              quality={90}
+              sizes="(min-width: 1024px) 420px, (min-width: 768px) 41vw, 80vw"
               className="object-contain"
             />
           </span>
