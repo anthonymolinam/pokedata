@@ -239,7 +239,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
               tabIndex={-1}
               aria-hidden="true"
               onClick={() => setMenuOpen(false)}
-              className="absolute inset-0 bg-ink/40 cursor-default"
+              className="absolute inset-0 bg-on-light/40 cursor-default"
             />
             <motion.div
               role="dialog"

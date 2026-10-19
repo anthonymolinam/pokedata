@@ -6,6 +6,8 @@
    ========================================================================= */
 
 :root {
+  color-scheme: light;
+
   /* Globales (§2.1) */
   --ground: #f3f4f8;
   --surface: #ffffff;
@@ -13,7 +15,6 @@
   --ink: #15161c;
   --ink-soft: #5c6070;
   --bone: #f7f5f0;
-  --bone-soft: #b9bcc8;
   --raised: #ffffff;
   --footer: #15161c;
   --accent: #cc2e0b;
@@ -173,6 +174,103 @@
   }
 }
 
+/* Tema oscuro (§2.4). Los mismos valores en los dos bloques: el primero es el
+   tema forzado con el selector y el segundo el automático, cuando el sistema
+   está en oscuro y no se ha forzado el claro. Si cambias uno, cambia el otro. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ground: #14161d;
+  --surface: #1d2029;
+  --step: #282c37;
+  --raised: #262a35;
+  --ink: #eef0f5;
+  --ink-soft: #a3a8b8;
+  --bone: #14161d;
+  --footer: #1d2029;
+
+  --shadow-header: 0 6px 20px rgb(0 0 0 / 0.45); /* taste-skill-ignore: cabecera desplazada */
+  --shadow-sheet: 0 -16px 40px rgb(0 0 0 / 0.55); /* taste-skill-ignore: hoja inferior */
+  --shadow-overlay: 0 16px 40px rgb(0 0 0 / 0.55); /* taste-skill-ignore: desplegable del buscador */
+  --shadow-modal: 0 16px 40px rgb(0 0 0 / 0.55); /* taste-skill-ignore: modal */
+  --shadow-tooltip: 0 6px 16px -6px rgb(0 0 0 / 0.6); /* taste-skill-ignore: tooltip */
+
+  /* Siniestro es el único campo que cambia: 2.70:1 contra el fondo, aclarado
+     un 5 % llega a 3.04:1 y su tinta hueso sigue en 5.45:1 */
+  --type-dark: #775f4f;
+  --type-dark-step: #665244;
+  --type-dark-field-dark: #775f4f;
+
+  /* glow: el tipo como texto, ≥ 4.5:1 sobre --surface y --ground oscuros.
+     Trece tipos usan su campo; los cinco de tinta hueso se aclaran. */
+  --type-normal-text: var(--type-normal);
+  --type-fire-text: var(--type-fire);
+  --type-water-text: var(--type-water);
+  --type-electric-text: var(--type-electric);
+  --type-grass-text: var(--type-grass);
+  --type-ice-text: var(--type-ice);
+  --type-fighting-text: #d26662;
+  --type-poison-text: #b96cb8; /* taste-skill-ignore: violeta canónico del tipo */
+  --type-ground-text: var(--type-ground);
+  --type-flying-text: var(--type-flying);
+  --type-psychic-text: var(--type-psychic);
+  --type-bug-text: var(--type-bug);
+  --type-rock-text: var(--type-rock);
+  --type-ghost-text: #937eaf; /* taste-skill-ignore: violeta canónico del tipo */
+  --type-dragon-text: #966cfd; /* taste-skill-ignore: violeta canónico del tipo */
+  --type-dark-text: #978478;
+  --type-steel-text: var(--type-steel);
+  --type-fairy-text: var(--type-fairy);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --ground: #14161d;
+    --surface: #1d2029;
+    --step: #282c37;
+    --raised: #262a35;
+    --ink: #eef0f5;
+    --ink-soft: #a3a8b8;
+    --bone: #14161d;
+    --footer: #1d2029;
+
+    --shadow-header: 0 6px 20px rgb(0 0 0 / 0.45); /* taste-skill-ignore: cabecera desplazada */
+    --shadow-sheet: 0 -16px 40px rgb(0 0 0 / 0.55); /* taste-skill-ignore: hoja inferior */
+    --shadow-overlay: 0 16px 40px rgb(0 0 0 / 0.55); /* taste-skill-ignore: desplegable del buscador */
+    --shadow-modal: 0 16px 40px rgb(0 0 0 / 0.55); /* taste-skill-ignore: modal */
+    --shadow-tooltip: 0 6px 16px -6px rgb(0 0 0 / 0.6); /* taste-skill-ignore: tooltip */
+
+    /* Siniestro es el único campo que cambia: 2.70:1 contra el fondo, aclarado
+       un 5 % llega a 3.04:1 y su tinta hueso sigue en 5.45:1 */
+    --type-dark: #775f4f;
+    --type-dark-step: #665244;
+    --type-dark-field-dark: #775f4f;
+
+    /* glow: el tipo como texto, ≥ 4.5:1 sobre --surface y --ground oscuros.
+       Trece tipos usan su campo; los cinco de tinta hueso se aclaran. */
+    --type-normal-text: var(--type-normal);
+    --type-fire-text: var(--type-fire);
+    --type-water-text: var(--type-water);
+    --type-electric-text: var(--type-electric);
+    --type-grass-text: var(--type-grass);
+    --type-ice-text: var(--type-ice);
+    --type-fighting-text: #d26662;
+    --type-poison-text: #b96cb8; /* taste-skill-ignore: violeta canónico del tipo */
+    --type-ground-text: var(--type-ground);
+    --type-flying-text: var(--type-flying);
+    --type-psychic-text: var(--type-psychic);
+    --type-bug-text: var(--type-bug);
+    --type-rock-text: var(--type-rock);
+    --type-ghost-text: #937eaf; /* taste-skill-ignore: violeta canónico del tipo */
+    --type-dragon-text: #966cfd; /* taste-skill-ignore: violeta canónico del tipo */
+    --type-dark-text: #978478;
+    --type-steel-text: var(--type-steel);
+    --type-fairy-text: var(--type-fairy);
+  }
+}
+
 /* Campo de contexto: cualquier contenedor con data-type="fire" pinta su
    interior con bg-field / text-field-ink / bg-field-step / text-field-deep.
    Es la base de las tarjetas, las columnas del día, el escenario de la ficha
@@ -214,7 +312,6 @@
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-bone: var(--bone);
-  --color-bone-soft: var(--bone-soft);
   --color-accent: var(--accent);
   --color-ok: var(--ok);
   --color-raised: var(--raised);

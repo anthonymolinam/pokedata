@@ -412,7 +412,7 @@ export default function PokemonFiltersBar({
               <div
                 aria-hidden="true"
                 onClick={() => setOpen(false)}
-                className="absolute inset-0 bg-ink/40"
+                className="absolute inset-0 bg-on-light/40"
               />
               <motion.div
                 initial={{ y: reduceMotion ? 0 : "100%" }}

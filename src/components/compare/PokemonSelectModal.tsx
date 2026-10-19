@@ -118,7 +118,7 @@ export default function PokemonSelectModal({
         onClick={(e) => {
           if (e.target === e.currentTarget) close();
         }}
-        className={`layer-in m-auto flex-col open:flex w-[min(44rem,calc(100vw-2*var(--gutter)))] max-h-[min(85svh,52rem)] max-w-none overflow-hidden rounded-[22px] bg-raised p-0 text-ink ${LAYER_SHADOW} backdrop:bg-ink/40`}
+        className={`layer-in m-auto flex-col open:flex w-[min(44rem,calc(100vw-2*var(--gutter)))] max-h-[min(85svh,52rem)] max-w-none overflow-hidden rounded-[22px] bg-raised p-0 text-ink ${LAYER_SHADOW} backdrop:bg-on-light/40`}
       >
         <div data-field="raised" className="flex flex-col gap-4 px-7 py-5 md:px-8 md:py-6">
           <div className="flex items-center justify-between gap-4">
