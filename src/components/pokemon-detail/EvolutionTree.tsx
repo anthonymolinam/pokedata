@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { ArrowDown, ArrowRight } from "lucide-react";
+import { ArrowDown, ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import { EvolutionStage } from "@/lib/pokeapi";
 import PokemonCard from "@/components/pokemon/PokemonCard";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
@@ -737,9 +737,15 @@ function Branch({ node, currentLower, locale, column = false }: BranchProps) {
                 <li
                   key={`${child.name}-${index}`}
                   style={{ "--rows": 1 + rowsOf(child) } as CSSProperties}
-                  className="flex w-full min-w-0 flex-col max-lg:grid max-lg:row-span-(--rows) max-lg:grid-rows-subgrid max-lg:justify-items-center lg:w-auto lg:flex-row lg:items-center"
+                  className="flex w-full min-w-0 flex-col max-lg:grid max-lg:row-span-(--rows) max-lg:grid-rows-subgrid max-lg:justify-items-center lg:w-auto lg:flex-row"
                 >
-                  <Arrow requirements={requirementsOf(child)} />
+                  {/* En escritorio la bifurcación se abre: la primera rama
+                      sube en diagonal, la última baja y las del medio siguen
+                      rectas */}
+                  <Arrow
+                    requirements={requirementsOf(child)}
+                    direction={index === 0 ? "up" : index === children.length - 1 ? "down" : "straight"}
+                  />
                   <Branch node={child} currentLower={currentLower} locale={locale} column />
                 </li>
               ) : (
@@ -748,7 +754,7 @@ function Branch({ node, currentLower, locale, column = false }: BranchProps) {
                   className={
                     flat
                       ? "contents lg:flex lg:w-auto lg:flex-row"
-                      : "flex w-full min-w-0 flex-col items-center lg:w-auto lg:flex-row"
+                      : "flex w-full min-w-0 flex-col items-center lg:w-auto lg:flex-row lg:items-stretch"
                   }
                 >
                   <Arrow requirements={requirementsOf(child)} />
@@ -763,19 +769,32 @@ function Branch({ node, currentLower, locale, column = false }: BranchProps) {
   );
 }
 
-// Flecha entre dos etapas con la condición encima: hacia la derecha en
-// escritorio y hacia abajo en móvil. Abajo del todo, para que la flecha quede
-// junto a su tarjeta cuando la fila es más alta que su texto
-function Arrow({ requirements }: { requirements: string[] }) {
+// Flecha entre dos etapas con la condición encima: hacia abajo en móvil y
+// hacia la derecha en escritorio (en diagonal en las ramas de una bifurcación).
+// En móvil va abajo del todo, junto a su tarjeta, cuando la fila es más alta
+// que su texto. En escritorio ocupa el alto de la fila, con el mismo hueco
+// arriba que la tarjeta (el del artwork que sobresale), y tres filas: la
+// condición, la flecha y un hueco igual al de arriba. Así la flecha cae en la
+// altura media de la tarjeta destino y la condición, justo encima.
+const DESKTOP_ARROW = { up: ArrowUpRight, down: ArrowDownRight, straight: ArrowRight };
+
+function Arrow({
+  requirements,
+  direction = "straight",
+}: {
+  requirements: string[];
+  direction?: keyof typeof DESKTOP_ARROW;
+}) {
+  const DesktopArrow = DESKTOP_ARROW[direction];
   return (
-    <div className="flex flex-col items-center justify-end gap-1.5 pt-4 text-center lg:w-36 lg:shrink-0 lg:justify-start lg:px-3 lg:pt-12">
+    <div className="flex flex-col items-center justify-end gap-1.5 pt-4 text-center lg:grid lg:w-36 lg:shrink-0 lg:grid-rows-[1fr_auto_1fr] lg:justify-items-center lg:px-3 lg:pt-12">
       {requirements.length > 0 && (
-        <p className="max-w-40 text-small font-extrabold text-balance lg:max-w-none">
+        <p className="max-w-40 text-small font-extrabold text-balance lg:max-w-none lg:self-end">
           {requirements.join(" · ")}
         </p>
       )}
       <ArrowDown aria-hidden="true" strokeWidth={3} className="size-6 lg:hidden" />
-      <ArrowRight aria-hidden="true" strokeWidth={3} className="hidden size-6 lg:block" />
+      <DesktopArrow aria-hidden="true" strokeWidth={3} className="hidden size-6 lg:row-start-2 lg:block" />
     </div>
   );
 }
