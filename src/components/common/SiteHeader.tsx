@@ -38,6 +38,7 @@ interface SiteHeaderProps {
     themeLight: string;
     themeDark: string;
     themeSystem: string;
+    themeSystemShort: string;
   };
 }
 
@@ -254,7 +255,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
         )}
       </AnimatePresence>
 
-      {/* Móvil: hoja inferior con la navegación */}
+      {/* Móvil: hoja inferior con la navegación y el selector de tema */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -315,6 +316,18 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
                   })}
                 </ul>
               </nav>
+              <div className="mt-4">
+                <ThemeSwitcher
+                  variant="sheet"
+                  labels={{
+                    theme: labels.theme,
+                    light: labels.themeLight,
+                    dark: labels.themeDark,
+                    system: labels.themeSystem,
+                    systemShort: labels.themeSystemShort,
+                  }}
+                />
+              </div>
             </motion.div>
           </motion.div>
         )}

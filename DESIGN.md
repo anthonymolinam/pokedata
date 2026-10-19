@@ -238,7 +238,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Logo:** al pasar el ratón (o al enfocarlo), la Pokébola da una vuelta completa en 600ms con un ligero rebote. Con movimiento reducido no gira.
 - **Móvil (< 768px):**
   - La cabecera mide 60px y muestra el logo, un botón de lupa que abre el buscador a pantalla completa, ES/EN y un botón «Menú».
-  - «Menú» abre una hoja inferior con la navegación y, debajo, el **selector de tema**: el mismo control de tres segmentos, a todo el ancho de la hoja, con el icono **y su nombre visible** en cada segmento (en táctil no hay hover, así que no hay tooltip). Fuera de la hoja, la cabecera móvil no lo muestra.
+  - «Menú» abre una hoja inferior con la navegación y, debajo, el **selector de tema**: el mismo control de tres segmentos, a todo el ancho de la hoja, con el icono **y su nombre visible** en cada segmento (en táctil no hay hover, así que no hay tooltip). «Según el sistema» no cabe en un tercio de la hoja a 360px, así que ahí se lee «Sistema» / «System»; el nombre accesible sigue siendo el completo, que lo contiene. Fuera de la hoja, la cabecera móvil no lo muestra.
   - El buscador del hero sigue siendo el principal en la portada.
 
 ### 4.2 Portada: hero compacto

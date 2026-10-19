@@ -20,6 +20,7 @@ export const translations = {
       themeLight: "Light",
       themeDark: "Dark",
       themeSystem: "Match system",
+      themeSystemShort: "System",
       searchPlaceholder: "Search Pokémon...",
     },
     footer: {
@@ -193,6 +194,7 @@ export const translations = {
       themeLight: "Claro",
       themeDark: "Oscuro",
       themeSystem: "Según el sistema",
+      themeSystemShort: "Sistema",
       searchPlaceholder: "Buscar Pokémon...",
     },
     footer: {

@@ -691,6 +691,12 @@ body {
   transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* En la hoja del menú los segmentos se reparten el ancho: el relleno avanza su
+   propio ancho más el hueco */
+.theme-switcher[data-variant="sheet"] .theme-thumb {
+  --segment: calc(100% + 0.125rem);
+}
+
 :root[data-theme-pref="light"] .theme-thumb {
   transform: translateX(0);
 }
