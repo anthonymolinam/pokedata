@@ -33,6 +33,8 @@ function valueClass(wins: boolean, base: "body" | "lead"): string {
 
 // Estadísticas enfrentadas (DESIGN.md §4.6): panel blanco con las barras que
 // crecen desde el eje central, cada una en el color de texto de su Pokémon (deep en claro, glow en oscuro), sobre 255.
+// Crecen al entrar en pantalla, cada vez que se monta el panel: la página le
+// da una key por pareja, así que cambiar de Pokémon o de forma las repite.
 export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareStatBarsProps) {
   const { compare, detail } = getDictionary(locale);
   const ref = useReveal<HTMLElement>();
@@ -51,6 +53,7 @@ export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareS
   return (
     <section
       ref={ref}
+      data-reveal="pending"
       aria-labelledby="compare-stats-title"
       className="rounded-surface bg-surface p-5 text-ink md:p-10"
     >

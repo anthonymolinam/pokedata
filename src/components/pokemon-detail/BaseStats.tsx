@@ -12,7 +12,8 @@ interface BaseStatsProps {
 
 // Estadísticas base (DESIGN.md §4.4): seis filas con el nombre, el valor y la
 // barra sobre 255, en el color de texto del tipo principal (deep en claro, glow en oscuro) sobre una pista --step. Las
-// barras crecen una vez al entrar en pantalla; sin JavaScript o con movimiento
+// barras crecen al entrar en pantalla, cada vez que se monta el panel (la
+// ficha le da una key por Pokémon y forma); sin JavaScript o con movimiento
 // reducido se ven ya llenas.
 export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps) {
   const { detail } = getDictionary(locale);
@@ -22,6 +23,7 @@ export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps
   return (
     <section
       ref={ref}
+      data-reveal="pending"
       aria-labelledby="stats-title"
       data-type={primaryType}
       className="rounded-surface bg-surface p-6 md:p-10 text-ink"

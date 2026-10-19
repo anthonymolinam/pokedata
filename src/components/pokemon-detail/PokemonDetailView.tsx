@@ -166,7 +166,10 @@ export default function PokemonDetailView({
       />
 
       <div className="grid gap-5 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        {/* Al pasar a otro Pokémon (el buscador reutiliza la página) o a otra
+            forma, el panel se vuelve a montar y las barras crecen de nuevo */}
         <BaseStats
+          key={`${pokemon.name}:${selectedVariant?.name ?? ""}`}
           stats={activeStats}
           primaryType={activeTypes[0]?.toLowerCase() ?? "normal"}
           locale={locale}

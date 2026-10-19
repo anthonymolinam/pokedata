@@ -136,7 +136,14 @@ export default async function ComparePage({
       />
 
       {pokemon1 && pokemon2 && (
-        <CompareStatBars pokemon1={pokemon1} pokemon2={pokemon2} locale={locale} />
+        // La key vuelve a montar las barras al cambiar de Pokémon o de forma,
+        // para que crezcan de nuevo
+        <CompareStatBars
+          key={`${p1}:${p2}`}
+          pokemon1={pokemon1}
+          pokemon2={pokemon2}
+          locale={locale}
+        />
       )}
     </div>
   );

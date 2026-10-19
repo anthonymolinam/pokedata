@@ -597,15 +597,22 @@ body {
 .stat-bar {
   transform-origin: left;
   transform: scaleX(var(--v, 1));
-  transition: transform 600ms cubic-bezier(0.22, 0.8, 0.24, 1);
 }
 
-[data-reveal="pending"] .stat-bar {
-  transform: scaleX(0);
-}
+/* Las barras crecen al entrar en pantalla. El panel se pinta ya «pending», así
+   que salen vacías desde el primer pintado y no se ven llenas y luego vaciarse.
+   Solo con JavaScript (si no, nada las pasaría a «shown») y sin movimiento
+   reducido; en otro caso se ven ya llenas. La transición vive solo en «shown»:
+   un cambio de valores sin volver a montar el panel no estira las barras. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal="pending"] .stat-bar {
+    transform: scaleX(0);
+  }
 
-[data-reveal="shown"] .stat-bar {
-  transition-delay: calc(var(--i, 0) * 70ms);
+  [data-reveal="shown"] .stat-bar {
+    transition: transform 600ms cubic-bezier(0.22, 0.8, 0.24, 1);
+    transition-delay: calc(var(--i, 0) * 70ms);
+  }
 }
 
 /* Comparador (§4.6): las barras de la izquierda crecen desde el eje central */
@@ -829,10 +836,6 @@ body {
   }
 
   .theme-thumb {
-    transition: none;
-  }
-
-  .stat-bar {
     transition: none;
   }
 }
