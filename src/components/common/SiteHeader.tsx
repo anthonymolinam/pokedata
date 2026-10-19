@@ -8,8 +8,9 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Pokeball from "@/components/common/Pokeball";
 import GlobalSearchBar from "@/components/common/GlobalSearchBar";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import ThemeSwitcher from "@/components/common/ThemeSwitcher";
 import { getLocalizedPath } from "@/constants/routes";
-import { useHeroSearchVisible } from "@/lib/hero-search-visibility";
+import { isHeroSearchVisible, useHeroSearchVisible } from "@/lib/hero-search-visibility";
 import { Locale } from "@/proxy";
 
 // Sombra de la cabecera desplazada y de las capas flotantes (DESIGN.md §4.0)
@@ -33,6 +34,10 @@ interface SiteHeaderProps {
     mainNav: string;
     home: string;
     language: string;
+    theme: string;
+    themeLight: string;
+    themeDark: string;
+    themeSystem: string;
   };
 }
 
@@ -68,6 +73,19 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Sin buscador compacto (móvil y tableta), Ctrl K / ⌘K abre el de pantalla
+  // completa, salvo en la portada mientras se ve el del hero, que es suyo
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "k") return;
+      if (!searchButtonRef.current?.getClientRects().length || isHeroSearchVisible()) return;
+      e.preventDefault();
+      setSearchOpen(true);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   // Las capas móviles se cierran al navegar
@@ -114,7 +132,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
         }`}
       />
 
-      <div className="shell relative flex items-center gap-2 md:gap-4 lg:gap-6 h-15 md:h-18">
+      <div className="shell relative flex items-center gap-2 md:gap-3 lg:gap-6 h-15 md:h-18">
         <Link
           href={`/${locale}`}
           aria-label={labels.home}
@@ -133,7 +151,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
                   <Link
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    className={`grid place-items-center h-11 px-4 rounded-pill font-extrabold text-small whitespace-nowrap active:scale-[0.96] transition-transform duration-150 ${
+                    className={`grid place-items-center h-11 px-3 lg:px-4 rounded-pill font-extrabold text-small whitespace-nowrap active:scale-[0.96] transition-transform duration-150 ${
                       active ? "bg-ink text-bone" : "hover:bg-step"
                     }`}
                   >
@@ -145,10 +163,11 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
           </ul>
         </nav>
 
-        {/* Oculto conserva su hueco: la cabecera no se mueve cuando entra */}
+        {/* Oculto conserva su hueco: la cabecera no se mueve cuando entra. Entre 768
+            y 1023px no cabe junto al selector de tema y queda solo la lupa (§4.1) */}
         <div
           inert={hideCompactSearch}
-          className={`hidden md:block ml-auto w-full max-w-60 min-w-0 transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:translate-y-0 ${
+          className={`hidden lg:block ml-auto w-full max-w-60 min-w-0 transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:translate-y-0 ${
             hideCompactSearch ? "invisible opacity-0 translate-y-2" : "visible opacity-100 translate-y-0"
           }`}
         >
@@ -159,19 +178,31 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
           />
         </div>
 
-        <div className="ml-auto md:ml-0 flex items-center gap-1.5 md:gap-2 shrink-0">
+        <div className="ml-auto lg:ml-0 flex items-center gap-1.5 md:gap-2 shrink-0">
           <button
             ref={searchButtonRef}
             type="button"
             aria-label={labels.openSearch}
             aria-haspopup="dialog"
             onClick={() => setSearchOpen(true)}
-            className={`${pillButton} w-11 md:hidden`}
+            className={`${pillButton} w-11 lg:hidden`}
           >
             <Search aria-hidden="true" strokeWidth={2.5} className="size-5" />
           </button>
 
           <LanguageSwitcher currentLocale={locale} label={labels.language} />
+
+          {/* En móvil va dentro de la hoja del menú (§4.1) */}
+          <div className="hidden md:block">
+            <ThemeSwitcher
+              labels={{
+                theme: labels.theme,
+                light: labels.themeLight,
+                dark: labels.themeDark,
+                system: labels.themeSystem,
+              }}
+            />
+          </div>
 
           <button
             ref={menuButtonRef}
@@ -186,7 +217,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
         </div>
       </div>
 
-      {/* Móvil: buscador a pantalla completa */}
+      {/* Móvil y tableta: buscador a pantalla completa */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
@@ -197,7 +228,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
             transition={{ duration: 0.2, ease: SHEET_EASE }}
-            className="fixed inset-0 z-60 bg-raised md:hidden"
+            className="fixed inset-0 z-60 bg-raised lg:hidden"
           >
             <div className="shell flex items-center gap-2 pt-2.5">
               <div className="flex-1 min-w-0">

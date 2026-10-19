@@ -681,6 +681,75 @@ body {
   }
 }
 
+/* Selector de tema (§4.1 y §6). El segmento activo lo marca data-theme-pref,
+   que pone el script de arranque antes del primer pintado: así es correcto
+   sin esperar a la hidratación. El relleno se desliza al nuevo segmento; sin
+   el atributo (sin JavaScript) queda en «Según el sistema». */
+.theme-thumb {
+  --segment: calc(2.25rem + 0.125rem);
+  transform: translateX(calc(2 * var(--segment)));
+  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root[data-theme-pref="light"] .theme-thumb {
+  transform: translateX(0);
+}
+
+:root[data-theme-pref="dark"] .theme-thumb {
+  transform: translateX(var(--segment));
+}
+
+:root[data-theme-pref="light"] .theme-option[data-theme-option="light"],
+:root[data-theme-pref="dark"] .theme-option[data-theme-option="dark"],
+:root:not([data-theme-pref="light"], [data-theme-pref="dark"]) .theme-option[data-theme-option="system"] {
+  color: var(--ink);
+}
+
+/* Tooltip con el nombre, debajo del segmento (la cabecera está arriba del
+   todo): con el puntero y con el foco del teclado; Esc lo esconde. Es el mismo
+   globo que el de la tabla de tipos. El último se abre hacia dentro para no
+   salirse por la derecha. */
+.theme-option[data-tip]::before {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 10px);
+  left: 50%;
+  translate: -50% 0;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--bone);
+  font-size: var(--step-small);
+  font-weight: 800;
+  line-height: 1.45;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-tooltip); /* taste-skill-ignore: capa flotante */
+  visibility: hidden;
+  opacity: 0;
+}
+
+.theme-option[data-theme-option="system"]::before {
+  left: auto;
+  right: -4px;
+  translate: none;
+}
+
+@media (hover: hover) {
+  .theme-option[data-tip]:hover:not([data-tip-hidden])::before {
+    visibility: visible;
+    opacity: 1;
+    animation: tip-in 120ms ease-out;
+  }
+}
+
+.theme-option[data-tip]:focus-visible:not([data-tip-hidden])::before {
+  visibility: visible;
+  opacity: 1;
+  animation: tip-in 120ms ease-out;
+}
+
 /* Capas flotantes (§6): aparecen y suben 8px en 250ms */
 @keyframes layer-in {
   from {
@@ -698,6 +767,10 @@ body {
   .float,
   .layer-in[open] {
     animation: none;
+  }
+
+  .theme-thumb {
+    transition: none;
   }
 
   .stat-bar {

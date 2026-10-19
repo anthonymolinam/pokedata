@@ -166,6 +166,10 @@ export default async function RootLayout({ children, params }: LayoutProps) {
               mainNav: dict.nav.mainNav,
               home: dict.nav.home,
               language: dict.nav.language,
+              theme: dict.nav.theme,
+              themeLight: dict.nav.themeLight,
+              themeDark: dict.nav.themeDark,
+              themeSystem: dict.nav.themeSystem,
             }}
           />
 
