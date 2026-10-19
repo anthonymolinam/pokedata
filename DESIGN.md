@@ -54,14 +54,15 @@ En oscuro, `--ink` y `--bone` intercambian su papel: la tinta es clara y los rel
 
 El acento rojo no se usa nunca para marcar estados ni selecciones; eso lo hace la tinta.
 
-**Contraste de los tokens oscuros (WCAG 2.x):**
+**Contraste de los tokens (WCAG 2.x).** Generada con `npm run check-contrast -- --md`; umbral 4.5:1, salvo el acento, que es un gráfico (3:1):
 
-| Par | Ratio |
-| --- | --- |
-| `--ink` sobre `--ground` / `--surface` / `--step` / `--raised` | 15.85 / 14.27 / 12.23 / 12.57 |
-| `--ink-soft` sobre `--ground` / `--surface` / `--step` / `--raised` | 7.61 / 6.86 / 5.88 / 6.04 |
-| `--bone` sobre `--ink` (botones, «Total», tooltips) | 15.85 |
-| `--on-dark` / `--on-dark-soft` sobre `--footer` | 14.93 / 8.59 |
+| Par | Claro | Oscuro |
+| --- | --- | --- |
+| `--ink` sobre `--ground` / `--surface` / `--step` / `--raised` / `--raised-step` | 16.42 / 18.05 / 14.74 / 18.05 / 14.74 | 15.84 / 14.26 / 12.23 / 12.57 / 9.81 |
+| `--ink-soft` sobre `--ground` / `--surface` / `--step` / `--raised` | 5.68 / 6.24 / 5.10 / 6.24 | 7.61 / 6.85 / 5.87 / 6.04 |
+| `--bone` sobre `--ink` (botones, «Total», tooltips) | 16.56 | 15.84 |
+| `--on-dark` / `--on-dark-soft` sobre `--footer` | 16.56 / 9.53 | 14.93 / 8.59 |
+| `--accent` sobre `--ground` (mitad del logo, gráfico) | 4.82 | 3.40 |
 
 ### 2.2 Los 18 tipos
 
@@ -74,26 +75,26 @@ Se conservan los valores actuales de `src/constants/typeColors.ts`. Cada tipo ti
 
 | Tipo | `field` | `field-ink` | field/ink | `step` | `deep` | deep/blanco | deep/fondo |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Normal | `#A8A77A` | ink | 7.28 | `#909069` | `#727253` | 4.94 | 4.50 |
-| Fuego | `#EE8130` | ink | 6.72 | `#CD6F29` | `#A95C22` | 4.95 | 4.51 |
-| Agua | `#6390F0` | ink | 5.83 | `#557CCE` | `#4C6FB9` | 4.90 | *4.46* |
-| Eléctrico | `#F7D02C` | ink | 12.05 | `#D4B326` | `#836E17` | 4.99 | 4.54 |
-| Planta | `#7AC74C` | ink | 8.68 | `#69AB41` | `#4C7B2F` | 5.02 | 4.57 |
-| Hielo | `#96D9D6` | ink | 11.34 | `#81BBB8` | `#527776` | 4.93 | *4.49* |
-| Lucha | `#C22E28` | bone | 5.19 | `#A72822` | `#C22E28` | 5.65 | 5.14 |
+| Normal | `#A8A77A` | ink | 7.28 | `#909069` | `#727253` | 4.94 | *4.49* |
+| Fuego | `#EE8130` | ink | 6.72 | `#CD6F29` | `#A95C22` | 4.95 | 4.50 |
+| Agua | `#6390F0` | ink | 5.82 | `#557CCE` | `#4C6FB9` | 4.90 | *4.46* |
+| Eléctrico | `#F7D02C` | ink | 12.04 | `#D4B326` | `#836E17` | 4.99 | 4.54 |
+| Planta | `#7AC74C` | ink | 8.68 | `#69AB41` | `#4C7B2F` | 5.02 | 4.56 |
+| Hielo | `#96D9D6` | ink | 11.33 | `#81BBB8` | `#527776` | 4.93 | *4.48* |
+| Lucha | `#C22E28` | bone | 5.18 | `#A72822` | `#C22E28` | 5.65 | 5.14 |
 | Veneno | `#A33EA1` | bone | 5.12 | `#8C358A` | `#A33EA1` | 5.58 | 5.08 |
-| Tierra | `#E2BF65` | ink | 10.21 | `#C2A457` | `#816D3A` | 5.02 | 4.57 |
-| Volador | `#A98FF3` | ink | 6.80 | `#917BD1` | `#7664AA` | 5.03 | 4.58 |
-| Psíquico | `#F95587` | ink | 5.74 | `#D64974` | `#C24269` | 4.91 | *4.47* |
-| Bicho | `#A6B91A` | ink | 8.23 | `#8F9F16` | `#6A7611` | 4.99 | 4.54 |
-| Roca | `#B6A136` | ink | 7.00 | `#9D8A2E` | `#7E6F25` | 5.01 | 4.56 |
-| Fantasma | `#735797` | bone | 5.45 | `#634B82` | `#735797` | 5.93 | 5.40 |
-| Dragón | `#6F35FC` | bone | 5.37 | `#5F2ED9` | `#6F35FC` | 5.85 | 5.32 |
-| Siniestro | `#705746` | bone | 6.14 | `#604B3C` | `#705746` | 6.69 | 6.08 |
-| Acero | `#B7B7CE` | ink | 9.18 | `#9D9DB1` | `#6E6E7C` | 5.02 | 4.57 |
-| Hada | `#D685AD` | ink | 6.72 | `#B87295` | `#985E7B` | 4.97 | 4.53 |
+| Tierra | `#E2BF65` | ink | 10.20 | `#C2A457` | `#816D3A` | 5.02 | 4.56 |
+| Volador | `#A98FF3` | ink | 6.79 | `#917BD1` | `#7664AA` | 5.03 | 4.57 |
+| Psíquico | `#F95587` | ink | 5.73 | `#D64974` | `#C24269` | 4.90 | *4.46* |
+| Bicho | `#A6B91A` | ink | 8.23 | `#8F9F16` | `#6A7611` | 4.98 | 4.53 |
+| Roca | `#B6A136` | ink | 6.99 | `#9D8A2E` | `#7E6F25` | 5.01 | 4.56 |
+| Fantasma | `#735797` | bone | 5.44 | `#634B82` | `#735797` | 5.93 | 5.39 |
+| Dragón | `#6F35FC` | bone | 5.36 | `#5F2ED9` | `#6F35FC` | 5.84 | 5.32 |
+| Siniestro | `#705746` | bone | 6.13 | `#604B3C` | `#705746` | 6.68 | 6.08 |
+| Acero | `#B7B7CE` | ink | 9.17 | `#9D9DB1` | `#6E6E7C` | 5.01 | 4.56 |
+| Hada | `#D685AD` | ink | 6.71 | `#B87295` | `#985E7B` | 4.97 | 4.52 |
 
-Los contrastes están calculados con WCAG 2.x, con la tinta `--on-light` (`#15161C`). Las cifras en cursiva no llegan a 4.5:1, y de ahí sale la regla 1 del §2.3.
+Los contrastes están calculados con WCAG 2.x por `npm run check-contrast` (dos decimales hacia abajo, para que ninguna cifra prometa más de lo que hay). Las cifras en cursiva no llegan a 4.5:1, y de ahí sale la regla 1 del §2.3.
 
 El código no usa `deep` directamente para texto: usa **`--type-*-text`**, que vale `deep` en claro y `glow` en oscuro (§2.4).
 
@@ -101,7 +102,7 @@ Los tokens viven en un único sitio: `typeColors.ts` y las variables `--type-*` 
 
 ### 2.3 Reglas de contraste
 
-1. **El texto con color de tipo va en `--type-*-text` y sobre `--surface`.** En claro es `deep`, y sobre `--ground` Agua, Hielo y Psíquico bajan de 4.5:1, así que nunca hay texto de tipo apoyado directamente en el fondo. En oscuro (`glow`) pasa de 4.5:1 en los dos, pero la regla es la misma para no tener dos.
+1. **El texto con color de tipo va en `--type-*-text` y sobre `--surface`.** En claro es `deep`, y sobre `--ground` Normal, Agua, Hielo y Psíquico bajan de 4.5:1, así que nunca hay texto de tipo apoyado directamente en el fondo. En oscuro (`glow`) pasa de 4.5:1 en los dos, pero la regla es la misma para no tener dos.
 2. **Ningún texto se pinta con `field` sobre blanco o sobre el fondo.** Eléctrico, Hielo, Normal y Hada caen a entre 1.4 y 2.5:1.
 3. **Todo bloque de color lleva su texto dentro, en su `field-ink`.** Eso incluye tarjetas, columnas del día, bloques del panel de filtros y chips activos. Así, un Eléctrico que apenas se distingue del fondo no pierde información.
 4. **Las etiquetas de tipo dentro de un campo de color son pastillas de superficie:** en claro, blancas (`--surface` al 80 %) con texto en `--ink`, como en la maqueta; en oscuro, `--ground` al 80 % con texto en `--ink` (clara). Peor caso en oscuro: 9.84:1, sobre Eléctrico. No se pone un color claro sobre otro claro sin una tinta de por medio.
@@ -125,25 +126,25 @@ Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon
 | Tipo | `field` en oscuro | campo/fondo | field/ink | `glow` | glow/superficie | glow/fondo |
 | --- | --- | --- | --- | --- | --- | --- |
 | Normal | `#A8A77A` | 7.29 | 7.28 | = field | 6.56 | 7.29 |
-| Fuego | `#EE8130` | 6.73 | 6.72 | = field | 6.06 | 6.73 |
-| Agua | `#6390F0` | 5.83 | 5.83 | = field | 5.25 | 5.83 |
-| Eléctrico | `#F7D02C` | 12.06 | 12.05 | = field | 10.86 | 12.06 |
-| Planta | `#7AC74C` | 8.69 | 8.68 | = field | 7.83 | 8.69 |
-| Hielo | `#96D9D6` | 11.35 | 11.34 | = field | 10.22 | 11.35 |
-| Lucha | `#C22E28` | 3.20 | 5.19 | `#D26662` | 4.51 | 5.01 |
-| Veneno | `#A33EA1` | 3.24 | 5.12 | `#B96CB8` | 4.57 | 5.08 |
-| Tierra | `#E2BF65` | 10.22 | 10.21 | = field | 9.20 | 10.22 |
-| Volador | `#A98FF3` | 6.81 | 6.80 | = field | 6.13 | 6.81 |
-| Psíquico | `#F95587` | 5.75 | 5.74 | = field | 5.17 | 5.75 |
-| Bicho | `#A6B91A` | 8.24 | 8.23 | = field | 7.42 | 8.24 |
-| Roca | `#B6A136` | 7.00 | 7.00 | = field | 6.31 | 7.00 |
-| Fantasma | `#735797` | 3.05 | 5.45 | `#937EAF` | 4.53 | 5.03 |
-| Dragón | `#6F35FC` | 3.09 | 5.37 | `#966CFD` | 4.54 | 5.04 |
-| Siniestro | **`#775F4F`** | 3.04 | 5.45 | `#978478` | 4.56 | 5.07 |
-| Acero | `#B7B7CE` | 9.19 | 9.18 | = field | 8.27 | 9.19 |
-| Hada | `#D685AD` | 6.73 | 6.72 | = field | 6.06 | 6.73 |
+| Fuego | `#EE8130` | 6.72 | 6.72 | = field | 6.05 | 6.72 |
+| Agua | `#6390F0` | 5.83 | 5.82 | = field | 5.25 | 5.83 |
+| Eléctrico | `#F7D02C` | 12.05 | 12.04 | = field | 10.85 | 12.05 |
+| Planta | `#7AC74C` | 8.69 | 8.68 | = field | 7.82 | 8.69 |
+| Hielo | `#96D9D6` | 11.35 | 11.33 | = field | 10.22 | 11.35 |
+| Lucha | `#C22E28` | 3.19 | 5.18 | `#D26662` | 4.50 | 5.00 |
+| Veneno | `#A33EA1` | 3.23 | 5.12 | `#B96CB8` | 4.57 | 5.07 |
+| Tierra | `#E2BF65` | 10.21 | 10.20 | = field | 9.19 | 10.21 |
+| Volador | `#A98FF3` | 6.80 | 6.79 | = field | 6.12 | 6.80 |
+| Psíquico | `#F95587` | 5.74 | 5.73 | = field | 5.17 | 5.74 |
+| Bicho | `#A6B91A` | 8.23 | 8.23 | = field | 7.41 | 8.23 |
+| Roca | `#B6A136` | 7.00 | 6.99 | = field | 6.30 | 7.00 |
+| Fantasma | `#735797` | 3.04 | 5.44 | `#937EAF` | 4.52 | 5.02 |
+| Dragón | `#6F35FC` | 3.08 | 5.36 | `#966CFD` | 4.53 | 5.04 |
+| Siniestro | **`#775F4F`** | 3.04 | 5.45 | `#978478` | 4.56 | 5.06 |
+| Acero | `#B7B7CE` | 9.18 | 9.17 | = field | 8.27 | 9.18 |
+| Hada | `#D685AD` | 6.72 | 6.71 | = field | 6.05 | 6.72 |
 
-Los valores salen de un script que mezcla con blanco en pasos del 1 % hasta llegar al umbral; si se toca un token, se recalcula la fila entera.
+Cada `glow` se obtuvo mezclando el campo con blanco en pasos del 1 % hasta llegar al umbral. Las cifras de la tabla las genera `npm run check-contrast`; si se toca un token, se vuelve a ejecutar y se pega su salida.
 
 **Lo que cambia en oscuro y nada más.** Casi todo sale de los tokens; lo poco que no, usa la variante `dark:` de Tailwind (definida en `globals.css`), que cubre el tema forzado y el automático:
 - **Brillo de hover de las tarjetas** (§4.3): mismo alcance, más intensidad. Sobre fondo oscuro el color de tipo luce de verdad, y se aprovecha: dos capas en lugar de una.
@@ -517,7 +518,7 @@ La dirección «Pop» ya está construida (merge 99fcfce); su orden de trabajo q
    - Etiquetas de tipo en `--ground` al 80 % y pastilla «Total» estrecha sobre `--on-light`.
    - Tinte de la fila o columna seleccionada de la tabla de tipos mezclado con `--surface`.
 8. **Pantalla por pantalla, en oscuro:** portada (hero, día, filtros, rejilla, carga), ficha, comparador con su modal, tabla de tipos, 404 y pie. En cada una se busca lo que se quedó blanco, tinta oscura sobre fondo oscuro o una sombra que ya no se ve.
-9. **Contraste verificado.** Un script (`npm run check-contrast`) recalcula desde `globals.css` las tablas del §2.1 y del §2.4 y falla si algún par baja de su umbral: 4.5:1 en texto y 3:1 en los bordes de campo y los gráficos. Las cifras de este documento salen de ese script, no a mano.
+9. **Contraste verificado.** Un script (`npm run check-contrast`) recalcula desde `globals.css` las tablas del §2.1 y del §2.4 y falla si algún par baja de su umbral: 4.5:1 en texto y 3:1 en los bordes de campo y los gráficos. Las cifras de este documento salen de ese script, no a mano. También calcula la tabla del §2.2 y el peor caso de la regla 4, y falla si los dos bloques oscuros de `globals.css` no son iguales o si `typeColors.ts` y `theme.ts` no repiten los valores del CSS. Al pasarlo, Normal resultó estar en 4.49:1 sobre el fondo claro (no en 4.50): se suma a la regla 1, que ya lo cubre.
 10. **Revisión.**
     - `lint.mjs` sin FAIL. Excepciones: las mismas de siempre más el halo de hover oscuro, justificado en una frase.
     - `inspect.mjs` contra `npm run dev` a 1440, 768 y 390px, en claro y en oscuro (con el sistema en oscuro y sin clave guardada).

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "artwork-bounds": "node scripts/artwork-bounds.mjs",
-    "pokemon-index": "node scripts/pokemon-index.mjs"
+    "pokemon-index": "node scripts/pokemon-index.mjs",
+    "check-contrast": "node scripts/check-contrast.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

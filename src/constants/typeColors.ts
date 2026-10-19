@@ -6,7 +6,7 @@ import type { PokemonType } from "@/constants/typeChart";
 //   ink:   tinta sobre el campo (negra o hueso, la de más contraste)
 //   step:  campo oscurecido un 14 %, superficie secundaria dentro del campo
 //   deep:  el tipo como texto sobre blanco (≥ 4.9:1 sobre --surface; sobre
-//          --ground, Agua, Hielo y Psíquico bajan de 4.5:1, ver §2.3)
+//          --ground, Normal, Agua, Hielo y Psíquico bajan de 4.5:1, ver §2.3)
 export interface TypeTokens {
   field: string;
   ink: string;
