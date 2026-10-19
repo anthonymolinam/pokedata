@@ -152,7 +152,7 @@ Los valores salen de un script que mezcla con blanco en pasos del 1 % hasta lleg
 - **Velo bajo modales y hojas:** `--on-light` al 40 % en los dos temas. Con `--ink` se volvería un velo claro en oscuro.
 - **Pastilla «Total» estrecha:** base `--on-light` al 15 % en los dos temas, con texto en `field-ink`. Con `--ink` se aclararía en oscuro y bajaría el contraste de la tinta hueso.
 - **Controles nativos y barras de scroll:** `color-scheme: light` o `dark` en `:root`, según el tema activo.
-- **Barra del navegador:** `<meta name="theme-color">` con `--ground` de cada tema (`#F3F4F8` / `#14161D`), con `media` para el modo automático; el script de arranque la corrige si el tema está forzado.
+- **Barra del navegador:** `<meta name="theme-color">` con `--ground` de cada tema (`#F3F4F8` / `#14161D`), con `media` para el modo automático; si el tema está forzado, el script de arranque antepone otro `theme-color` sin `media`, que gana porque el navegador usa el primero que encaja.
 
 **Carga sin parpadeo** (guía de Next 16: `node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md`, apartado «Themes»):
 - La preferencia vive en `localStorage` con la clave `pokedata-theme` (`light` o `dark`). Si no existe, el modo es automático. No se usa cookie: obligaría a renderizar en dinámico las páginas que hoy son estáticas.
@@ -506,7 +506,7 @@ La dirección «Pop» ya está construida (merge 99fcfce); su orden de trabajo q
    - Comprobar con capturas que el modo claro no ha cambiado ni un píxel.
 2. **Repaso de usos.** Cada componente que pinta sobre un campo de tipo usa `field-ink` o las constantes `--on-*`; cada texto de tipo, `--type-*-text`; cada capa flotante, `--raised`. La Pokébola pasa a colores fijos (§2.4). Así el paso 3 cambia solo variables.
 3. **Valores oscuros.** El bloque oscuro de `globals.css`, en `:root[data-theme="dark"]` y en `@media (prefers-color-scheme: dark)` con `:not([data-theme="light"])`. Incluye `color-scheme`, `field-dark` de Siniestro, `glow` como `--type-*-text` y las sombras oscuras. Se prueba con el modo oscuro del sistema, sin selector todavía.
-4. **Script de arranque.** El `<script>` inline en el `<head>` del layout raíz (§2.4), `suppressHydrationWarning` en `<html>` y `theme-color` con `media` en `generateViewport`. Prueba: forzar `localStorage.setItem("pokedata-theme","dark")` con el sistema en claro y recargar con la red y la CPU ralentizadas: el primer pintado ya es oscuro.
+4. **Script de arranque.** El `<script>` inline en el `<head>` del layout raíz (§2.4), `suppressHydrationWarning` en `<html>` y `theme-color` con `media` en el `viewport` del layout. Prueba: forzar `localStorage.setItem("pokedata-theme","dark")` con el sistema en claro y recargar con la red y la CPU ralentizadas: el primer pintado ya es oscuro.
 5. **Selector de escritorio** (§4.1). Grupo de radios con sol, luna y monitor, tooltip, marca del activo por `data-theme-pref`, guardado, evento `storage` y textos en `translations.ts` en los dos idiomas. Comprobar que la cabecera cabe a 768px; si no, entre 768 y 1023px el buscador compacto se queda solo en su botón de lupa de 44px.
 6. **Selector en la hoja móvil.** El mismo control dentro de «Menú», con iconos y nombres visibles.
 7. **Ajustes propios del oscuro.**

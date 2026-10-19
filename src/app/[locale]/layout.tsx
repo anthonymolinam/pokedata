@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "../globals.css";
 import SiteHeader from "@/components/common/SiteHeader";
@@ -6,6 +6,7 @@ import SiteFooter from "@/components/common/SiteFooter";
 import MotionProvider from "@/components/common/MotionProvider";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
+import { THEME_COLORS, themeScript } from "@/lib/theme";
 
 // Única familia (DESIGN.md §3): display 900, controles 800, texto 600.
 // Va en el proyecto (src/app/fonts, OFL) y no desde Google Fonts, que falla
@@ -20,6 +21,15 @@ const nunito = localFont({
   variable: "--font-nunito",
   display: "swap",
 });
+
+// Barra del navegador en el --ground de cada tema (DESIGN.md §2.4). Con el tema
+// forzado, el script de arranque antepone otro theme-color que gana a estos
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLORS.light },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLORS.dark },
+  ],
+};
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -128,8 +138,12 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   };
 
   return (
-    <html lang={locale} className={nunito.variable}>
+    // suppressHydrationWarning: el script de arranque cambia los atributos de
+    // <html> antes de hidratar, y React tiene que quedarse con los del DOM
+    <html lang={locale} className={nunito.variable} suppressHydrationWarning>
       <head>
+        {/* Tema sin parpadeo (DESIGN.md §2.4): corre antes del primer pintado */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
