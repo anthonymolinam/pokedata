@@ -29,6 +29,10 @@
   --ink-soft: #5c6070;
   --bone: #f7f5f0;
   --raised: #ffffff;
+  /* Escalón sobre las capas flotantes: en claro, el mismo que --step */
+  --raised-step: #e6e8ef;
+  /* Cuánto field lleva el ×1 de la fila o columna elegida (§4.5) */
+  --cross-mix: 35%;
   --footer: #15161c;
   --accent: #cc2e0b;
   --ok: #3fb950;
@@ -197,6 +201,11 @@
   --surface: #1d2029;
   --step: #282c37;
   --raised: #262a35;
+  /* --step casi coincide con --raised: sobre las capas flotantes, uno más claro */
+  --raised-step: #363b48;
+  /* Mezclado al 35 % con la superficie oscura el field se ensucia (el
+     naranja sale marrón); al 80 % conserva su color */
+  --cross-mix: 80%;
   --ink: #eef0f5;
   --ink-soft: #a3a8b8;
   --bone: #14161d;
@@ -244,6 +253,8 @@
     --surface: #1d2029;
     --step: #282c37;
     --raised: #262a35;
+    --raised-step: #363b48;
+    --cross-mix: 80%;
     --ink: #eef0f5;
     --ink-soft: #a3a8b8;
     --bone: #14161d;
@@ -311,7 +322,7 @@
    a su tono aunque estén dentro de un campo de tipo), y el pie, con tinta
    hueso fija. */
 [data-field="surface"] { --field: var(--surface); --field-ink: var(--ink); --field-step: var(--step); --field-deep: var(--ink); --field-text: var(--ink); }
-[data-field="raised"] { --field: var(--raised); --field-ink: var(--ink); --field-step: var(--step); --field-deep: var(--ink); --field-text: var(--ink); }
+[data-field="raised"] { --step: var(--raised-step); --field: var(--raised); --field-ink: var(--ink); --field-step: var(--raised-step); --field-deep: var(--ink); --field-text: var(--ink); }
 [data-field="footer"] { --field: var(--footer); --field-ink: var(--on-dark); --field-step: var(--ink-soft); --field-deep: var(--on-dark); --field-text: var(--on-dark); }
 
 /* Utilidades de Tailwind: bg-ground, bg-surface, text-ink, bg-type-fire,
@@ -605,9 +616,9 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2l4-4M0 8l8-8M6 10l4-4' stroke='%235c6070' stroke-width='2.5'/%3E%3C/svg%3E");
 }
 
-/* ×1 en la fila o la columna elegida: su field mezclado con blanco */
+/* ×1 en la fila o la columna elegida: su field mezclado con la superficie */
 .type-cross {
-  background-color: color-mix(in srgb, var(--field) 35%, var(--surface));
+  background-color: color-mix(in srgb, var(--field) var(--cross-mix), var(--surface));
 }
 
 /* ×1 fuera de la selección */

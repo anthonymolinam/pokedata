@@ -33,6 +33,7 @@ Cada token tiene un valor por tema. El código usa siempre el token, nunca el va
 | `--surface` | `#FFFFFF` | `#1D2029` | Paneles: hero, buscador, panel de filtros, bloques de la ficha, chips sin color |
 | `--step` | `#E6E8EF` | `#282C37` | Un tono por debajo del fondo en claro y por encima en oscuro: buscador enfocado, pista de controles segmentados, hover de enlaces |
 | `--raised` | `#FFFFFF` | `#262A35` | Capas flotantes: desplegable del buscador, hoja móvil, modales |
+| `--raised-step` | `#E6E8EF` | `#363B48` | El `--step` dentro de una capa flotante (`data-field="raised"`): en oscuro `--step` casi coincide con `--raised` |
 | `--ink` | `#15161C` | `#EEF0F5` | Tinta principal, botón secundario, pastilla «Total», tooltips |
 | `--ink-soft` | `#5C6070` | `#A3A8B8` | Solo texto secundario: subtítulos y notas. Nunca en texto principal |
 | `--bone` | `#F7F5F0` | `#14161D` | Texto sobre un relleno en `--ink` (botón secundario, «Total», tooltip, nav activa) |
@@ -148,7 +149,7 @@ Los valores salen de un script que mezcla con blanco en pasos del 1 % hasta lleg
 - **Brillo de hover de las tarjetas** (§4.3): mismo alcance, más intensidad. Sobre fondo oscuro el color de tipo luce de verdad, y se aprovecha: dos capas en lugar de una.
 - **Sombras:** las de claro no se ven sobre `#14161D`. La cabecera al desplazar usa `0 6px 20px rgba(0,0,0,.45)` y las capas flotantes van en `--raised` con `0 16px 40px rgba(0,0,0,.55)`. La separación la da sobre todo el escalón de tono.
 - **Pokébola del logo:** contorno, banda y botón en `--on-light`, mitad inferior y centro en `--pokeball-white`, mitad superior en `--accent`. Con colores fijos el logo es el mismo en los dos temas; sobre el fondo oscuro la silueta la dibujan el rojo y el blanco (18.07:1).
-- **Tabla de tipos:** la fila o columna seleccionada se tiñe con su `field` mezclado con `--surface` (en claro, que es blanco, queda igual que ahora). La guía de hover usa `--ink` al 5 %, que en oscuro aclara.
+- **Tabla de tipos:** la fila o columna seleccionada se tiñe con su `field` mezclado con `--surface` (en claro, que es blanco, queda igual que ahora). La proporción es `--cross-mix`: 35 % en claro y 80 % en oscuro, porque al 35 % sobre la superficie oscura el campo se ensucia (el naranja de Fuego sale marrón). La guía de hover usa `--ink` al 5 %, que en oscuro aclara.
 - **Velo bajo modales y hojas:** `--on-light` al 40 % en los dos temas. Con `--ink` se volvería un velo claro en oscuro.
 - **Pastilla «Total» estrecha:** base `--on-light` al 15 % en los dos temas, con texto en `field-ink`. Con `--ink` se aclararía en oscuro y bajaría el contraste de la tinta hueso.
 - **Controles nativos y barras de scroll:** `color-scheme: light` o `dark` en `:root`, según el tema activo.
@@ -159,7 +160,7 @@ Los valores salen de un script que mezcla con blanco en pasos del 1 % hasta lleg
 - Un `<script>` inline en el `<head>` del layout raíz, antes de cualquier hoja de estilo que pinte, lee la clave y pone en `<html>`:
   - `data-theme="light"` o `"dark"` solo si el tema está forzado; en automático no pone nada y manda `prefers-color-scheme`.
   - `data-theme-pref="light" | "dark" | "system"`, que es lo que marca el segmento activo del selector **por CSS**, ya correcto en el primer pintado y sin esperar a la hidratación.
-- El script va envuelto en `try/catch` (navegación privada, almacenamiento bloqueado): si falla, el modo es automático. `<html>` lleva `suppressHydrationWarning`.
+- El script va envuelto en `try/catch` (navegación privada, almacenamiento bloqueado): si falla, el modo es automático. `<html>` lleva `suppressHydrationWarning`. El `<script>` se pinta con `InlineScript`, que en el cliente lo marca `text/plain`: React no avisa de un script que no ejecutaría (guía «Preventing Flash» de Next).
 - **CSS:** los valores claros en `:root`; los oscuros en `:root[data-theme="dark"]` y en `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }`. En automático, si el sistema cambia de tema con la página abierta, la página cambia sola.
 - **El cambio es instantáneo**, sin fundido. Como solo se animan `transform` y `opacity` (§6), ningún color se queda a medio camino.
 - Otras pestañas abiertas se enteran con el evento `storage` y cambian también.
@@ -387,7 +388,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Franja superior:** un título pequeño («Tabla de tipos», `<h1>` en `--step-lead`) y una línea de explicación («Las filas atacan y las columnas reciben. Toca un tipo para resaltarlo.»). Sin tarjeta grande de título, sin subtítulo y **sin leyenda**: el significado de cada celda lo da el tooltip.
 - **Tooltip de celda** (solo con puntero): al pasar el ratón por una celda aparece encima un globo breve con el enfrentamiento, «Fuego → Planta: ×2» / «Fire → Grass: ×2» (×2, ×½, ×0 o ×1), con los nombres de tipo en el idioma de la página. Va en `--ink` con texto hueso, `--step-small` en 800, radio de 8px y sombra (es una capa flotante), y aparece con un fundido de 120ms. En las dos primeras y las dos últimas columnas se abre hacia dentro para no salirse de la tabla. Es CSS (`attr(data-tip)` en `globals.css`).
 - **Sin selector aparte ni panel de información:** la propia matriz es el selector. Pulsar el tipo de una fila elige ese tipo **como atacante** (`?atk=`); pulsar el de una columna, **como defensor** (`?def=`). Pulsarlo otra vez quita la selección y pulsar otro la cambia. No hay resumen de debilidades ni botón «Quitar la selección». Los enlaces antiguos con `?type=` abren la fila.
-- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con blanco) y su cabecera lleva el aro en tinta; el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
+- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con `--surface` según `--cross-mix`) y su cabecera lleva el aro en tinta; el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
 - **Guía de hover** (solo con puntero): al pasar por una celda se marcan su fila y su columna, y lo atenuado vuelve a leerse. Es CSS puro (`:has()` en `globals.css`).
   - **El aro en tinta es solo de la selección.** En hover, las cabeceras se oscurecen un poco (`brightness(0.92)`), sin borde, para que nunca parezca que hay dos tipos seleccionados.
   - **Un solo criterio de color:** la fila o columna seleccionada se tiñe con un tono claro de su tipo; la fila y columna bajo el ratón, con un gris neutro muy suave (`--ink` al 5 % sobre `--ground`), solo en las celdas ×1 que no están teñidas.

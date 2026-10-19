@@ -4,6 +4,7 @@ import "../globals.css";
 import SiteHeader from "@/components/common/SiteHeader";
 import SiteFooter from "@/components/common/SiteFooter";
 import MotionProvider from "@/components/common/MotionProvider";
+import InlineScript from "@/components/common/InlineScript";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 import { THEME_COLORS, themeScript } from "@/lib/theme";
@@ -143,7 +144,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
     <html lang={locale} className={nunito.variable} suppressHydrationWarning>
       <head>
         {/* Tema sin parpadeo (DESIGN.md §2.4): corre antes del primer pintado */}
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <InlineScript html={themeScript} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
