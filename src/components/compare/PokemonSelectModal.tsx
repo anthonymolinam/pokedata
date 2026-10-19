@@ -1,80 +1,79 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { Search, X, Loader2 } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Loader2, Search, X } from "lucide-react";
 import { PokemonSummary } from "@/lib/pokeapi";
-import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
+import { DailyPokemon } from "@/lib/daily";
+import { artworkUrl } from "@/lib/artwork";
 import { getDictionary } from "@/constants/translations";
+import { Locale } from "@/proxy";
+import PokemonCard from "@/components/pokemon/PokemonCard";
+
+// Capa flotante: una de las sombras permitidas (DESIGN.md §4.0)
+const LAYER_SHADOW = "shadow-[0_24px_64px_rgb(21_22_28/0.24)]"; // taste-skill-ignore
 
 interface PokemonSelectModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (pokemonSlug: string) => void;
-  currentPokemonSlug?: string;
-  locale?: string;
+  triggerLabel: string;
+  triggerAriaLabel?: string;
+  triggerClassName: string;
+  // Enlace al comparador con el otro lado fijo; falta el Pokémon elegido
+  hrefPrefix: string;
+  currentSlug: string;
+  suggestions: DailyPokemon[];
+  locale: Locale;
 }
 
+// Modal de selección del comparador (§4.6): capa flotante blanca con el mismo
+// buscador que la portada y las mismas mini tarjetas. Cada tarjeta es un
+// enlace al comparador con ese Pokémon en su lado. Sin escribir nada, propone
+// los tres Pokémon del día.
 export default function PokemonSelectModal({
-  isOpen,
-  onClose,
-  onSelect,
-  currentPokemonSlug,
-  locale = "es",
+  triggerLabel,
+  triggerAriaLabel,
+  triggerClassName,
+  hrefPrefix,
+  currentSlug,
+  suggestions,
+  locale,
 }: PokemonSelectModalProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<PokemonSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { compare, common } = getDictionary(locale);
+  const id = useId();
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<PokemonSummary[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const dict = getDictionary(locale);
-  const isEs = locale === "es";
-  const cleanQuery = searchTerm.trim();
-  const results = cleanQuery === "" ? [] : searchResults;
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 50);
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, onClose]);
+  const cleanQuery = query.trim();
+  const daily: PokemonSummary[] = suggestions.map((p) => ({
+    id: p.id,
+    name: p.name,
+    image: artworkUrl(p.id),
+    types: p.types,
+  }));
+  const shown = cleanQuery ? results : daily;
 
   useEffect(() => {
     if (!cleanQuery) return;
 
     let ignore = false;
     const controller = new AbortController();
-
     const timer = setTimeout(async () => {
-      setIsLoading(true);
+      setLoading(true);
       try {
-        const res = await fetch(
-          `/api/search?q=${encodeURIComponent(cleanQuery)}&limit=30`,
-          { signal: controller.signal },
-        );
+        const res = await fetch(`/api/search?q=${encodeURIComponent(cleanQuery)}&limit=24`, {
+          signal: controller.signal,
+        });
         if (res.ok && !ignore) {
           const data = await res.json();
-          setSearchResults(data.results || []);
+          setResults(data.results || []);
         }
       } catch (err: unknown) {
         if (err instanceof Error && err.name !== "AbortError") {
           console.error("Error al buscar Pokémon:", err);
         }
       } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
+        if (!ignore) setLoading(false);
       }
     }, 250);
 
@@ -85,122 +84,107 @@ export default function PokemonSelectModal({
     };
   }, [cleanQuery]);
 
-  const handleClose = () => {
-    setSearchTerm("");
-    setSearchResults([]);
-    onClose();
-  };
+  function open() {
+    dialogRef.current?.showModal();
+    inputRef.current?.focus();
+  }
 
-  const handleSelect = (slug: string) => {
-    setSearchTerm("");
-    setSearchResults([]);
-    onSelect(slug);
-    onClose();
-  };
+  function close() {
+    dialogRef.current?.close();
+  }
 
-  if (!isOpen) return null;
+  // Esc, la X, un clic fuera o elegir un Pokémon: el foco vuelve al botón
+  function handleClosed() {
+    setQuery("");
+    setResults([]);
+  }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={handleClose}
-    >
-      <div
-        className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
-        onClick={(e) => e.stopPropagation()}
+    <>
+      <button
+        type="button"
+        onClick={open}
+        aria-haspopup="dialog"
+        aria-label={triggerAriaLabel}
+        className={triggerClassName}
       >
-        {/* Cabecera */}
-        <div className="p-4 sm:p-5 border-b border-zinc-800/80 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-              {dict.compare.selectTitle}
-            </h3>
+        {triggerLabel}
+      </button>
+
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={`${id}-title`}
+        onClose={handleClosed}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) close();
+        }}
+        className={`layer-in m-auto flex-col open:flex w-[min(44rem,calc(100vw-2*var(--gutter)))] max-h-[min(85svh,52rem)] max-w-none overflow-hidden rounded-[22px] bg-surface p-0 text-ink ${LAYER_SHADOW} backdrop:bg-ink/40`}
+      >
+        <div data-field="surface" className="flex flex-col gap-4 px-7 py-5 md:px-8 md:py-6">
+          <div className="flex items-center justify-between gap-4">
+            <h2 id={`${id}-title`} className="text-lead font-black">
+              {compare.selectTitle}
+            </h2>
             <button
-              onClick={handleClose}
-              className="p-1.5 text-zinc-400 hover:text-white rounded-xl hover:bg-zinc-800 transition-colors cursor-pointer"
+              type="button"
+              onClick={close}
+              aria-label={compare.close}
+              className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill bg-step motion-safe:transition-transform duration-150 active:scale-[0.96]"
             >
-              <X className="w-5 h-5" />
+              <X aria-hidden="true" strokeWidth={2.5} className="size-5" />
             </button>
           </div>
 
-          <div className="relative">
-            {isLoading ? (
-              <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 animate-spin" />
+          <div className="flex h-14 items-center gap-2 rounded-pill bg-step px-5 has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-3 has-[input:focus-visible]:outline-ink">
+            {loading ? (
+              <Loader2 aria-hidden="true" strokeWidth={2.5} className="size-5 shrink-0 animate-spin" />
             ) : (
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Search aria-hidden="true" strokeWidth={2.5} className="size-5 shrink-0" />
             )}
+            <label htmlFor={`${id}-search`} className="sr-only">
+              {compare.selectLabel}
+            </label>
             <input
               ref={inputRef}
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={dict.compare.selectPlaceholder}
-              className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500 transition-colors"
+              id={`${id}-search`}
+              type="search"
+              autoComplete="off"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={compare.selectPlaceholder}
+              className="h-full min-w-0 flex-1 bg-transparent text-body font-bold outline-none placeholder:font-semibold placeholder:text-ink-soft [&::-webkit-search-cancel-button]:appearance-none"
             />
           </div>
         </div>
 
-        {/* Resultados */}
-        <div className="overflow-y-auto p-3 sm:p-4 divide-y divide-zinc-800/40 min-h-55">
-          {cleanQuery === "" ? (
-            <div className="py-14 text-center text-xs text-zinc-500">
-              {dict.compare.selectEmpty}
-            </div>
-          ) : !isLoading && results.length === 0 ? (
-            <div className="py-14 text-center text-xs text-zinc-500">
-              {dict.common.noResults}
-            </div>
+        {/* Relleno de sobra para que el brillo de hover de las tarjetas (28px
+            por los lados, 46px por abajo) no quede cortado por el scroll */}
+        <div className="custom-scrollbar overflow-y-auto overscroll-contain px-7 pb-12 md:px-8">
+          {!cleanQuery && <h3 className="text-body font-black">{compare.suggestions}</h3>}
+
+          {cleanQuery && !loading && results.length === 0 ? (
+            <p role="status" className="py-12 text-center text-body">
+              {common.noResults}
+            </p>
           ) : (
-            results.map((item) => {
-              const displayName =
-                isEs && CANONICAL_TO_SPANISH[item.name.toLowerCase()]
-                  ? CANONICAL_TO_SPANISH[item.name.toLowerCase()]
-                  : item.name;
-
-              const isSelected =
-                currentPokemonSlug?.toLowerCase() === item.name.toLowerCase();
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelect(item.name)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all group cursor-pointer ${
-                    isSelected
-                      ? "bg-zinc-800/90 border border-rose-500/50"
-                      : "hover:bg-zinc-800/50 border border-transparent"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 shrink-0">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        sizes="40px"
-                        className="object-contain group-hover:scale-110 transition-transform duration-200"
-                      />
-                    </div>
-                    <div>
-                      <span className="font-bold text-xs text-zinc-200 group-hover:text-white capitalize block">
-                        {displayName.replace(/-/g, " ")}
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-500">
-                        #{String(item.id).padStart(4, "0")}
-                      </span>
-                    </div>
-                  </div>
-
-                  {isSelected && (
-                    <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                      {dict.compare.activeBadge}
-                    </span>
-                  )}
-                </button>
-              );
-            })
+            <ul
+              aria-busy={loading || undefined}
+              className="grid grid-cols-2 gap-x-3 gap-y-12 pt-12 sm:grid-cols-3"
+            >
+              {shown.map((pokemon) => (
+                <li key={pokemon.id} onClickCapture={close}>
+                  <PokemonCard
+                    pokemon={pokemon}
+                    href={`${hrefPrefix}${encodeURIComponent(pokemon.name)}`}
+                    locale={locale}
+                    current={pokemon.name === currentSlug.toLowerCase()}
+                  />
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      </div>
-    </div>
+      </dialog>
+    </>
   );
 }

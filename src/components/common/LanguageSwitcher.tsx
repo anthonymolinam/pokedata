@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Locale } from "@/proxy";
 import { ROUTE_MAP, REVERSE_ROUTE_MAP } from "@/constants/routes";
 import {
@@ -10,16 +11,16 @@ import {
 
 export default function LanguageSwitcher({
   currentLocale,
+  label,
 }: {
   currentLocale: Locale;
+  label: string;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleToggle = (targetLocale: Locale) => {
-    if (targetLocale === currentLocale) return;
-
+  // La misma página en el otro idioma, traduciendo el slug de la ruta y del Pokémon
+  const getTargetPath = (targetLocale: Locale) => {
     const segments = pathname.split("/").filter(Boolean);
     // segments[0] es el locale actual ('es' o 'en')
     segments[0] = targetLocale;
@@ -52,36 +53,48 @@ export default function LanguageSwitcher({
 
     const basePath = `/${segments.join("/")}`;
     const queryString = searchParams.toString();
-    const newPath = queryString ? `${basePath}?${queryString}` : basePath;
-
-    router.push(newPath);
+    return queryString ? `${basePath}?${queryString}` : basePath;
   };
 
+  // Control segmentado (DESIGN.md §4.1): ES y EN a la vez sobre una pista
+  // --step; el activo se rellena en blanco y el otro enlaza a la misma página
+  const options: { locale: Locale; label: string; name: string }[] = [
+    { locale: "es", label: "ES", name: "Español" },
+    { locale: "en", label: "EN", name: "English" },
+  ];
+
   return (
-    <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 text-xs font-mono">
-      <button
-        type="button"
-        onClick={() => handleToggle("es")}
-        className={`px-2 py-0.5 rounded-lg transition-colors cursor-pointer ${
-          currentLocale === "es"
-            ? "bg-rose-500 text-white font-bold"
-            : "text-zinc-500 hover:text-zinc-300"
-        }`}
-      >
-        ES
-      </button>
-      <span className="text-zinc-700">|</span>
-      <button
-        type="button"
-        onClick={() => handleToggle("en")}
-        className={`px-2 py-0.5 rounded-lg transition-colors cursor-pointer ${
-          currentLocale === "en"
-            ? "bg-rose-500 text-white font-bold"
-            : "text-zinc-500 hover:text-zinc-300"
-        }`}
-      >
-        EN
-      </button>
+    <div
+      role="group"
+      aria-label={label}
+      className="flex items-center gap-0.5 p-1 rounded-pill bg-step font-extrabold text-small"
+    >
+      {options.map((option) => {
+        const segment =
+          "relative grid place-items-center h-9 min-w-10 px-2.5 rounded-pill after:absolute after:-inset-x-0.5 after:-inset-y-1";
+        return currentLocale === option.locale ? (
+          <span
+            key={option.locale}
+            lang={option.locale}
+            aria-current="true"
+            className={`${segment} bg-surface text-ink`}
+          >
+            <span aria-hidden="true">{option.label}</span>
+            <span className="sr-only">{option.name}</span>
+          </span>
+        ) : (
+          <Link
+            key={option.locale}
+            href={getTargetPath(option.locale)}
+            lang={option.locale}
+            hrefLang={option.locale}
+            className={`${segment} text-ink-soft hover:text-ink active:scale-[0.96] transition-transform duration-150`}
+          >
+            <span aria-hidden="true">{option.label}</span>
+            <span className="sr-only">{option.name}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

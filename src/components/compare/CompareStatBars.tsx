@@ -1,174 +1,134 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { PokemonDetail } from "@/lib/pokeapi";
+import { formatPokemonHeroName } from "@/lib/pokemon-names";
+import { useReveal } from "@/lib/use-reveal";
+import { isPokemonType } from "@/constants/typeColors";
 import { getDictionary } from "@/constants/translations";
+import { Locale } from "@/proxy";
 
 interface CompareStatBarsProps {
   pokemon1: PokemonDetail;
   pokemon2: PokemonDetail;
-  locale?: string;
+  locale: Locale;
 }
 
-const STAT_CONFIG = [
-  { key: "hp", dictKey: "hp" as const },
-  { key: "attack", dictKey: "attack" as const },
-  { key: "defense", dictKey: "defense" as const },
-  { key: "special-attack", dictKey: "specialAttack" as const },
-  { key: "special-defense", dictKey: "specialDefense" as const },
-  { key: "speed", dictKey: "speed" as const },
-];
+const STAT_KEYS = ["hp", "attack", "defense", "special-attack", "special-defense", "speed"];
 
-export default function CompareStatBars({
-  pokemon1,
-  pokemon2,
-  locale = "es",
-}: CompareStatBarsProps) {
-  const dict = getDictionary(locale);
+// Valor, barra, eje, barra, valor. En móvil el nombre de la estadística sube a
+// su propia línea, centrado sobre el eje.
+const row =
+  "grid grid-cols-[2.75rem_1fr_1fr_2.75rem] items-center gap-x-2 md:grid-cols-[3.5rem_1fr_minmax(7rem,9rem)_1fr_3.5rem] md:gap-x-4";
 
-  const p1Map = new Map(
-    pokemon1.stats.map((s) => [s.name.toLowerCase(), s.value]),
-  );
-  const p2Map = new Map(
-    pokemon2.stats.map((s) => [s.name.toLowerCase(), s.value]),
-  );
+function primaryType(pokemon: PokemonDetail): string {
+  return pokemon.types.map((t) => t.toLowerCase()).find(isPokemonType) ?? "normal";
+}
 
-  const p1Total = pokemon1.stats.reduce((acc, s) => acc + s.value, 0);
-  const p2Total = pokemon2.stats.reduce((acc, s) => acc + s.value, 0);
+// El ganador de cada estadística se marca con peso 900 y un tamaño más, no con
+// color (§4.6)
+function valueClass(wins: boolean, base: "body" | "lead"): string {
+  if (base === "body") return wins ? "text-lead font-black" : "text-body font-extrabold";
+  return wins ? "text-head font-black" : "text-lead font-extrabold";
+}
+
+// Estadísticas enfrentadas (DESIGN.md §4.6): panel blanco con las barras que
+// crecen desde el eje central, cada una en el deep de su Pokémon, sobre 255.
+export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareStatBarsProps) {
+  const { compare, detail } = getDictionary(locale);
+  const ref = useReveal<HTMLElement>();
+
+  const sides = [pokemon1, pokemon2].map((pokemon) => {
+    const values = new Map(pokemon.stats.map((s) => [s.name.toLowerCase(), s.value]));
+    return {
+      name: formatPokemonHeroName(pokemon.name, locale),
+      type: primaryType(pokemon),
+      values: STAT_KEYS.map((key) => values.get(key) ?? 0),
+      total: pokemon.stats.reduce((sum, s) => sum + s.value, 0),
+    };
+  });
+  const [left, right] = sides;
 
   return (
-    <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs uppercase tracking-wider font-bold text-zinc-400">
-          {dict.common.baseStats}
-        </h3>
-        <span className="text-[11px] font-mono text-zinc-500">
-          {dict.compare.maxRef}
-        </span>
+    <section
+      ref={ref}
+      aria-labelledby="compare-stats-title"
+      className="rounded-surface bg-surface p-5 text-ink md:p-10"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <h2 id="compare-stats-title" className="text-head font-black">
+          {detail.baseStats}
+        </h2>
+        <p className="text-small text-ink-soft">{compare.scaleNote}</p>
       </div>
 
-      <div className="space-y-4">
-        {STAT_CONFIG.map(({ key, dictKey }) => {
-          const val1 = p1Map.get(key) || 0;
-          const val2 = p2Map.get(key) || 0;
-          const diff = val1 - val2;
+      {/* Quién es quién: cada nombre en el campo de su tipo, sobre sus barras */}
+      <div aria-hidden="true" className="mt-6 grid grid-cols-2 gap-x-4 md:mt-8">
+        {sides.map((side, i) => (
+          <p
+            key={i}
+            data-type={side.type}
+            className={`max-w-full truncate rounded-pill bg-field px-3.5 py-1 text-small font-extrabold text-field-ink ${i === 0 ? "justify-self-start" : "justify-self-end"}`}
+          >
+            {side.name}
+          </p>
+        ))}
+      </div>
 
-          const p1Wins = diff > 0;
-          const p2Wins = diff < 0;
-
-          const pct1 = Math.min((val1 / 255) * 100, 100);
-          const pct2 = Math.min((val2 / 255) * 100, 100);
-
-          const label = dict.stats[dictKey];
-
+      <dl className="mt-4">
+        {STAT_KEYS.map((key, i) => {
+          const a = left.values[i];
+          const b = right.values[i];
           return (
-            <div
-              key={key}
-              className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs"
-            >
-              {/* Pokémon 1 */}
-              <div className="flex items-center justify-end gap-2">
-                {p1Wins && (
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold shrink-0">
-                    +{Math.abs(diff)}
-                  </span>
-                )}
+            <div key={key} className={`${row} gap-y-1 py-2`}>
+              <dt className="col-span-full text-center text-small font-extrabold md:col-span-1 md:col-start-3 md:row-start-1 md:text-body md:font-semibold">
+                {detail.statNames[key] ?? key}
+              </dt>
+              <dd className={`num md:col-start-1 md:row-start-1 ${valueClass(a > b, "body")}`}>
+                <span className="sr-only">{left.name}: </span>
+                {a}
+              </dd>
+              <dd
+                aria-hidden="true"
+                data-type={left.type}
+                className="flex h-3 justify-end overflow-hidden rounded-pill bg-step md:col-start-2 md:row-start-1"
+              >
                 <span
-                  className={`font-mono font-bold w-7 text-right shrink-0 ${
-                    p1Wins ? "text-emerald-400" : "text-zinc-200"
-                  }`}
-                >
-                  {val1}
-                </span>
-                <div className="w-full max-w-30 sm:max-w-45 h-2 bg-zinc-800/80 rounded-full overflow-hidden flex justify-end p-0.5">
-                  <motion.div
-                    key={`${pokemon1.name}-${key}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct1}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className={`h-full rounded-full ${
-                      p1Wins
-                        ? "bg-linear-to-r from-teal-400 to-emerald-500"
-                        : "bg-zinc-600"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {/* Etiqueta Central */}
-              <div className="w-20 text-center font-bold text-zinc-400 uppercase tracking-wider text-[11px] select-none">
-                {label}
-              </div>
-
-              {/* Pokémon 2 */}
-              <div className="flex items-center justify-start gap-2">
-                <div className="w-full max-w-30 sm:max-w-45 h-2 bg-zinc-800/80 rounded-full overflow-hidden flex justify-start p-0.5">
-                  <motion.div
-                    key={`${pokemon2.name}-${key}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct2}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className={`h-full rounded-full ${
-                      p2Wins
-                        ? "bg-linear-to-r from-emerald-500 to-teal-400"
-                        : "bg-zinc-600"
-                    }`}
-                  />
-                </div>
+                  className="stat-bar stat-bar-end block h-full w-full rounded-pill bg-field-deep"
+                  style={{ "--v": Math.min(a / 255, 1), "--i": i } as React.CSSProperties}
+                />
+              </dd>
+              <dd
+                aria-hidden="true"
+                data-type={right.type}
+                className="h-3 overflow-hidden rounded-pill bg-step md:col-start-4 md:row-start-1"
+              >
                 <span
-                  className={`font-mono font-bold w-7 text-left shrink-0 ${
-                    p2Wins ? "text-emerald-400" : "text-zinc-200"
-                  }`}
-                >
-                  {val2}
-                </span>
-                {p2Wins && (
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold shrink-0">
-                    +{Math.abs(diff)}
-                  </span>
-                )}
-              </div>
+                  className="stat-bar block h-full w-full rounded-pill bg-field-deep"
+                  style={{ "--v": Math.min(b / 255, 1), "--i": i } as React.CSSProperties}
+                />
+              </dd>
+              <dd className={`num text-right md:col-start-5 md:row-start-1 ${valueClass(b > a, "body")}`}>
+                <span className="sr-only">{right.name}: </span>
+                {b}
+              </dd>
             </div>
           );
         })}
-      </div>
 
-      {/* BST */}
-      <div className="pt-4 border-t border-zinc-800/80 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <div className="flex items-center justify-end gap-2">
-          {p1Total > p2Total && (
-            <span className="text-xs font-mono font-bold text-emerald-400">
-              +{p1Total - p2Total}
-            </span>
-          )}
-          <span
-            className={`text-base font-mono font-black ${
-              p1Total > p2Total ? "text-emerald-400" : "text-zinc-200"
-            }`}
-          >
-            {p1Total}
-          </span>
+        <div className={`${row} mt-4 gap-y-1 rounded-[18px] bg-step px-3 py-3 md:px-4`}>
+          <dt className="col-span-full text-center text-small font-extrabold md:col-span-1 md:col-start-3 md:row-start-1 md:text-body">
+            {detail.total}
+          </dt>
+          <dd className={`num col-span-2 md:col-span-1 md:col-start-1 md:row-start-1 ${valueClass(left.total > right.total, "lead")}`}>
+            <span className="sr-only">{left.name}: </span>
+            {left.total}
+          </dd>
+          <dd className={`num col-span-2 text-right md:col-span-1 md:col-start-5 md:row-start-1 ${valueClass(right.total > left.total, "lead")}`}>
+            <span className="sr-only">{right.name}: </span>
+            {right.total}
+          </dd>
         </div>
-
-        <div className="w-20 text-center font-bold text-zinc-400 uppercase tracking-wider text-[11px] select-none">
-          {dict.stats.total}
-        </div>
-
-        <div className="flex items-center justify-start gap-2">
-          <span
-            className={`text-base font-mono font-black ${
-              p2Total > p1Total ? "text-emerald-400" : "text-zinc-200"
-            }`}
-          >
-            {p2Total}
-          </span>
-          {p2Total > p1Total && (
-            <span className="text-xs font-mono font-bold text-emerald-400">
-              +{p2Total - p1Total}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
+      </dl>
+    </section>
   );
 }

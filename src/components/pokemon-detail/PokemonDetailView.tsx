@@ -10,10 +10,11 @@ import {
   getPokemonVariantSummary,
 } from "@/lib/pokeapi";
 import { calculateTypeWeaknesses } from "@/lib/type-matrix";
-import PokemonHeroSection from "./PokemonHeroSection";
+import { Locale } from "@/proxy";
+import PokemonStage from "./PokemonStage";
+import BaseStats from "./BaseStats";
 import EvolutionTree from "./EvolutionTree";
 import TypeWeaknesses from "./TypeWeaknesses";
-import PokemonDetailContainer from "./PokemonDetailContainer";
 import PokemonNavigation from "./PokemonNavigation";
 
 interface PokemonDetailViewProps {
@@ -31,8 +32,9 @@ export default function PokemonDetailView({
   initialVariantName,
   prevPokemon,
   nextPokemon,
-  locale = "es",
+  locale: rawLocale = "es",
 }: PokemonDetailViewProps) {
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
   // Initialize with the variant specified in initialVariantName if it exists
   const [selectedVariant, setSelectedVariant] = useState<PokemonVariety | null>(
     () => {
@@ -67,6 +69,7 @@ export default function PokemonDetailView({
   }, [initialVariantName, pokemon.varieties]);
 
   const activeTypes = selectedVariant ? selectedVariant.types : pokemon.types;
+  const activeStats = selectedVariant ? selectedVariant.stats : pokemon.stats;
 
   // 1. Weaknesses recalculated on the fly
   const activeWeaknesses = useMemo(() => {
@@ -151,27 +154,27 @@ export default function PokemonDetailView({
     };
   }, [selectedVariant, evolutionChain]);
 
+  // Ficha (DESIGN.md §4.4): el escenario y, debajo, paneles blancos con una
+  // composición distinta cada uno
   return (
-    <PokemonDetailContainer>
-      {/* Previous / Next navigation bar with keyboard shortcuts */}
-      <PokemonNavigation
-        prev={prevPokemon}
-        next={nextPokemon}
-        locale={locale}
-      />
-
-      {/* Interactive Hero */}
-      <PokemonHeroSection
+    <div className="flex flex-col gap-5 md:gap-8">
+      <PokemonStage
         pokemon={pokemon}
         selectedVariant={selectedVariant}
         onVariantChange={handleVariantChange}
         locale={locale}
       />
 
-      {/* Weaknesses and resistances table */}
-      <TypeWeaknesses effectiveness={activeWeaknesses} locale={locale} />
+      <div className="grid gap-5 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <BaseStats
+          stats={activeStats}
+          primaryType={activeTypes[0]?.toLowerCase() ?? "normal"}
+          locale={locale}
+        />
+        <TypeWeaknesses effectiveness={activeWeaknesses} locale={locale} />
+      </div>
 
-      {/* Evolution Chain with correct order and variants */}
+      {/* Cadena evolutiva, con las formas regionales de la forma activa */}
       <EvolutionTree
         currentPokemonName={
           selectedVariant ? selectedVariant.name : pokemon.name
@@ -179,6 +182,12 @@ export default function PokemonDetailView({
         chain={customChain}
         locale={locale}
       />
-    </PokemonDetailContainer>
+
+      <PokemonNavigation
+        prev={prevPokemon}
+        next={nextPokemon}
+        locale={locale}
+      />
+    </div>
   );
 }

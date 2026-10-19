@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { getPokemonDetail } from "@/lib/pokeapi";
 import { getDictionary } from "@/constants/translations";
-import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
+import {
+  CANONICAL_TO_SPANISH,
+  resolveCanonicalPokemonName,
+} from "@/constants/pokemonAliases";
 import { getLocalizedPath } from "@/constants/routes";
 import CompareHeader from "@/components/compare/CompareHeader";
 import CompareStatBars from "@/components/compare/CompareStatBars";
+import { getDailyPokemon } from "@/lib/daily-server";
+import { Locale } from "@/proxy";
 
 interface ComparePageProps {
   params: Promise<{ locale: string }>;
@@ -94,13 +99,19 @@ export async function generateMetadata({
   };
 }
 
+// Comparador (DESIGN.md §4.6): dos escenarios en el campo de cada Pokémon y,
+// debajo, sus estadísticas enfrentadas
 export default async function ComparePage({
   params,
   searchParams,
 }: ComparePageProps) {
-  const { locale } = await params;
-  const { p1 = "charizard", p2 = "blastoise" } = await searchParams;
-  const dict = getDictionary(locale);
+  const { locale: rawLocale } = await params;
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
+  const query = await searchParams;
+  // Admite alias en español (?p1=colmilargo) igual que la ficha
+  const p1 = resolveCanonicalPokemonName(query.p1 || "charizard").toLowerCase();
+  const p2 = resolveCanonicalPokemonName(query.p2 || "blastoise").toLowerCase();
+  const { compare } = getDictionary(locale);
 
   const [pokemon1, pokemon2] = await Promise.all([
     getPokemonDetail(p1).catch(() => null),
@@ -108,14 +119,10 @@ export default async function ComparePage({
   ]);
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          {dict.compare.title}
-        </h1>
-        <p className="text-xs sm:text-sm text-zinc-400">
-          {dict.compare.subtitle}
-        </p>
+    <div className="flex flex-col gap-5 md:gap-8">
+      <div>
+        <h1 className="text-hero font-black">{compare.title}</h1>
+        <p className="mt-3 text-body">{compare.subtitle}</p>
       </div>
 
       <CompareHeader
@@ -123,16 +130,14 @@ export default async function ComparePage({
         pokemon2={pokemon2}
         p1Slug={p1}
         p2Slug={p2}
+        basePath={getLocalizedPath(locale, "compare")}
+        suggestions={getDailyPokemon()}
         locale={locale}
       />
 
       {pokemon1 && pokemon2 && (
-        <CompareStatBars
-          pokemon1={pokemon1}
-          pokemon2={pokemon2}
-          locale={locale}
-        />
+        <CompareStatBars pokemon1={pokemon1} pokemon2={pokemon2} locale={locale} />
       )}
-    </main>
+    </div>
   );
 }

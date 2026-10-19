@@ -1,6 +1,6 @@
-# ⚡ National Pokédex
+# ⚡ PokéData
 
-A modern, fast, and minimalist Pokédex web application built with **Next.js (App Router)**, **TypeScript**, and **Tailwind CSS**. Engineered with a focus on performance, mobile accessibility, and seamless UX across all 1,025+ official Pokémon and their alternate forms.
+PokéData is a modern, fast Pokémon database built with **Next.js (App Router)**, **TypeScript**, and **Tailwind CSS**. Engineered with a focus on performance, mobile accessibility, and seamless UX across all 1,025+ official Pokémon and their alternate forms.
 
 ---
 

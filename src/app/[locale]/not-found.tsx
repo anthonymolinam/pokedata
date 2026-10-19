@@ -3,72 +3,79 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, ArrowLeft } from "lucide-react";
+import { artworkUrl, figureStyle } from "@/lib/artwork";
+import { getDictionary } from "@/constants/translations";
 
+// Gengar: el Fantasma que se queda en el escenario cuando la página se esfuma
+const GENGAR = 94;
+
+// not-found no recibe props: el idioma sale de la ruta
 export default function NotFound() {
   const pathname = usePathname();
-  const isEs = pathname.startsWith("/es");
-  const homePath = isEs ? "/es" : "/en";
+  const locale = pathname.startsWith("/en") ? "en" : "es";
+  const { notFound } = getDictionary(locale);
 
+  // 404 (DESIGN.md §4.8): escenario en el campo de Fantasma, tinta hueso, con
+  // un «404» gigante detrás del artwork, que flota como en la ficha, y el
+  // mensaje en --step-hero con un botón para volver a la Pokédex
   return (
-    <div className="flex-1 min-h-[calc(100dvh-180px)] flex flex-col items-center justify-center text-center px-4 py-8">
-      <div className="relative flex flex-col items-center max-w-lg my-auto">
-        <div className="absolute -top-12 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
+    <section
+      aria-labelledby="not-found-title"
+      data-type="ghost"
+      className="card-pop relative isolate grid overflow-hidden rounded-[22px] md:rounded-[32px] bg-field text-field-ink lg:min-h-[min(64svh,620px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"
+    >
+      <div
+        aria-hidden="true"
+        className="relative h-[min(80vw,44svh)] md:h-[min(52vw,44svh)] lg:order-2 lg:h-auto [container-type:size]"
+      >
+        <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-black leading-none tracking-[-0.04em] text-[min(62cqw,90cqh)] opacity-[.14] select-none num">
+          404
+        </span>
 
-        {/* 404 with Psyduck */}
-        <div className="relative mb-6">
-          <span className="text-8xl sm:text-9xl font-black tracking-tighter text-zinc-800/80 font-mono select-none block">
-            404
+        <div className="absolute inset-0 float">
+          <span
+            className="absolute block"
+            style={figureStyle(GENGAR, {
+              height: "70cqh",
+              maxWidth: "78cqw",
+              centerX: "50%",
+              centerY: "52%",
+            })}
+          >
+            <Image
+              src={artworkUrl(GENGAR)}
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 768px) 50vh, 80vw"
+              className="object-contain"
+            />
           </span>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-36 h-36 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
-              <Image
-                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/54.png"
-                alt="Confused Psyduck"
-                fill
-                priority
-                sizes="144px"
-                className="object-contain"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Headings & Descriptions */}
-        <div className="space-y-2 mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-mono font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-            SIGNAL_LOST_ERROR
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            {isEs ? "¡Psyduck está confuso!" : "Psyduck is confused!"}
-          </h1>
-          <p className="text-zinc-400 text-sm max-w-sm mx-auto leading-relaxed">
-            {isEs
-              ? "El Pokémon o la página que buscas no existe en PokéData o se perdió entre la hierba alta."
-              : "The Pokémon or page you are looking for does not exist in the PokéData database or vanished into the tall grass."}
-          </p>
-        </div>
-
-        {/* Navigation Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href={homePath}
-            className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
-          >
-            <Home className="w-4 h-4" />
-            {isEs ? "Volver a la Pokédex" : "Back to Pokédex"}
-          </Link>
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {isEs ? "Atrás" : "Go Back"}
-          </button>
         </div>
       </div>
-    </div>
+
+      <div className="flex flex-col items-start justify-end px-5 pb-7 md:px-10 md:pb-10 lg:px-12 lg:py-12">
+        <h1
+          id="not-found-title"
+          style={{ "--i": 4 } as React.CSSProperties}
+          className="card-pop text-hero font-black"
+        >
+          {notFound.title}
+        </h1>
+        <p
+          style={{ "--i": 6 } as React.CSSProperties}
+          className="card-pop mt-4 max-w-[44ch] text-body"
+        >
+          {notFound.body}
+        </p>
+        <Link
+          href={`/${locale}`}
+          style={{ "--i": 8 } as React.CSSProperties}
+          className="card-pop mt-7 inline-flex min-h-11 items-center rounded-pill bg-surface px-6 text-body font-extrabold text-ink motion-safe:transition-transform duration-150 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:-translate-y-0.5 active:scale-[0.96]"
+        >
+          {notFound.back}
+        </Link>
+      </div>
+    </section>
   );
 }

@@ -1,4 +1,8 @@
 import { GENERATIONS } from "@/constants/generations";
+import {
+  MULTILINGUAL_ALIASES,
+  normalizeQuery,
+} from "@/constants/pokemonAliases";
 
 const BASE_URL = "https://pokeapi.co/api/v2";
 const DEFAULT_REVALIDATE = 86400; // 24 hours
@@ -77,6 +81,12 @@ interface ApiEvolutionNode {
     party_species?: ApiNamedResource;
     needs_overworld_rain?: boolean;
     other_condition?: string;
+    // El método actual; los demás son de juegos anteriores
+    is_default?: boolean;
+    known_move_type?: ApiNamedResource;
+    min_affection?: number;
+    location?: ApiNamedResource;
+    near_special_rock?: boolean;
   }[];
   evolves_to: ApiEvolutionNode[];
 }
@@ -95,6 +105,9 @@ export interface PokemonSummary {
   name: string;
   image: string;
   types: string[];
+  // Suma de las estadísticas base (la pastilla «Total» de la tarjeta). Falta
+  // solo cuando PokéAPI no responde y la tarjeta se arma con datos mínimos.
+  total?: number;
 }
 
 export interface PokemonDetail extends PokemonSummary {
@@ -125,6 +138,12 @@ export interface EvolutionStage {
     partySpecies?: string;
     needsOverworldRain?: boolean;
     otherCondition?: string;
+    knownMoveType?: string;
+    minAffection?: number;
+    location?: string;
+    // En otros juegos también sube de nivel junto a una roca especial (Leafeon
+    // y Glaceon)
+    nearSpecialRock?: boolean;
   };
   evolvesTo: EvolutionStage[];
 }
@@ -145,6 +164,11 @@ export interface AdjacentPokemon {
   id: number;
   name: string;
   image: string;
+  types: string[];
+}
+
+function sumBaseStats(stats: ApiPokemonStat[]): number {
+  return stats.reduce((sum, s) => sum + s.base_stat, 0);
 }
 
 /**
@@ -219,6 +243,7 @@ export async function getPaginatedPokemonList(
           pokeData.sprites.front_default ??
           "/placeholder.png",
         types: pokeData.types.map((t) => t.type.name),
+        total: sumBaseStats(pokeData.stats),
       };
     }),
   );
@@ -277,6 +302,9 @@ const VARIETY_SUFFIX_MAP: Record<string, string> = {
   "family-of-three": "Family of Three",
   "two-segment": "Two-Segment Form",
   "three-segment": "Three-Segment Form",
+
+  // Pikachu disfrazado: siglas que el formateo genérico dejaría en «Phd»
+  phd: "PhD",
 };
 
 function formatVarietyLabel(name: string, baseName: string): string {
@@ -455,7 +483,10 @@ export async function getEvolutionChain(
 
       let triggerDetails;
       if (node.evolution_details && node.evolution_details.length > 0) {
-        const d = node.evolution_details[0];
+        // PokéAPI da un detalle por juego: manda el marcado como actual
+        const d =
+          node.evolution_details.find((detail) => detail.is_default) ??
+          node.evolution_details[0];
 
         let otherCondition: string | undefined = undefined;
         const triggerName = d.trigger?.name;
@@ -491,6 +522,12 @@ export async function getEvolutionChain(
           partySpecies: d.party_species?.name ?? undefined,
           needsOverworldRain: d.needs_overworld_rain ?? undefined,
           otherCondition,
+          knownMoveType: d.known_move_type?.name ?? undefined,
+          minAffection: d.min_affection ?? undefined,
+          location: d.location?.name ?? undefined,
+          nearSpecialRock:
+            node.evolution_details.some((detail) => detail.near_special_rock) ||
+            undefined,
         };
       }
 
@@ -535,6 +572,36 @@ export async function getAllPokemonIndex(): Promise<
   });
 }
 
+// 4b. Pokémon whose name (English or Spanish alias) or number matches the query
+export async function searchPokemonMatches(
+  rawQuery: string,
+): Promise<{ id: number; name: string }[]> {
+  const cleanQuery = normalizeQuery(rawQuery);
+  if (!cleanQuery) return [];
+
+  const allPokemon = await getAllPokemonIndex();
+
+  if (/^\d+$/.test(cleanQuery)) {
+    return allPokemon.filter((poke) => poke.id === Number(cleanQuery));
+  }
+
+  const matchedCanonicalNames = new Set<string>();
+  for (const [spanishAlias, englishName] of Object.entries(
+    MULTILINGUAL_ALIASES,
+  )) {
+    if (spanishAlias.includes(cleanQuery)) {
+      matchedCanonicalNames.add(englishName);
+    }
+  }
+
+  return allPokemon.filter((poke) => {
+    const pokeName = normalizeQuery(poke.name);
+    return (
+      pokeName.includes(cleanQuery) || matchedCanonicalNames.has(pokeName)
+    );
+  });
+}
+
 // 5. Global search result details with offset and limit pagination
 export async function searchPokemonGlobal(
   matches: { id: number; name: string }[],
@@ -558,6 +625,7 @@ export async function searchPokemonGlobal(
           data.sprites.front_default ??
           "/placeholder.png",
         types: data.types.map((t) => t.type.name),
+        total: sumBaseStats(data.stats),
       };
     }),
   );
@@ -618,6 +686,7 @@ export async function getAdjacentPokemon(currentId: number): Promise<{
           data.sprites.other?.["official-artwork"]?.front_default ??
           data.sprites.front_default ??
           "/placeholder.png",
+        types: data.types.map((t) => t.type.name),
       };
     } catch {
       return null;
@@ -671,6 +740,7 @@ export async function getPokemonListByType(
               pData.sprites.front_default ??
               "/placeholder.png",
             types: pData.types.map((t) => t.type.name),
+            total: sumBaseStats(pData.stats),
           };
         } catch {
           return {
@@ -728,6 +798,7 @@ export async function getPokemonListByGen(
             pokeData.sprites.front_default ??
             "/placeholder.png",
           types: pokeData.types.map((t) => t.type.name),
+          total: sumBaseStats(pokeData.stats),
         };
       }),
     );
@@ -739,7 +810,65 @@ export async function getPokemonListByGen(
   }
 }
 
-// 10. Filtered query (Types + Generation) with pagination
+// 10. Ids that match the filters (Types + Generation), sorted
+export async function getFilteredPokemonIds({
+  types = [],
+  genId = null,
+}: {
+  types?: string[];
+  genId?: number | null;
+}): Promise<number[]> {
+  let candidateIds: number[] = [];
+
+  if (types.length > 0) {
+    const typeLists = await Promise.all(
+      types.map(async (t) => {
+        try {
+          const data = await pokeFetch<ApiTypeResponse>(
+            `type/${t.toLowerCase()}`,
+            DEFAULT_REVALIDATE * 7,
+          );
+          const ids = data.pokemon
+            .map((p: { pokemon: { url: string } }) => {
+              const parts = p.pokemon.url.split("/").filter(Boolean);
+              return parseInt(parts[parts.length - 1], 10);
+            })
+            .filter((id: number) => id <= 1025);
+          return new Set<number>(ids);
+        } catch {
+          return new Set<number>();
+        }
+      }),
+    );
+
+    const firstSet = typeLists[0];
+    candidateIds = Array.from(firstSet).filter((id) =>
+      typeLists.every((set) => set.has(id)),
+    );
+  } else if (genId) {
+    const genConfig = GENERATIONS.find((g) => g.id === genId);
+    if (genConfig) {
+      for (let i = genConfig.startId; i <= genConfig.endId; i++) {
+        candidateIds.push(i);
+      }
+    }
+  }
+
+  if (genId && types.length > 0) {
+    const genConfig = GENERATIONS.find((g) => g.id === genId);
+    if (genConfig) {
+      candidateIds = candidateIds.filter(
+        (id) => id >= genConfig.startId && id <= genConfig.endId,
+      );
+    }
+  }
+
+  candidateIds.sort((a, b) => a - b);
+
+  return candidateIds;
+}
+
+// 11. Filtered query (Types + Generation) with pagination
 export async function getFilteredPokemonList({
   types = [],
   genId = null,
@@ -752,52 +881,7 @@ export async function getFilteredPokemonList({
   pageSize?: number;
 }) {
   try {
-    let candidateIds: number[] = [];
-
-    if (types.length > 0) {
-      const typeLists = await Promise.all(
-        types.map(async (t) => {
-          try {
-            const data = await pokeFetch<ApiTypeResponse>(
-              `type/${t.toLowerCase()}`,
-              DEFAULT_REVALIDATE * 7,
-            );
-            const ids = data.pokemon
-              .map((p: { pokemon: { url: string } }) => {
-                const parts = p.pokemon.url.split("/").filter(Boolean);
-                return parseInt(parts[parts.length - 1], 10);
-              })
-              .filter((id: number) => id <= 1025);
-            return new Set<number>(ids);
-          } catch {
-            return new Set<number>();
-          }
-        }),
-      );
-
-      const firstSet = typeLists[0];
-      candidateIds = Array.from(firstSet).filter((id) =>
-        typeLists.every((set) => set.has(id)),
-      );
-    } else if (genId) {
-      const genConfig = GENERATIONS.find((g) => g.id === genId);
-      if (genConfig) {
-        for (let i = genConfig.startId; i <= genConfig.endId; i++) {
-          candidateIds.push(i);
-        }
-      }
-    }
-
-    if (genId && types.length > 0) {
-      const genConfig = GENERATIONS.find((g) => g.id === genId);
-      if (genConfig) {
-        candidateIds = candidateIds.filter(
-          (id) => id >= genConfig.startId && id <= genConfig.endId,
-        );
-      }
-    }
-
-    candidateIds.sort((a, b) => a - b);
+    const candidateIds = await getFilteredPokemonIds({ types, genId });
 
     const totalCount = candidateIds.length;
     const totalPages = Math.ceil(totalCount / pageSize) || 1;
@@ -817,6 +901,7 @@ export async function getFilteredPokemonList({
               pData.sprites.front_default ??
               "/placeholder.png",
             types: pData.types.map((t) => t.type.name),
+            total: sumBaseStats(pData.stats),
           };
         } catch {
           return {
@@ -836,7 +921,7 @@ export async function getFilteredPokemonList({
   }
 }
 
-// 11. Canonical Pokémon name formatting
+// 12. Canonical Pokémon name formatting
 const POKEMON_NAME_MAP: Record<string, string> = {
   "ho-oh": "Ho-Oh",
   "jangmo-o": "Jangmo-o",

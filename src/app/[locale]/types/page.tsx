@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import InteractiveTypeChart from "@/components/types/InteractiveTypeChart";
+import TypeChart, { type TypeSelection } from "@/components/types/TypeChart";
+import { getLocalizedPath } from "@/constants/routes";
+import { isPokemonType } from "@/constants/typeColors";
+import { Locale } from "@/proxy";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ atk?: string; def?: string; type?: string }>;
 }
 
 export async function generateMetadata({
@@ -12,19 +16,30 @@ export async function generateMetadata({
   const isEs = locale === "es";
 
   return {
-    title: isEs ? "Tabla de Tipos | PokéData" : "Type Chart | PokéData",
+    title: isEs ? "Tabla de tipos | PokéData" : "Type chart | PokéData",
     description: isEs
       ? "Matriz completa de enfrentamientos elementales, debilidades y resistencias en Pokémon."
       : "Complete matrix of elemental matchups, weaknesses, and resistances in Pokémon.",
   };
 }
 
-export default async function TypesPage({ params }: PageProps) {
-  const { locale } = await params;
+// Tabla de tipos (DESIGN.md §4.5). La fila elegida llega en ?atk=fire y la
+// columna en ?def=fire; los enlaces antiguos con ?type= abren la fila
+export default async function TypesPage({ params, searchParams }: PageProps) {
+  const { locale: rawLocale } = await params;
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
+  const { atk, def, type } = await searchParams;
+
+  let selected: TypeSelection | null = null;
+  const attacker = atk ?? type;
+  if (attacker && isPokemonType(attacker)) selected = { axis: "atk", type: attacker };
+  else if (def && isPokemonType(def)) selected = { axis: "def", type: def };
 
   return (
-    <div className="min-h-[calc(100dvh-110px)] flex flex-col justify-start max-w-7xl mx-auto px-4 py-3">
-      <InteractiveTypeChart locale={locale} />
-    </div>
+    <TypeChart
+      locale={locale}
+      basePath={getLocalizedPath(locale, "types")}
+      selected={selected}
+    />
   );
 }

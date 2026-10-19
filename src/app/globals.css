@@ -1,33 +1,558 @@
 @import "tailwindcss";
 
+/* =========================================================================
+   Tokens de la dirección «Pop» (DESIGN.md §2, §3 y §4.0). Ningún otro archivo
+   escribe a mano un color de tipo: todo sale de aquí o de src/constants/typeColors.ts.
+   ========================================================================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Globales (§2.1) */
+  --ground: #f3f4f8;
+  --surface: #ffffff;
+  --step: #e6e8ef;
+  --ink: #15161c;
+  --ink-soft: #5c6070;
+  --bone: #f7f5f0;
+  --bone-soft: #b9bcc8;
+  --accent: #cc2e0b;
+  --ok: #3fb950;
+
+  /* Margen lateral (§4.0): 20px en móvil, 32px en escritorio */
+  --gutter: 1.25rem;
+
+  /* Esquinas (§4.0): superficies 28px (22px en móvil), controles en pastilla */
+  --surface-radius: 1.375rem;
+  --pill-radius: 999px;
+
+  /* Tipos (§2.2): field · field-ink · step (field −14 %) · deep (≥ 4.9:1 sobre blanco) */
+  --type-normal: #a8a77a;
+  --type-normal-ink: var(--ink);
+  --type-normal-step: #909069;
+  --type-normal-deep: #727253;
+
+  --type-fire: #ee8130;
+  --type-fire-ink: var(--ink);
+  --type-fire-step: #cd6f29;
+  --type-fire-deep: #a95c22;
+
+  --type-water: #6390f0;
+  --type-water-ink: var(--ink);
+  --type-water-step: #557cce;
+  --type-water-deep: #4c6fb9;
+
+  --type-electric: #f7d02c;
+  --type-electric-ink: var(--ink);
+  --type-electric-step: #d4b326;
+  --type-electric-deep: #836e17;
+
+  --type-grass: #7ac74c;
+  --type-grass-ink: var(--ink);
+  --type-grass-step: #69ab41;
+  --type-grass-deep: #4c7b2f;
+
+  --type-ice: #96d9d6;
+  --type-ice-ink: var(--ink);
+  --type-ice-step: #81bbb8;
+  --type-ice-deep: #527776;
+
+  --type-fighting: #c22e28;
+  --type-fighting-ink: var(--bone);
+  --type-fighting-step: #a72822;
+  --type-fighting-deep: #c22e28;
+
+  --type-poison: #a33ea1; /* taste-skill-ignore: violeta canónico del tipo */
+  --type-poison-ink: var(--bone);
+  --type-poison-step: #8c358a; /* taste-skill-ignore */
+  --type-poison-deep: #a33ea1; /* taste-skill-ignore */
+
+  --type-ground: #e2bf65;
+  --type-ground-ink: var(--ink);
+  --type-ground-step: #c2a457;
+  --type-ground-deep: #816d3a;
+
+  --type-flying: #a98ff3;
+  --type-flying-ink: var(--ink);
+  --type-flying-step: #917bd1;
+  --type-flying-deep: #7664aa;
+
+  --type-psychic: #f95587;
+  --type-psychic-ink: var(--ink);
+  --type-psychic-step: #d64974;
+  --type-psychic-deep: #c24269;
+
+  --type-bug: #a6b91a;
+  --type-bug-ink: var(--ink);
+  --type-bug-step: #8f9f16;
+  --type-bug-deep: #6a7611;
+
+  --type-rock: #b6a136;
+  --type-rock-ink: var(--ink);
+  --type-rock-step: #9d8a2e;
+  --type-rock-deep: #7e6f25;
+
+  --type-ghost: #735797; /* taste-skill-ignore: violeta canónico del tipo */
+  --type-ghost-ink: var(--bone);
+  --type-ghost-step: #634b82; /* taste-skill-ignore */
+  --type-ghost-deep: #735797; /* taste-skill-ignore */
+
+  --type-dragon: #6f35fc; /* taste-skill-ignore: violeta canónico del tipo */
+  --type-dragon-ink: var(--bone);
+  --type-dragon-step: #5f2ed9; /* taste-skill-ignore */
+  --type-dragon-deep: #6f35fc; /* taste-skill-ignore */
+
+  --type-dark: #705746;
+  --type-dark-ink: var(--bone);
+  --type-dark-step: #604b3c;
+  --type-dark-deep: #705746;
+
+  --type-steel: #b7b7ce;
+  --type-steel-ink: var(--ink);
+  --type-steel-step: #9d9db1;
+  --type-steel-deep: #6e6e7c;
+
+  --type-fairy: #d685ad;
+  --type-fairy-ink: var(--ink);
+  --type-fairy-step: #b87295;
+  --type-fairy-deep: #985e7b;
+
+  /* Campo de contexto: por defecto, el fondo. [data-type] lo sustituye (ver abajo). */
+  --field: var(--ground);
+  --field-ink: var(--ink);
+  --field-step: var(--step);
+  --field-deep: var(--ink);
+
+  /* Escala tipográfica (§3): cinco tamaños, ninguno más */
+  --step-small: 0.875rem;
+  --step-body: clamp(1rem, 0.95rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.1875rem, 1rem + 0.6vw, 1.625rem);
+  --step-head: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  --step-hero: clamp(2.5rem, 1.6rem + 3.4vw, 4.5rem);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (min-width: 768px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --surface-radius: 1.75rem;
+    --gutter: 2rem;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Campo de contexto: cualquier contenedor con data-type="fire" pinta su
+   interior con bg-field / text-field-ink / bg-field-step / text-field-deep.
+   Es la base de las tarjetas, las columnas del día, el escenario de la ficha
+   y el cambio de forma. */
+[data-type="normal"] { --field: var(--type-normal); --field-ink: var(--type-normal-ink); --field-step: var(--type-normal-step); --field-deep: var(--type-normal-deep); }
+[data-type="fire"] { --field: var(--type-fire); --field-ink: var(--type-fire-ink); --field-step: var(--type-fire-step); --field-deep: var(--type-fire-deep); }
+[data-type="water"] { --field: var(--type-water); --field-ink: var(--type-water-ink); --field-step: var(--type-water-step); --field-deep: var(--type-water-deep); }
+[data-type="electric"] { --field: var(--type-electric); --field-ink: var(--type-electric-ink); --field-step: var(--type-electric-step); --field-deep: var(--type-electric-deep); }
+[data-type="grass"] { --field: var(--type-grass); --field-ink: var(--type-grass-ink); --field-step: var(--type-grass-step); --field-deep: var(--type-grass-deep); }
+[data-type="ice"] { --field: var(--type-ice); --field-ink: var(--type-ice-ink); --field-step: var(--type-ice-step); --field-deep: var(--type-ice-deep); }
+[data-type="fighting"] { --field: var(--type-fighting); --field-ink: var(--type-fighting-ink); --field-step: var(--type-fighting-step); --field-deep: var(--type-fighting-deep); }
+[data-type="poison"] { --field: var(--type-poison); --field-ink: var(--type-poison-ink); --field-step: var(--type-poison-step); --field-deep: var(--type-poison-deep); }
+[data-type="ground"] { --field: var(--type-ground); --field-ink: var(--type-ground-ink); --field-step: var(--type-ground-step); --field-deep: var(--type-ground-deep); }
+[data-type="flying"] { --field: var(--type-flying); --field-ink: var(--type-flying-ink); --field-step: var(--type-flying-step); --field-deep: var(--type-flying-deep); }
+[data-type="psychic"] { --field: var(--type-psychic); --field-ink: var(--type-psychic-ink); --field-step: var(--type-psychic-step); --field-deep: var(--type-psychic-deep); }
+[data-type="bug"] { --field: var(--type-bug); --field-ink: var(--type-bug-ink); --field-step: var(--type-bug-step); --field-deep: var(--type-bug-deep); }
+[data-type="rock"] { --field: var(--type-rock); --field-ink: var(--type-rock-ink); --field-step: var(--type-rock-step); --field-deep: var(--type-rock-deep); }
+[data-type="ghost"] { --field: var(--type-ghost); --field-ink: var(--type-ghost-ink); --field-step: var(--type-ghost-step); --field-deep: var(--type-ghost-deep); }
+[data-type="dragon"] { --field: var(--type-dragon); --field-ink: var(--type-dragon-ink); --field-step: var(--type-dragon-step); --field-deep: var(--type-dragon-deep); }
+[data-type="dark"] { --field: var(--type-dark); --field-ink: var(--type-dark-ink); --field-step: var(--type-dark-step); --field-deep: var(--type-dark-deep); }
+[data-type="steel"] { --field: var(--type-steel); --field-ink: var(--type-steel-ink); --field-step: var(--type-steel-step); --field-deep: var(--type-steel-deep); }
+[data-type="fairy"] { --field: var(--type-fairy); --field-ink: var(--type-fairy-ink); --field-step: var(--type-fairy-step); --field-deep: var(--type-fairy-deep); }
+
+/* Campos fijos: blanco para paneles y capas flotantes (vuelven a blanco aunque
+   estén dentro de un campo de tipo) y tinta para el pie. */
+[data-field="surface"] { --field: var(--surface); --field-ink: var(--ink); --field-step: var(--step); --field-deep: var(--ink); }
+[data-field="ink"] { --field: var(--ink); --field-ink: var(--bone); --field-step: var(--ink-soft); --field-deep: var(--bone); }
+
+/* Utilidades de Tailwind: bg-ground, bg-surface, text-ink, bg-type-fire,
+   text-type-fire-ink, bg-type-fire-step, text-type-fire-deep, bg-field,
+   text-field-ink… text-small/body/lead/head/hero, font-sans (Nunito),
+   rounded-surface, rounded-pill… */
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-step: var(--step);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-bone: var(--bone);
+  --color-bone-soft: var(--bone-soft);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+
+  --color-field: var(--field);
+  --color-field-ink: var(--field-ink);
+  --color-field-step: var(--field-step);
+  --color-field-deep: var(--field-deep);
+
+  --color-type-normal: var(--type-normal);
+  --color-type-normal-ink: var(--type-normal-ink);
+  --color-type-normal-step: var(--type-normal-step);
+  --color-type-normal-deep: var(--type-normal-deep);
+  --color-type-fire: var(--type-fire);
+  --color-type-fire-ink: var(--type-fire-ink);
+  --color-type-fire-step: var(--type-fire-step);
+  --color-type-fire-deep: var(--type-fire-deep);
+  --color-type-water: var(--type-water);
+  --color-type-water-ink: var(--type-water-ink);
+  --color-type-water-step: var(--type-water-step);
+  --color-type-water-deep: var(--type-water-deep);
+  --color-type-electric: var(--type-electric);
+  --color-type-electric-ink: var(--type-electric-ink);
+  --color-type-electric-step: var(--type-electric-step);
+  --color-type-electric-deep: var(--type-electric-deep);
+  --color-type-grass: var(--type-grass);
+  --color-type-grass-ink: var(--type-grass-ink);
+  --color-type-grass-step: var(--type-grass-step);
+  --color-type-grass-deep: var(--type-grass-deep);
+  --color-type-ice: var(--type-ice);
+  --color-type-ice-ink: var(--type-ice-ink);
+  --color-type-ice-step: var(--type-ice-step);
+  --color-type-ice-deep: var(--type-ice-deep);
+  --color-type-fighting: var(--type-fighting);
+  --color-type-fighting-ink: var(--type-fighting-ink);
+  --color-type-fighting-step: var(--type-fighting-step);
+  --color-type-fighting-deep: var(--type-fighting-deep);
+  --color-type-poison: var(--type-poison);
+  --color-type-poison-ink: var(--type-poison-ink);
+  --color-type-poison-step: var(--type-poison-step);
+  --color-type-poison-deep: var(--type-poison-deep);
+  --color-type-ground: var(--type-ground);
+  --color-type-ground-ink: var(--type-ground-ink);
+  --color-type-ground-step: var(--type-ground-step);
+  --color-type-ground-deep: var(--type-ground-deep);
+  --color-type-flying: var(--type-flying);
+  --color-type-flying-ink: var(--type-flying-ink);
+  --color-type-flying-step: var(--type-flying-step);
+  --color-type-flying-deep: var(--type-flying-deep);
+  --color-type-psychic: var(--type-psychic);
+  --color-type-psychic-ink: var(--type-psychic-ink);
+  --color-type-psychic-step: var(--type-psychic-step);
+  --color-type-psychic-deep: var(--type-psychic-deep);
+  --color-type-bug: var(--type-bug);
+  --color-type-bug-ink: var(--type-bug-ink);
+  --color-type-bug-step: var(--type-bug-step);
+  --color-type-bug-deep: var(--type-bug-deep);
+  --color-type-rock: var(--type-rock);
+  --color-type-rock-ink: var(--type-rock-ink);
+  --color-type-rock-step: var(--type-rock-step);
+  --color-type-rock-deep: var(--type-rock-deep);
+  --color-type-ghost: var(--type-ghost);
+  --color-type-ghost-ink: var(--type-ghost-ink);
+  --color-type-ghost-step: var(--type-ghost-step);
+  --color-type-ghost-deep: var(--type-ghost-deep);
+  --color-type-dragon: var(--type-dragon);
+  --color-type-dragon-ink: var(--type-dragon-ink);
+  --color-type-dragon-step: var(--type-dragon-step);
+  --color-type-dragon-deep: var(--type-dragon-deep);
+  --color-type-dark: var(--type-dark);
+  --color-type-dark-ink: var(--type-dark-ink);
+  --color-type-dark-step: var(--type-dark-step);
+  --color-type-dark-deep: var(--type-dark-deep);
+  --color-type-steel: var(--type-steel);
+  --color-type-steel-ink: var(--type-steel-ink);
+  --color-type-steel-step: var(--type-steel-step);
+  --color-type-steel-deep: var(--type-steel-deep);
+  --color-type-fairy: var(--type-fairy);
+  --color-type-fairy-ink: var(--type-fairy-ink);
+  --color-type-fairy-step: var(--type-fairy-step);
+  --color-type-fairy-deep: var(--type-fairy-deep);
+
+  /* Nunito es la única familia; no hay monoespaciada en ningún sitio (§3) */
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+
+  --text-small: var(--step-small);
+  --text-small--line-height: 1.45;
+  --text-body: var(--step-body);
+  --text-body--line-height: 1.45;
+  --text-lead: var(--step-lead);
+  --text-lead--line-height: 1.05;
+  --text-lead--letter-spacing: -0.03em;
+  --text-head: var(--step-head);
+  --text-head--line-height: 1.05;
+  --text-head--letter-spacing: -0.03em;
+  --text-hero: var(--step-hero);
+  --text-hero--line-height: 0.95;
+  --text-hero--letter-spacing: -0.04em;
+
+  --tracking-display: -0.04em;
+  --leading-display: 0.95;
+  --leading-text: 1.45;
+
+  --radius-surface: var(--surface-radius);
+  --radius-pill: var(--pill-radius);
 }
 
-/* Scrollbar moderno y discreto para elementos oscuros */
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--step-body);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* Contenedor común (§4.0): márgenes de 20px en móvil y 32px desde 768px,
+   contenido de 1280px como máximo */
+@utility shell {
+  width: 100%;
+  max-width: calc(1280px + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Foco visible (§2.3, regla 7): 3px en la tinta del campo, separado 3px.
+   Sobre un campo de tinta hueso, el contorno sale en hueso. Va en la capa
+   base para que un componente pueda cambiarlo con utilidades (la tarjeta lo
+   pone en tinta porque su contorno cae sobre el fondo, no sobre el campo). */
+@layer base {
+  :focus-visible {
+    outline: 3px solid var(--field-ink);
+    outline-offset: 3px;
+  }
+}
+
+/* Rol display (§3): Nunito 900, sentence case, tracking −0.04em, interlineado 0.95 */
+.display {
+  font-weight: 900;
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-display);
+}
+
+/* Brillo de tipo de las tarjetas (§4.3): solo en hover y foco, nunca en
+   reposo. La sombra vive en una capa aparte para fundirla con la opacidad. */
+.type-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--field) 70%, transparent); /* taste-skill-ignore: brillo de hover (§4.0) */
+  opacity: 0;
+  transition: opacity 250ms ease-out;
+  pointer-events: none;
+}
+
+.type-glow:hover::before,
+.type-glow:focus-visible::before {
+  opacity: 1;
+}
+
+/* Entrada «pop» de las tarjetas (§6): suben 30px y crecen desde 0.94, con
+   45ms de escalonado (--i es el índice). Es CSS, así que sin JavaScript la
+   tarjeta acaba igual de visible. */
+@keyframes card-pop {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.94);
+  }
+}
+
+.card-pop {
+  animation: card-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* Tarjetas fantasma (§4.8): aparecen con opacidad a partir de los 300ms */
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.skeleton-in {
+  animation: skeleton-in 200ms ease-out 300ms both;
+}
+
+/* Ficha (§6): el artwork del escenario flota despacio, en bucle de 6s */
+@keyframes float {
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Cambio de forma (§4.4): el campo nuevo entra como capa con fundido de 400ms */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.fade-in {
+  animation: fade-in 400ms ease-out both;
+}
+
+/* Barras de estadísticas (§6): scaleX de 0 a su valor (--v) al entrar en
+   pantalla, 600ms con 70ms de escalonado (--i). Solo se encogen si el script
+   marca el bloque como pendiente, así que sin JavaScript se ven ya llenas. Al
+   cambiar de forma, la barra se desliza a su nuevo valor. */
+.stat-bar {
+  transform-origin: left;
+  transform: scaleX(var(--v, 1));
+  transition: transform 600ms cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+
+[data-reveal="pending"] .stat-bar {
+  transform: scaleX(0);
+}
+
+[data-reveal="shown"] .stat-bar {
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+/* Comparador (§4.6): las barras de la izquierda crecen desde el eje central */
+.stat-bar-end {
+  transform-origin: right;
+}
+
+/* Tabla de tipos (§4.5). ×0: tinta con rayas a 45° en un patrón SVG plano,
+   para que el «sin efecto» no dependa solo del color. */
+.type-zero {
+  background-color: var(--ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2l4-4M0 8l8-8M6 10l4-4' stroke='%235c6070' stroke-width='2.5'/%3E%3C/svg%3E");
+}
+
+/* ×1 en la fila o la columna elegida: su field mezclado con blanco */
+.type-cross {
+  background-color: color-mix(in srgb, var(--field) 35%, var(--surface));
+}
+
+/* ×1 fuera de la selección */
+.type-one {
+  background-color: var(--guide-tint, var(--ground));
+}
+
+/* Fila o columna elegida: el resto de celdas y las otras cabeceras de ese eje
+   se atenúan, sin dejar de leerse */
+.type-matrix [data-dim] {
+  opacity: var(--guide-on, 0.5);
+  transition: opacity 200ms ease-out;
+}
+
+/* Las cabeceras atenuadas, un poco menos: su nombre tiene que leerse */
+.type-matrix .type-head[data-dim] {
+  opacity: var(--guide-on, 0.65);
+}
+
+/* El aro en tinta es solo de la selección; la guía de hover oscurece un poco
+   la pastilla, sin borde, para que nunca parezca una segunda selección */
+.type-head {
+  filter: var(--guide-shade, none);
+  transition: filter 150ms ease-out, opacity 200ms ease-out;
+}
+
+/* Guía de hover: al pasar por una celda se marcan su fila y su columna. Un
+   solo criterio de color: la selección se tiñe de su tipo (.type-cross) y la
+   guía, de un gris neutro muy suave, solo en las celdas ×1 sin teñir; las
+   cabeceras se oscurecen y lo atenuado vuelve a leerse. Las variables se
+   heredan hasta la cabecera. */
+@media (hover: hover) {
+  .type-head:hover {
+    --guide-shade: brightness(0.92);
+  }
+
+  .type-matrix tr:has(> td[data-col]:hover) > *,
+  .type-matrix:has(td[data-col="normal"]:hover) [data-col="normal"],
+  .type-matrix:has(td[data-col="fire"]:hover) [data-col="fire"],
+  .type-matrix:has(td[data-col="water"]:hover) [data-col="water"],
+  .type-matrix:has(td[data-col="grass"]:hover) [data-col="grass"],
+  .type-matrix:has(td[data-col="electric"]:hover) [data-col="electric"],
+  .type-matrix:has(td[data-col="ice"]:hover) [data-col="ice"],
+  .type-matrix:has(td[data-col="fighting"]:hover) [data-col="fighting"],
+  .type-matrix:has(td[data-col="poison"]:hover) [data-col="poison"],
+  .type-matrix:has(td[data-col="ground"]:hover) [data-col="ground"],
+  .type-matrix:has(td[data-col="flying"]:hover) [data-col="flying"],
+  .type-matrix:has(td[data-col="psychic"]:hover) [data-col="psychic"],
+  .type-matrix:has(td[data-col="bug"]:hover) [data-col="bug"],
+  .type-matrix:has(td[data-col="rock"]:hover) [data-col="rock"],
+  .type-matrix:has(td[data-col="ghost"]:hover) [data-col="ghost"],
+  .type-matrix:has(td[data-col="dragon"]:hover) [data-col="dragon"],
+  .type-matrix:has(td[data-col="dark"]:hover) [data-col="dark"],
+  .type-matrix:has(td[data-col="steel"]:hover) [data-col="steel"],
+  .type-matrix:has(td[data-col="fairy"]:hover) [data-col="fairy"] {
+    --guide-on: 1;
+    --guide-tint: color-mix(in srgb, var(--ink) 5%, var(--ground));
+    --guide-shade: brightness(0.92);
+  }
+}
+
+/* Tooltip de las celdas (§4.5): «Fuego → Planta: ×2» encima de la celda, solo
+   con puntero. Es una capa flotante, así que lleva sombra. En las dos primeras
+   y las dos últimas columnas se abre hacia dentro para no salirse de la tabla
+   (y no provocar scroll). */
+@keyframes tip-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (hover: hover) {
+  .type-matrix td[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    z-index: 30;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    translate: -50% 0;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bone);
+    font-size: var(--step-small);
+    font-weight: 800;
+    line-height: 1.45;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--ink) 45%, transparent); /* taste-skill-ignore: capa flotante */
+    animation: tip-in 120ms ease-out;
+  }
+
+  .type-matrix td[data-tip-edge="start"]:hover::after {
+    left: 0;
+    translate: none;
+  }
+
+  .type-matrix td[data-tip-edge="end"]:hover::after {
+    left: auto;
+    right: 0;
+    translate: none;
+  }
+}
+
+/* Capas flotantes (§6): aparecen y suben 8px en 250ms */
+@keyframes layer-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.layer-in[open] {
+  animation: layer-in 250ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-pop,
+  .float,
+  .layer-in[open] {
+    animation: none;
+  }
+
+  .stat-bar {
+    transition: none;
+  }
+}
+
+/* Números (#0006, estadísticas, totales, SHA) */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbar de las capas flotantes (desplegable del buscador, modales) */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -35,16 +560,16 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #27272a; /* zinc-800 */
-  border-radius: 9999px;
+  background: var(--step);
+  border-radius: var(--pill-radius);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46; /* zinc-700 */
+  background: var(--ink-soft);
 }
 
 /* Firefox */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #27272a transparent;
+  scrollbar-color: var(--step) transparent;
 }

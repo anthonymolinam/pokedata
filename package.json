@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "artwork-bounds": "node scripts/artwork-bounds.mjs",
+    "pokemon-index": "node scripts/pokemon-index.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

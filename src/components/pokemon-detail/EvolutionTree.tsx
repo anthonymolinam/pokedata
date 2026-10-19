@@ -1,16 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { EvolutionStage } from "@/lib/pokeapi";
-import { TYPE_COLORS } from "@/constants/typeColors";
+import PokemonCard from "@/components/pokemon/PokemonCard";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
+import { getDictionary } from "@/constants/translations";
+import { isPokemonType } from "@/constants/typeColors";
+import { Locale } from "@/proxy";
 
 interface EvolutionTreeProps {
   currentPokemonName: string;
   chain: EvolutionStage | null;
-  locale?: string;
+  locale: Locale;
 }
 
 // 1. Diccionario de objetos evolutivos en inglés
@@ -150,26 +151,18 @@ const SPECIAL_EVOLUTION_OVERRIDES: Record<string, { es: string; en: string }> =
     },
   };
 
-const TYPE_TRANSLATIONS_ES: Record<string, string> = {
-  normal: "Normal",
-  fire: "Fuego",
-  water: "Agua",
-  grass: "Planta",
-  electric: "Eléctrico",
-  ice: "Hielo",
-  fighting: "Lucha",
-  poison: "Veneno",
-  ground: "Tierra",
-  flying: "Volador",
-  psychic: "Psíquico",
-  bug: "Bicho",
-  rock: "Roca",
-  ghost: "Fantasma",
-  dragon: "Dragón",
-  steel: "Acero",
-  dark: "Siniestro",
-  fairy: "Hada",
+// Rocas junto a las que se evoluciona subiendo de nivel
+const SPECIAL_ROCKS: Record<string, { es: string; en: string }> = {
+  leafeon: { es: "Roca Musgo", en: "Moss Rock" },
+  glaceon: { es: "Roca Hielo", en: "Ice Rock" },
 };
+
+// «mt-coronet» → «Mt Coronet»
+const titleCase = (slug: string) =>
+  slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 
 function formatItemName(rawItem: string, isEs: boolean): string {
   if (!rawItem) return "";
@@ -403,16 +396,14 @@ function formatSpecialCondition(
   return { label: rawCondition, absorbsLevel: false };
 }
 
-function EvolutionArrowWithDetails({
-  details,
-  locale,
-  targetPokemonName,
-}: {
-  details?: EvolutionStage["triggerDetails"];
-  locale: string;
-  targetPokemonName?: string;
-}) {
-  if (!details) return null;
+// Condiciones para evolucionar, en frases cortas («Nivel 16», «Usar Piedra
+// Fuego»)
+function evolutionRequirements(
+  details: EvolutionStage["triggerDetails"],
+  locale: string,
+  targetPokemonName?: string,
+): string[] {
+  if (!details) return [];
   const isEs = locale === "es";
 
   const requirements: string[] = [];
@@ -515,6 +506,21 @@ function EvolutionArrowWithDetails({
       );
     }
 
+    // E2. Movimiento de un tipo (Sylveon: uno de tipo Hada) y afecto
+    if (details.knownMoveType && isPokemonType(details.knownMoveType)) {
+      const typeName = getDictionary(isEs ? "es" : "en").typeNames[details.knownMoveType];
+      requirements.push(
+        isEs
+          ? `Conocer un movimiento de tipo ${typeName}`
+          : `Know a ${typeName}-type move`,
+      );
+    }
+    if (details.minAffection) {
+      requirements.push(
+        isEs ? `Afecto ≥ ${details.minAffection}` : `Affection ≥ ${details.minAffection}`,
+      );
+    }
+
     // F. Género y otros requisitos de campo
     if (details.gender === 1) requirements.push(isEs ? "(Hembra)" : "(Female)");
     if (details.gender === 2) requirements.push(isEs ? "(Macho)" : "(Male)");
@@ -545,6 +551,31 @@ function EvolutionArrowWithDetails({
       const itemName = formatItemName(details.item, isEs);
       requirements.push(isEs ? `Usar ${itemName}` : `Use ${itemName}`);
     }
+
+    // Subir de nivel en un lugar concreto, cuando no hay otro requisito
+    if (requirements.length === 0 && details.location) {
+      requirements.push(
+        `${isEs ? "Subir de nivel en" : "Level up at"} ${titleCase(details.location)}`,
+      );
+    }
+  }
+
+  // Leafeon y Glaceon: además de la piedra, en otros juegos suben de nivel
+  // junto a su roca. Se une al primer requisito como alternativa.
+  if (details.nearSpecialRock) {
+    const rock = SPECIAL_ROCKS[targetKey];
+    const alternative = rock
+      ? isEs
+        ? `subir de nivel junto a la ${rock.es}`
+        : `level up near the ${rock.en}`
+      : isEs
+        ? "subir de nivel junto a una roca especial"
+        : "level up near a special rock";
+    if (requirements.length > 0) {
+      requirements[0] = `${requirements[0]} ${isEs ? "o" : "or"} ${alternative}`;
+    } else {
+      requirements.push(alternative.charAt(0).toUpperCase() + alternative.slice(1));
+    }
   }
 
   // Fallback genérico final
@@ -552,160 +583,161 @@ function EvolutionArrowWithDetails({
     requirements.push(isEs ? "Evolución especial" : "Special Evolution");
   }
 
-  return (
-    <div className="flex flex-col items-center justify-center gap-1.5 w-44 shrink-0">
-      <div className="flex flex-col gap-1 w-full items-center justify-center">
-        {requirements.map((req, index) => (
-          <span
-            key={`${req}-${index}`}
-            className="w-full max-w-38.75 px-2.5 py-1 bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-center text-[10px] font-semibold text-amber-300 leading-snug whitespace-normal text-balance"
-          >
-            {req}
-          </span>
-        ))}
-      </div>
+  return requirements;
+}
 
-      <ArrowRight className="w-5 h-5 text-zinc-500 rotate-90 md:rotate-0 shrink-0" />
-    </div>
+const REGIONAL_FORM = /-(alola|galar|hisui|paldea)$/;
+
+// Cuatro o más evoluciones finales desde una misma etapa (Eevee) van en abanico:
+// una sola flecha hacia un bloque con todas ellas y la condición encima de
+// cada tarjeta. Las ramas con su propia cadena (Silcoon → Beautifly) van en
+// filas, cada una con su flecha.
+const isLeaf = (node: EvolutionStage) => node.evolvesTo.length === 0;
+
+// Cadena evolutiva (DESIGN.md §4.4): mini tarjetas con la anatomía de las de
+// la portada unidas por flechas, con la condición encima de cada flecha. En
+// escritorio la cadena corre de izquierda a derecha y las ramas se apilan a la
+// derecha de su origen; en móvil baja en vertical, con las flechas hacia abajo. El Pokémon que se está
+// viendo lleva el aro de selección en tinta.
+export default function EvolutionTree({
+  currentPokemonName,
+  chain,
+  locale,
+}: EvolutionTreeProps) {
+  const { detail } = getDictionary(locale);
+  const hasEvolutions = Boolean(chain && chain.evolvesTo.length > 0);
+
+  return (
+    <section
+      aria-labelledby="evolution-title"
+      className="rounded-surface bg-surface p-6 md:p-10 text-ink"
+    >
+      <h2 id="evolution-title" className="text-head font-black">
+        {detail.evolution}
+      </h2>
+
+      {chain && hasEvolutions ? (
+        // El scroll recorta todo lo que sale de su caja: el brillo de hover
+        // (hasta 46px por abajo y 28px por los lados), la subida y el aro de
+        // selección. La caja ocupa también el relleno del panel (margen
+        // negativo y el mismo relleno), así que el recorte cae en el borde del
+        // panel, donde el brillo ya se ha desvanecido, sin mover nada
+        <div className="-mx-6 -mb-6 mt-6 overflow-x-auto overscroll-x-contain custom-scrollbar px-6 pb-6 md:-mx-10 md:-mb-10 md:mt-8 md:px-10 md:pb-10">
+          <div className="flex justify-center min-w-fit">
+            <Branch
+              node={chain}
+              currentLower={currentPokemonName.toLowerCase()}
+              locale={locale}
+            />
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-body">{detail.noEvolution}</p>
+      )}
+    </section>
   );
 }
 
-function EvolutionBranch({
-  node,
-  currentPokemonName,
-  locale,
-}: {
+interface BranchProps {
   node: EvolutionStage;
-  currentPokemonName: string;
-  locale: string;
-}) {
-  const isEs = locale === "es";
-  const currentLower = currentPokemonName.toLowerCase();
+  currentLower: string;
+  locale: Locale;
+}
+
+// Una etapa y, a continuación, sus evoluciones, cada una tras su flecha
+function Branch({ node, currentLower, locale }: BranchProps) {
+  const children = node.evolvesTo;
+  const nodeLower = node.name.toLowerCase();
   const isCurrent =
-    node.name.toLowerCase() === currentLower ||
-    (node.speciesName && node.speciesName.toLowerCase() === currentLower) ||
-    node.name.toLowerCase().startsWith(`${currentLower}-`);
+    nodeLower === currentLower ||
+    node.speciesName?.toLowerCase() === currentLower ||
+    nodeLower.startsWith(`${currentLower}-`);
 
-  const targetHref = getEvolutionHref(node, locale);
+  const fan = children.length > 3 && children.every(isLeaf);
+  const card = (
+    // El artwork sobresale por arriba de la tarjeta: el hueco superior le
+    // deja sitio
+    <div className="w-full max-w-44 shrink-0 pt-10 lg:w-48 lg:max-w-none lg:pt-12">
+      <PokemonCard
+        pokemon={{
+          id: node.id,
+          // Las formas regionales conservan su nombre (Vulpix de Alola)
+          name: REGIONAL_FORM.test(nodeLower)
+            ? node.name
+            : node.speciesName || node.name,
+          image: node.image,
+          types: node.types,
+        }}
+        href={getEvolutionHref(node, locale)}
+        locale={locale}
+        current={isCurrent}
+      />
+    </div>
+  );
+  const requirementsOf = (child: EvolutionStage) =>
+    evolutionRequirements(child.triggerDetails, locale, child.speciesName || child.name);
 
+  // En móvil ocupa su columna entera, para que la tarjeta tenga ancho
   return (
-    <div className="flex flex-col md:flex-row items-center gap-6">
-      {/* Tarjeta del Pokémon */}
-      <Link
-        href={targetHref}
-        className={`group flex flex-col items-center p-3 rounded-2xl border transition-all ${
-          isCurrent
-            ? "bg-zinc-800/80 border-rose-500/80 shadow-lg shadow-rose-500/10"
-            : "bg-zinc-950/40 border-zinc-800/60 hover:border-zinc-700 hover:bg-zinc-900/40"
-        }`}
-      >
-        <span className="text-[10px] font-mono text-zinc-500">
-          #{String(node.id).padStart(4, "0")}
-        </span>
-        <div className="relative w-20 h-20 my-1">
-          <Image
-            src={node.image}
-            alt={node.name}
-            fill
-            sizes="80px"
-            className="object-contain group-hover:scale-110 transition-transform duration-200"
-          />
-        </div>
-        <span className="font-bold text-xs text-zinc-200 mb-1 text-center">
-          {formatEvolutionPokemonName(node.speciesName || node.name, locale)}
-        </span>
-        <div className="flex gap-1 flex-wrap justify-center">
-          {node.types.map((t) => {
-            const rawType = t.toLowerCase();
-            const displayType =
-              isEs && TYPE_TRANSLATIONS_ES[rawType]
-                ? TYPE_TRANSLATIONS_ES[rawType]
-                : t;
+    <div className="flex w-full flex-col items-center lg:w-auto lg:flex-row">
+      {card}
 
-            return (
-              <span
-                key={t}
-                className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${
-                  TYPE_COLORS[rawType] || "bg-zinc-700 text-white"
-                }`}
+      {fan ? (
+        <>
+          <Arrow requirements={[]} />
+          {/* En móvil, sin bloque: la única flecha ya baja hacia la rejilla y
+              las tarjetas ganan ancho */}
+          <ul className="grid w-full grid-cols-2 gap-x-3 sm:w-auto sm:grid-cols-4 sm:rounded-surface sm:bg-ground sm:px-3 sm:pb-4 lg:grid-cols-2 lg:gap-x-5 lg:px-5 lg:pb-5 xl:grid-cols-4">
+            {children.map((child, index) => (
+              <li
+                key={`${child.name}-${index}`}
+                className="flex min-w-0 flex-col items-center justify-between sm:w-40 lg:w-auto"
               >
-                {displayType}
-              </span>
-            );
-          })}
-        </div>
-      </Link>
-
-      {/* Flechas y ramas evolutivas */}
-      {node.evolvesTo.length > 0 && (
-        <div className="flex flex-col gap-6 items-center justify-center">
-          {node.evolvesTo.map((child) => (
-            <div
-              key={child.id}
-              className="flex flex-col md:flex-row items-center justify-start gap-4 w-full"
-            >
-              <EvolutionArrowWithDetails
-                details={child.triggerDetails}
-                locale={locale}
-                targetPokemonName={child.speciesName || child.name}
-              />
-              <EvolutionBranch
-                node={child}
-                currentPokemonName={currentPokemonName}
-                locale={locale}
-              />
-            </div>
-          ))}
-        </div>
+                <p className="pt-4 text-center text-small font-extrabold text-balance">
+                  {requirementsOf(child).join(" · ")}
+                </p>
+                <Branch node={child} currentLower={currentLower} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        children.length > 0 && (
+          <ul
+            className={
+              children.length > 1
+                ? "grid w-full grid-cols-2 gap-x-3 lg:w-auto lg:grid-cols-1"
+                : "contents"
+            }
+          >
+            {children.map((child, index) => (
+              <li
+                key={`${child.name}-${index}`}
+                className="flex w-full min-w-0 flex-col items-center lg:w-auto lg:flex-row"
+              >
+                <Arrow requirements={requirementsOf(child)} />
+                <Branch node={child} currentLower={currentLower} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        )
       )}
     </div>
   );
 }
 
-export default function EvolutionTree({
-  currentPokemonName,
-  chain,
-  locale = "es",
-}: EvolutionTreeProps) {
-  const isEs = locale === "es";
-
-  if (!chain || chain.evolvesTo.length === 0) {
-    return (
-      <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-2">
-        <h3 className="text-base font-bold text-white tracking-tight">
-          {isEs ? "Cadena Evolutiva" : "Evolution Chain"}
-        </h3>
-        <p className="text-xs text-zinc-400">
-          {isEs
-            ? "Este Pokémon no tiene evoluciones conocidas."
-            : "This Pokémon does not have any known evolutions."}
-        </p>
-      </div>
-    );
-  }
-
+// Flecha entre dos etapas con la condición encima: hacia la derecha en
+// escritorio y hacia abajo en móvil
+function Arrow({ requirements }: { requirements: string[] }) {
   return (
-    <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
-      <div>
-        <h3 className="text-base font-bold text-white tracking-tight">
-          {isEs ? "Cadena Evolutiva" : "Evolution Chain"}
-        </h3>
-        <p className="text-xs text-zinc-400">
-          {isEs
-            ? "Métodos y condiciones para evolucionar."
-            : "Methods and conditions for evolution."}
+    <div className="flex flex-col items-center gap-1.5 pt-4 text-center lg:w-36 lg:shrink-0 lg:px-3 lg:pt-12">
+      {requirements.length > 0 && (
+        <p className="max-w-40 text-small font-extrabold text-balance lg:max-w-none">
+          {requirements.join(" · ")}
         </p>
-      </div>
-
-      <div className="overflow-x-auto pb-4 pt-2">
-        <div className="min-w-fit flex justify-center">
-          <EvolutionBranch
-            node={chain}
-            currentPokemonName={currentPokemonName}
-            locale={locale}
-          />
-        </div>
-      </div>
+      )}
+      <ArrowDown aria-hidden="true" strokeWidth={3} className="size-6 lg:hidden" />
+      <ArrowRight aria-hidden="true" strokeWidth={3} className="hidden size-6 lg:block" />
     </div>
   );
 }
