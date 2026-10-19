@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { EvolutionStage } from "@/lib/pokeapi";
 import PokemonCard from "@/components/pokemon/PokemonCard";
@@ -594,6 +595,12 @@ const REGIONAL_FORM = /-(alola|galar|hisui|paldea)$/;
 // filas, cada una con su flecha.
 const isLeaf = (node: EvolutionStage) => node.evolvesTo.length === 0;
 
+// Filas que ocupa una etapa dentro de una columna de rama en móvil: su tarjeta
+// y, si sigue en línea, la flecha y las filas de la siguiente. Una etapa que se
+// vuelve a dividir ocupa una sola fila con todo lo suyo
+const rowsOf = (node: EvolutionStage): number =>
+  node.evolvesTo.length === 1 ? 2 + rowsOf(node.evolvesTo[0]) : 1;
+
 // Cadena evolutiva (DESIGN.md §4.4): mini tarjetas con la anatomía de las de
 // la portada unidas por flechas, con la condición encima de cada flecha. En
 // escritorio la cadena corre de izquierda a derecha y las ramas se apilan a la
@@ -642,10 +649,13 @@ interface BranchProps {
   node: EvolutionStage;
   currentLower: string;
   locale: Locale;
+  // Va dentro de una columna de rama: en móvil sus piezas se reparten por las
+  // filas que la columna comparte con su vecina
+  column?: boolean;
 }
 
 // Una etapa y, a continuación, sus evoluciones, cada una tras su flecha
-function Branch({ node, currentLower, locale }: BranchProps) {
+function Branch({ node, currentLower, locale, column = false }: BranchProps) {
   const children = node.evolvesTo;
   const nodeLower = node.name.toLowerCase();
   const isCurrent =
@@ -654,6 +664,9 @@ function Branch({ node, currentLower, locale }: BranchProps) {
     nodeLower.startsWith(`${currentLower}-`);
 
   const fan = children.length > 3 && children.every(isLeaf);
+  // Una etapa que no se divide se deshace en la columna: tarjeta, flecha y
+  // siguiente etapa ocupan cada una su fila compartida
+  const flat = column && children.length <= 1;
   const card = (
     // El artwork sobresale por arriba de la tarjeta: el hueco superior le
     // deja sitio
@@ -679,7 +692,13 @@ function Branch({ node, currentLower, locale }: BranchProps) {
 
   // En móvil ocupa su columna entera, para que la tarjeta tenga ancho
   return (
-    <div className="flex w-full flex-col items-center lg:w-auto lg:flex-row">
+    <div
+      className={
+        flat
+          ? "contents lg:flex lg:w-auto lg:flex-row lg:items-center"
+          : "flex w-full flex-col items-center lg:w-auto lg:flex-row"
+      }
+    >
       {card}
 
       {fan ? (
@@ -710,15 +729,33 @@ function Branch({ node, currentLower, locale }: BranchProps) {
                 : "contents"
             }
           >
-            {children.map((child, index) => (
-              <li
-                key={`${child.name}-${index}`}
-                className="flex w-full min-w-0 flex-col items-center lg:w-auto lg:flex-row"
-              >
-                <Arrow requirements={requirementsOf(child)} />
-                <Branch node={child} currentLower={currentLower} locale={locale} />
-              </li>
-            ))}
+            {children.map((child, index) =>
+              children.length > 1 ? (
+                // Columna de rama: en móvil comparte filas con su vecina
+                // (subgrid), así que requisitos y tarjetas de un mismo nivel
+                // ocupan lo mismo aunque el texto tenga más líneas
+                <li
+                  key={`${child.name}-${index}`}
+                  style={{ "--rows": 1 + rowsOf(child) } as CSSProperties}
+                  className="flex w-full min-w-0 flex-col max-lg:grid max-lg:row-span-(--rows) max-lg:grid-rows-subgrid max-lg:justify-items-center lg:w-auto lg:flex-row lg:items-center"
+                >
+                  <Arrow requirements={requirementsOf(child)} />
+                  <Branch node={child} currentLower={currentLower} locale={locale} column />
+                </li>
+              ) : (
+                <li
+                  key={`${child.name}-${index}`}
+                  className={
+                    flat
+                      ? "contents lg:flex lg:w-auto lg:flex-row"
+                      : "flex w-full min-w-0 flex-col items-center lg:w-auto lg:flex-row"
+                  }
+                >
+                  <Arrow requirements={requirementsOf(child)} />
+                  <Branch node={child} currentLower={currentLower} locale={locale} column={flat} />
+                </li>
+              ),
+            )}
           </ul>
         )
       )}
@@ -727,10 +764,11 @@ function Branch({ node, currentLower, locale }: BranchProps) {
 }
 
 // Flecha entre dos etapas con la condición encima: hacia la derecha en
-// escritorio y hacia abajo en móvil
+// escritorio y hacia abajo en móvil. Abajo del todo, para que la flecha quede
+// junto a su tarjeta cuando la fila es más alta que su texto
 function Arrow({ requirements }: { requirements: string[] }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 pt-4 text-center lg:w-36 lg:shrink-0 lg:px-3 lg:pt-12">
+    <div className="flex flex-col items-center justify-end gap-1.5 pt-4 text-center lg:w-36 lg:shrink-0 lg:justify-start lg:px-3 lg:pt-12">
       {requirements.length > 0 && (
         <p className="max-w-40 text-small font-extrabold text-balance lg:max-w-none">
           {requirements.join(" · ")}
