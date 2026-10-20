@@ -172,6 +172,17 @@ function sumBaseStats(stats: ApiPokemonStat[]): number {
   return stats.reduce((sum, s) => sum + s.base_stat, 0);
 }
 
+// Lleva el código HTTP para distinguir un Pokémon que no existe (404) de una
+// PokéAPI que no responde
+class PokeApiError extends Error {
+  constructor(
+    readonly status: number,
+    url: string,
+  ) {
+    super(`PokéAPI error: ${status} at ${url}`);
+  }
+}
+
 /**
  * Standardized fetch helper for PokéAPI with Next.js caching
  */
@@ -185,7 +196,7 @@ async function pokeFetch<T>(
   const res = await fetch(url, { next: { revalidate } });
 
   if (!res.ok) {
-    throw new Error(`PokéAPI error: ${res.status} at ${url}`);
+    throw new PokeApiError(res.status, url);
   }
 
   return res.json();
@@ -265,9 +276,13 @@ const VARIETY_SUFFIX_MAP: Record<string, string> = {
   hisui: "Hisui",
   paldea: "Paldea",
   "galar-zen": "Galar (Zen Mode)",
+  "galar-standard": "Galar",
   "paldea-combat": "Paldea (Combat Breed)",
   "paldea-blaze": "Paldea (Blaze Breed)",
   "paldea-aqua": "Paldea (Aqua Breed)",
+  "paldea-combat-breed": "Paldea (Combat Breed)",
+  "paldea-blaze-breed": "Paldea (Blaze Breed)",
+  "paldea-aqua-breed": "Paldea (Aqua Breed)",
 
   // Megas / Gigantamax
   mega: "Mega",
@@ -308,7 +323,7 @@ const VARIETY_SUFFIX_MAP: Record<string, string> = {
   phd: "PhD",
 };
 
-function formatVarietyLabel(name: string, baseName: string): string {
+export function formatVarietyLabel(name: string, baseName: string): string {
   if (name === baseName) return "Base Form";
 
   const suffix = name.replace(`${baseName}-`, "").toLowerCase();
@@ -672,6 +687,89 @@ export async function getPokemonVariantSummary(nameOrId: string): Promise<{
   } catch {
     return null;
   }
+}
+
+// 6b. Datos de un miembro del equipo (DESIGN.md §4.9), sin traducir: los nombres
+// los pone /api/team en el idioma de la página
+export interface TeamMemberSource {
+  // El slug de /pokemon/[name]: la especie para la forma por defecto
+  // ("mimikyu", no "mimikyu-disguised") y el nombre de PokéAPI para las demás
+  slug: string;
+  speciesId: number;
+  speciesName: string;
+  // Etiqueta en inglés de la forma («Alola», «Mega X»); null en la forma base
+  formLabel: string | null;
+  types: string[];
+  stats: { name: string; value: number }[];
+  artworkId: number;
+  // Todas las formas de la especie, la base primero
+  forms: { slug: string; label: string | null }[];
+}
+
+const idFromResourceUrl = (url: string) =>
+  Number(url.split("/").filter(Boolean).pop());
+
+// null si PokéAPI no conoce el slug; cualquier otro fallo se lanza, para no
+// tomar por desconocido a un Pokémon que existe
+export async function getTeamMemberSource(
+  slug: string,
+): Promise<TeamMemberSource | null> {
+  const query = slug.toLowerCase().trim();
+  const notFound = (err: unknown) =>
+    err instanceof PokeApiError && err.status === 404;
+
+  let data: ApiPokemonResponse;
+  try {
+    data = await pokeFetch<ApiPokemonResponse>(
+      `pokemon/${encodeURIComponent(DEFAULT_FORM_FALLBACKS[query] || query)}`,
+    );
+  } catch (err) {
+    if (!notFound(err)) throw err;
+    // Especies cuya forma base no se llama como ellas ("deoxys")
+    try {
+      const species = await pokeFetch<ApiPokemonSpeciesResponse>(
+        `pokemon-species/${encodeURIComponent(query)}`,
+      );
+      const variety =
+        species.varieties?.find((v) => v.is_default) ?? species.varieties?.[0];
+      if (!variety) return null;
+      data = await pokeFetch<ApiPokemonResponse>(variety.pokemon.url);
+    } catch (speciesErr) {
+      if (notFound(speciesErr)) return null;
+      throw speciesErr;
+    }
+  }
+
+  const speciesName = data.species?.name || getCleanSpeciesSlug(data.name);
+  const species = await pokeFetch<ApiPokemonSpeciesResponse>(
+    data.species?.url ?? `pokemon-species/${encodeURIComponent(speciesName)}`,
+  );
+  const varieties = species.varieties ?? [];
+  const isDefault =
+    varieties.find((v) => v.pokemon.name === data.name)?.is_default ??
+    data.name === speciesName;
+
+  const forms = [...varieties]
+    .sort((a, b) => Number(b.is_default) - Number(a.is_default))
+    .map((v) =>
+      v.is_default
+        ? { slug: speciesName, label: null }
+        : {
+            slug: v.pokemon.name,
+            label: formatVarietyLabel(v.pokemon.name, speciesName),
+          },
+    );
+
+  return {
+    slug: isDefault ? speciesName : data.name,
+    speciesId: data.species ? idFromResourceUrl(data.species.url) : data.id,
+    speciesName,
+    formLabel: isDefault ? null : formatVarietyLabel(data.name, speciesName),
+    types: data.types.map((t) => t.type.name),
+    stats: data.stats.map((s) => ({ name: s.stat.name, value: s.base_stat })),
+    artworkId: data.id,
+    forms: forms.length > 0 ? forms : [{ slug: speciesName, label: null }],
+  };
 }
 
 // 7. Navigation across adjacent Pokémon
