@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Artwork from "@/components/common/Artwork";
 import type { TeamSlot } from "@/components/team/TeamFields";
 import { artworkUrl } from "@/lib/artwork";
@@ -56,10 +56,17 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
   const rows = defenseMatrix(members);
   const risk = biggestRisk(rows);
 
+  // La clave cambia con el texto: el aviso nuevo entra con fundido (§6)
   let notice: ReactNode = " ";
-  if (slots !== null && members.length === 0) notice = team.empty;
-  else if (slots !== null && !risk) notice = team.noRisk;
-  else if (risk) {
+  let noticeKey = "none";
+  if (slots !== null && members.length === 0) {
+    notice = team.empty;
+    noticeKey = "empty";
+  } else if (slots !== null && !risk) {
+    notice = team.noRisk;
+    noticeKey = "no-risk";
+  } else if (risk) {
+    noticeKey = `${risk.attacker}|${riskSummary(risk, team)}`;
     notice = (
       <>
         <b className="font-black">{team.riskLabel}</b>
@@ -85,9 +92,11 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
 
       <p
         aria-live="polite"
-        className="mx-6 mt-5 flex flex-wrap items-center gap-2 min-h-14 px-[18px] py-3.5 rounded-[20px] bg-step font-extrabold"
+        className="mx-6 mt-5 flex items-center min-h-14 px-[18px] py-3.5 rounded-[20px] bg-step font-extrabold"
       >
-        {notice}
+        <span key={noticeKey} className="notice-in flex flex-wrap items-center gap-2">
+          {notice}
+        </span>
       </p>
 
       {/* Por debajo de 1024px la matriz tiene su propio scroll (§4.9 «Móvil») */}
@@ -111,11 +120,11 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
             {columns.map((member, i) =>
               member ? (
                 <span
-                  key={i}
+                  key={`${member.slug}-${i}`}
                   role="columnheader"
                   data-type={member.types[0]}
                   title={member.name}
-                  className="relative justify-self-center grid place-items-center size-10 rounded-pill bg-field overflow-hidden"
+                  className="cell-in relative justify-self-center grid place-items-center size-10 rounded-pill bg-field overflow-hidden"
                 >
                   <Artwork
                     src={artworkUrl(member.artworkId)}
@@ -127,7 +136,7 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
                   />
                 </span>
               ) : (
-                <span key={i} role="columnheader" className="justify-self-center size-10 rounded-pill bg-step">
+                <span key={`empty-${i}`} role="columnheader" className="justify-self-center size-10 rounded-pill bg-step">
                   <span className="sr-only">{team.emptySlot}</span>
                 </span>
               ),
@@ -164,13 +173,14 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
                 {columns.map((member, i) =>
                   member ? (
                     <Cell
-                      key={i}
+                      key={`${member.slug}-${i}`}
+                      row={r}
                       value={row.cells[memberIndex[i]]}
                       tip={`${typeNames[attacker]} → ${member.name}: ×${MULTIPLIER_TEXT[row.cells[memberIndex[i]]]}`}
                       risk={isRisk}
                     />
                   ) : (
-                    <span key={i} role="cell" className="h-8" />
+                    <span key={`empty-${i}`} role="cell" className="h-8" />
                   ),
                 )}
                 <span role="cell" className="grid grid-cols-3 gap-1 text-center">
@@ -188,8 +198,17 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
 }
 
 // Celda de un miembro, con la jerarquía ×4 > ×2 > ×½ > ×1: el tamaño, la forma
-// y el texto distinguen cada valor, nunca solo el color
-function Cell({ value, tip, risk }: { value: Multiplier; tip: string; risk: boolean }) {
+// y el texto distinguen cada valor, nunca solo el color. Su clave lleva el
+// miembro de la columna: cuando cambia, la columna entra de nuevo con escala y
+// fundido, escalonada por fila (§6)
+interface CellProps {
+  value: Multiplier;
+  tip: string;
+  risk: boolean;
+  row: number;
+}
+
+function Cell({ value, tip, risk, row }: CellProps) {
   const pill = "h-[26px] w-full max-w-16 rounded-pill grid place-items-center";
   let content: ReactNode;
 
@@ -226,7 +245,12 @@ function Cell({ value, tip, risk }: { value: Multiplier; tip: string; risk: bool
   }
 
   return (
-    <span role="cell" data-tip={tip} className="relative grid place-items-center h-8 text-small font-black num">
+    <span
+      role="cell"
+      data-tip={tip}
+      style={{ "--row": row } as CSSProperties}
+      className="cell-in relative grid place-items-center h-8 text-small font-black num"
+    >
       {content}
     </span>
   );

@@ -882,6 +882,44 @@ body {
   animation: layer-in 250ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
 }
 
+/* Equipo (§6): el menú de formas aparece con fundido y 4px de subida; las
+   celdas de la columna que cambia, con escala de 0.9 y fundido, 20ms por
+   fila; el aviso de riesgo nuevo, con fundido. Con movimiento reducido,
+   solo el fundido. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.menu-in {
+  animation: menu-in 200ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@keyframes cell-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.cell-in {
+  animation: cell-in 200ms ease-out both;
+  animation-delay: calc(var(--row, 0) * 20ms);
+}
+
+.notice-in {
+  animation: fade-in 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-in,
+  .cell-in {
+    animation-name: fade-in;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-pop,
   .float,

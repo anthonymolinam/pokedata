@@ -597,6 +597,8 @@ Solo se animan `transform` y `opacity`. Todo tiene alternativa con `prefers-redu
 | Equipo: huecos y controles | Hueco: sube 6px, la Pokébola gira 25°; controles de escritorio con fundido al hover o foco; menú de formas con fundido y 4px de subida | 350ms con rebote · 150ms · 200ms |
 | Equipo: análisis | Al cambiar el equipo, las celdas de la columna afectada entran con escala de 0.9 a 1 y fundido; la banda de riesgo cruza el texto con fundido; las barras de estadísticas, como en la ficha | 200ms · 20ms de escalonado por fila · barras 600ms |
 
+En el equipo, la entrada escalonada se guarda hasta que llegan todos los miembros: los huecos y los miembros entran cada uno con el retraso de su sitio, aunque los datos lleguen en dos tandas. El campo que sale deja su sitio enseguida (`popLayout`), para que la rejilla nunca tenga siete elementos. Los huecos y los fantasmas no tienen salida: el campo que ocupa su sitio entra encima. Con movimiento reducido, los campos solo se funden (sin subida, escala ni deslizamiento) y las celdas y el menú también.
+
 ---
 
 ## 7. Cambios respecto a la dirección anterior

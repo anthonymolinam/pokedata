@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type Ref } from "react";
+import { AnimatePresence, motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 import { ArrowLeft, ArrowRight, RefreshCw, X, type LucideIcon } from "lucide-react";
 import Artwork from "@/components/common/Artwork";
 import { artworkUrl } from "@/lib/artwork";
@@ -43,6 +44,43 @@ const SLOT_HEIGHT = "h-[300px] lg:h-[290px] no-hover:h-[330px] lg:no-hover:h-[33
 // Botones de la columna de balance: secundario en tinta y terciario en superficie
 const sideButton = `h-11 w-full px-4.5 rounded-pill font-extrabold text-small motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-0.5 active:scale-[0.96]`;
 
+// Movimiento de los campos (§6): entrada «pop» como las tarjetas (600ms con
+// rebote y 45ms de escalonado la primera vez); al añadir, el nuevo entra con
+// «pop»; al quitar, sale con escala a 0.94 y fundido mientras los siguientes
+// se deslizan; al reordenar, los campos se cruzan. Huecos y fantasmas no
+// tienen salida: el campo que ocupa su sitio entra encima. Con movimiento
+// reducido solo queda el fundido: sin subida, sin escala y sin deslizamiento.
+const BOUNCE = [0.34, 1.56, 0.64, 1] as const;
+const POP = { opacity: 0, y: 30, scale: 0.94 };
+const SHOWN = { opacity: 1, y: 0, scale: 1 };
+
+function slotMotion(
+  kind: TeamSlot["kind"],
+  index: number,
+  firstReveal: boolean,
+  layoutKey: string,
+  reduced: boolean,
+): HTMLMotionProps<"li"> {
+  if (kind === "loading") {
+    return { exit: { opacity: 0, transition: { duration: 0 } } };
+  }
+  const layout = { duration: 0.35, ease: BOUNCE };
+  const pop = firstReveal || kind === "member";
+  return {
+    layout: !reduced,
+    layoutDependency: layoutKey,
+    initial: pop && !reduced ? POP : { opacity: 0 },
+    animate: SHOWN,
+    transition: pop
+      ? { duration: 0.6, ease: BOUNCE, delay: firstReveal ? index * 0.045 : 0, layout }
+      : { duration: 0.2, ease: "easeOut", layout },
+    exit:
+      kind === "member"
+        ? { opacity: 0, scale: reduced ? 1 : 0.94, transition: { duration: 0.2, ease: "easeOut" } }
+        : { opacity: 0, transition: { duration: 0 } },
+  };
+}
+
 // Clave estable de cada miembro: su slug y cuántas veces ha salido antes (se
 // permiten repetidos). Al reordenar, cada campo conserva su clave
 function memberKeys(slots: TeamSlot[]): string[] {
@@ -74,6 +112,17 @@ export default function TeamFields({
   // Arrastre con puntero: el campo arrastrado y el campo de destino
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  // La primera vez que llega el equipo, los seis campos entran escalonados
+  // por su sitio, también los miembros que llegan después que los huecos;
+  // en cuanto no queda ninguno cargando, solo entra el que cambia
+  const [revealed, setRevealed] = useState(false);
+  const firstReveal = slots !== null && !revealed;
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (slots?.every((s) => s.kind !== "loading")) setRevealed(true);
+  }, [slots]);
+  const layoutKey = keys.join(",");
+  const reduced = useReducedMotion() ?? false;
 
   // Un único tamaño de nombre para todo el equipo: el que permite el nombre
   // más largo, con un mínimo de 7 letras
@@ -99,43 +148,49 @@ export default function TeamFields({
 
       <ol
         aria-label={team.listLabel.replace("{n}", String(count))}
-        className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-16 lg:col-[2/8] lg:grid-cols-subgrid lg:gap-y-0"
+        className="relative grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-16 lg:col-[2/8] lg:grid-cols-subgrid lg:gap-y-0"
       >
-        {shown.map((slot, i) => {
-          if (slot.kind === "member") {
-            return (
-              <MemberField
-                key={keys[i]}
-                member={slot.member}
-                index={i}
-                last={i === count - 1}
-                locale={locale}
-                actions={actions}
-                dragging={dragFrom === i}
-                dropTarget={dragOver === i && dragFrom !== null && dragFrom !== i}
-                onDragStart={() => setDragFrom(i)}
-                onDragEnter={() => setDragOver(i)}
-                onDragEnd={() => {
-                  setDragFrom(null);
-                  setDragOver(null);
-                }}
-                onDrop={(from) => {
-                  if (from !== i) actions.onReorder(from, i);
-                  setDragFrom(null);
-                  setDragOver(null);
-                }}
-              />
-            );
-          }
-          if (slot.kind === "empty") {
-            return (
-              <li key={keys[i]} className={SLOT_HEIGHT}>
-                <EmptySlot index={i} label={team.add} shortLabel={team.addShort} onAdd={onAdd} />
-              </li>
-            );
-          }
-          return <GhostField key={keys[i]} />;
-        })}
+        {/* popLayout: el campo que sale deja su sitio enseguida, así la
+            rejilla nunca tiene siete elementos */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {shown.map((slot, i) => {
+            const motionProps = slotMotion(slot.kind, i, firstReveal, layoutKey, reduced);
+            if (slot.kind === "member") {
+              return (
+                <MemberField
+                  key={keys[i]}
+                  motionProps={motionProps}
+                  member={slot.member}
+                  index={i}
+                  last={i === count - 1}
+                  locale={locale}
+                  actions={actions}
+                  dragging={dragFrom === i}
+                  dropTarget={dragOver === i && dragFrom !== null && dragFrom !== i}
+                  onDragStart={() => setDragFrom(i)}
+                  onDragEnter={() => setDragOver(i)}
+                  onDragEnd={() => {
+                    setDragFrom(null);
+                    setDragOver(null);
+                  }}
+                  onDrop={(from) => {
+                    if (from !== i) actions.onReorder(from, i);
+                    setDragFrom(null);
+                    setDragOver(null);
+                  }}
+                />
+              );
+            }
+            if (slot.kind === "empty") {
+              return (
+                <motion.li key={keys[i]} {...motionProps} className={SLOT_HEIGHT}>
+                  <EmptySlot index={i} label={team.add} shortLabel={team.addShort} onAdd={onAdd} />
+                </motion.li>
+              );
+            }
+            return <GhostField key={keys[i]} motionProps={motionProps} />;
+          })}
+        </AnimatePresence>
       </ol>
 
       <div className="hidden lg:flex flex-col gap-2.5 self-end">
@@ -156,6 +211,9 @@ export default function TeamFields({
 }
 
 interface MemberFieldProps {
+  // AnimatePresence le pasa una ref para sacarlo del flujo al quitarlo
+  ref?: Ref<HTMLLIElement>;
+  motionProps: HTMLMotionProps<"li">;
   member: TeamMember;
   index: number;
   last: boolean;
@@ -173,6 +231,8 @@ interface MemberFieldProps {
 // Campo de un miembro: el campo de su tipo principal, el artwork que se sale
 // 64px por arriba (48px en móvil), la ficha de alto fijo abajo y los controles
 function MemberField({
+  ref,
+  motionProps,
   member,
   index,
   last,
@@ -192,141 +252,175 @@ function MemberField({
   const hasForms = member.forms.length > 1;
   const withName = (text: string) => text.replace("{name}", member.name);
 
+  // El inicio y el final del arrastre nativo van por el DOM: en un elemento
+  // de Framer Motion, onDragStart y onDragEnd son los de su propio arrastre
+  const liRef = useRef<HTMLLIElement | null>(null);
+  const drag = useRef({ index, onDragStart, onDragEnd });
+  useEffect(() => {
+    drag.current = { index, onDragStart, onDragEnd };
+  });
+  useEffect(() => {
+    const li = liRef.current;
+    if (!li) return;
+    const start = (e: DragEvent) => {
+      if (!e.dataTransfer) return;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", String(drag.current.index));
+      drag.current.onDragStart();
+    };
+    const end = () => drag.current.onDragEnd();
+    li.addEventListener("dragstart", start);
+    li.addEventListener("dragend", end);
+    return () => {
+      li.removeEventListener("dragstart", start);
+      li.removeEventListener("dragend", end);
+    };
+  }, []);
+  const setRefs = (node: HTMLLIElement | null) => {
+    liRef.current = node;
+    if (typeof ref === "function") ref(node);
+    else if (ref) ref.current = node;
+  };
+
+  // El li lleva el movimiento de Framer Motion (transform) y el campo de
+  // dentro, el hover con su transición: así no se pisan
   return (
-    <li
+    <motion.li
+      ref={setRefs}
+      {...motionProps}
       tabIndex={-1}
       data-slot={index}
       aria-label={label}
       data-type={member.types[0] ?? "normal"}
       draggable
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", String(index));
-        onDragStart();
-      }}
       onDragEnter={onDragEnter}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
       }}
-      onDragEnd={onDragEnd}
       onDrop={(e) => {
         e.preventDefault();
         // Solo un sitio del equipo: un texto arrastrado desde fuera no cuenta
         const from = e.dataTransfer.getData("text/plain");
         if (/^[0-5]$/.test(from)) onDrop(Number(from));
       }}
-      className={`group relative ${SLOT_HEIGHT} flex flex-col p-1.5 rounded-surface bg-field text-field-ink overflow-x-clip focus-visible:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 ${
-        dragging ? "opacity-50" : ""
-      } ${dropTarget ? "outline-3 outline-offset-4 outline-ink" : ""}`}
+      className={`group relative ${SLOT_HEIGHT} rounded-surface focus-visible:outline-ink ${
+        dropTarget ? "outline-3 outline-offset-4 outline-ink" : ""
+      }`}
     >
-      {/* Su alto manda; el ancho puede llegar al 140 % de la columna porque el
-          lienzo tiene márgenes transparentes. Los lados se recortan con clip */}
       <div
-        aria-hidden="true"
-        className="pointer-events-none relative z-1 flex flex-1 min-h-0 items-end justify-center -mt-12 lg:-mt-16 mb-1.5"
-      >
-        <Artwork
-          src={artworkUrl(member.artworkId)}
-          alt=""
-          width={475}
-          height={475}
-          sizes="200px"
-          loading="eager"
-          draggable={false}
-          className={`h-full w-auto max-w-[140%] max-h-[475px] aspect-square flex-none object-contain motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.06]`}
-        />
-      </div>
-
-      {/* Ficha: cuatro filas siempre en la misma posición. La de la forma
-          existe aunque no haya forma, y los tipos se apoyan abajo */}
-      <div className="relative z-2 @container flex-none h-[140px] grid grid-rows-[auto_auto_auto_1fr] p-2.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
-        <p className="text-small font-extrabold text-ink-soft num leading-[18px]">
-          {String(member.id).padStart(4, "0")}
-        </p>
-        <p className="text-[clamp(14px,calc(100cqi/(var(--chars)*0.6+0.4)),20px)] font-black tracking-[-0.03em] leading-6 whitespace-nowrap">
-          {member.name}
-        </p>
-        <p
-          title={member.form?.full}
-          className="text-small font-extrabold text-ink-soft leading-[18px] truncate"
-        >
-          {member.form?.short ?? " "}
-        </p>
-        <ul aria-label={common.types} className="flex flex-wrap content-end gap-1">
-          {member.types.map((type) => (
-            <li
-              key={type}
-              data-type={type}
-              className="inline-flex items-center h-6 px-[9px] rounded-pill bg-field text-field-ink text-[12px] font-extrabold"
-            >
-              {typeNames[type]}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Controles: con puntero flotan sobre la parte alta del campo y aparecen
-          al pasar el ratón o con el foco dentro; en táctil, fila propia bajo
-          la ficha, siempre visible */}
-      <div
-        className={`z-3 flex justify-between gap-1 can-hover:absolute can-hover:top-2 can-hover:inset-x-1.5 can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100 no-hover:order-3 no-hover:mt-1.5 ${
-          menuOpen ? "" : "can-hover:opacity-0"
+        className={`relative h-full flex flex-col p-1.5 rounded-surface bg-field text-field-ink overflow-x-clip motion-safe:transition-transform ${spring} motion-safe:group-hover:-translate-y-1.5 ${
+          dragging ? "opacity-50" : ""
         }`}
       >
-        <div className="flex gap-1">
-          <ControlButton
-            icon={ArrowLeft}
-            control="left"
-            label={withName(team.moveLeft)}
-            disabled={index === 0}
-            onClick={() => actions.onMove(index, -1)}
-          />
-          <ControlButton
-            icon={ArrowRight}
-            control="right"
-            label={withName(team.moveRight)}
-            disabled={last}
-            onClick={() => actions.onMove(index, 1)}
-          />
-        </div>
-        <div className="flex gap-1">
-          <ControlButton
-            ref={formButtonRef}
-            icon={RefreshCw}
-            control="form"
-            label={hasForms ? team.changeForm : team.noOtherForms}
-            disabled={!hasForms}
-            expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-          />
-          <ControlButton
-            icon={X}
-            control="remove"
-            label={withName(team.remove)}
-            onClick={() => actions.onRemove(index)}
+        {/* Su alto manda; el ancho puede llegar al 140 % de la columna porque el
+            lienzo tiene márgenes transparentes. Los lados se recortan con clip */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none relative z-1 flex flex-1 min-h-0 items-end justify-center -mt-12 lg:-mt-16 mb-1.5"
+        >
+          <Artwork
+            src={artworkUrl(member.artworkId)}
+            alt=""
+            width={475}
+            height={475}
+            sizes="200px"
+            loading="eager"
+            draggable={false}
+            className={`h-full w-auto max-w-[140%] max-h-[475px] aspect-square flex-none object-contain motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.06]`}
           />
         </div>
-      </div>
 
-      {menuOpen && (
-        <FormMenu
-          member={member}
-          label={team.changeForm}
-          baseLabel={team.baseForm}
-          trigger={formButtonRef}
-          onClose={(returnFocus) => {
-            setMenuOpen(false);
-            if (returnFocus) formButtonRef.current?.focus();
-          }}
-          onChoose={(slug) => {
-            setMenuOpen(false);
-            if (slug === member.slug) formButtonRef.current?.focus();
-            else actions.onChangeForm(index, slug);
-          }}
-        />
-      )}
-    </li>
+        {/* Ficha: cuatro filas siempre en la misma posición. La de la forma
+            existe aunque no haya forma, y los tipos se apoyan abajo */}
+        <div className="relative z-2 @container flex-none h-[140px] grid grid-rows-[auto_auto_auto_1fr] p-2.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
+          <p className="text-small font-extrabold text-ink-soft num leading-[18px]">
+            {String(member.id).padStart(4, "0")}
+          </p>
+          <p className="text-[clamp(14px,calc(100cqi/(var(--chars)*0.6+0.4)),20px)] font-black tracking-[-0.03em] leading-6 whitespace-nowrap">
+            {member.name}
+          </p>
+          <p
+            title={member.form?.full}
+            className="text-small font-extrabold text-ink-soft leading-[18px] truncate"
+          >
+            {member.form?.short ?? " "}
+          </p>
+          <ul aria-label={common.types} className="flex flex-wrap content-end gap-1">
+            {member.types.map((type) => (
+              <li
+                key={type}
+                data-type={type}
+                className="inline-flex items-center h-6 px-[9px] rounded-pill bg-field text-field-ink text-[12px] font-extrabold"
+              >
+                {typeNames[type]}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Controles: con puntero flotan sobre la parte alta del campo y aparecen
+            al pasar el ratón o con el foco dentro; en táctil, fila propia bajo
+            la ficha, siempre visible */}
+        <div
+          className={`z-3 flex justify-between gap-1 can-hover:absolute can-hover:top-2 can-hover:inset-x-1.5 can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100 no-hover:order-3 no-hover:mt-1.5 ${
+            menuOpen ? "" : "can-hover:opacity-0"
+          }`}
+        >
+          <div className="flex gap-1">
+            <ControlButton
+              icon={ArrowLeft}
+              control="left"
+              label={withName(team.moveLeft)}
+              disabled={index === 0}
+              onClick={() => actions.onMove(index, -1)}
+            />
+            <ControlButton
+              icon={ArrowRight}
+              control="right"
+              label={withName(team.moveRight)}
+              disabled={last}
+              onClick={() => actions.onMove(index, 1)}
+            />
+          </div>
+          <div className="flex gap-1">
+            <ControlButton
+              ref={formButtonRef}
+              icon={RefreshCw}
+              control="form"
+              label={hasForms ? team.changeForm : team.noOtherForms}
+              disabled={!hasForms}
+              expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+            />
+            <ControlButton
+              icon={X}
+              control="remove"
+              label={withName(team.remove)}
+              onClick={() => actions.onRemove(index)}
+            />
+          </div>
+        </div>
+
+        {menuOpen && (
+          <FormMenu
+            member={member}
+            label={team.changeForm}
+            baseLabel={team.baseForm}
+            trigger={formButtonRef}
+            onClose={(returnFocus) => {
+              setMenuOpen(false);
+              if (returnFocus) formButtonRef.current?.focus();
+            }}
+            onChoose={(slug) => {
+              setMenuOpen(false);
+              if (slug === member.slug) formButtonRef.current?.focus();
+              else actions.onChangeForm(index, slug);
+            }}
+          />
+        )}
+      </div>
+    </motion.li>
   );
 }
 
@@ -426,7 +520,7 @@ function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: Form
       aria-label={label}
       data-field="raised"
       onKeyDown={onKeyDown}
-      className="absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:top-11 no-hover:bottom-[52px]"
+      className="menu-in absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:top-11 no-hover:bottom-[52px]"
     >
       {member.forms.map((form) => {
         const checked = form.slug === member.slug;
@@ -494,13 +588,18 @@ function EmptySlot({
 
 // Campo fantasma (§4.8): la forma del real en --step, con la ficha reservada,
 // sin parpadeo; entra con opacidad a los 300ms
-function GhostField() {
+function GhostField({ ref, motionProps }: { ref?: Ref<HTMLLIElement>; motionProps: HTMLMotionProps<"li"> }) {
   return (
-    <li aria-hidden="true" className={`${SLOT_HEIGHT} flex flex-col justify-end p-1.5 rounded-surface bg-step skeleton-in`}>
+    <motion.li
+      ref={ref}
+      {...motionProps}
+      aria-hidden="true"
+      className={`${SLOT_HEIGHT} flex flex-col justify-end p-1.5 rounded-surface bg-step skeleton-in`}
+    >
       <div className="h-[140px] grid content-start gap-2 p-2.5 rounded-[16px] lg:rounded-[20px] bg-ground">
         <div className="h-3.5 w-10 rounded-pill bg-step" />
         <div className="h-5 w-3/4 rounded-pill bg-step" />
       </div>
-    </li>
+    </motion.li>
   );
 }
