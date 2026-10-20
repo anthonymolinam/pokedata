@@ -48,6 +48,14 @@ function useTeamMembers(slugs: string[] | null, locale: Locale) {
   return slugs.map((slug) => getCachedMember(locale, slug));
 }
 
+// Mueve un elemento de una posición a otra, desplazando los de en medio
+function moveItem<T>(list: T[], from: number, to: number): T[] {
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
+
 // Equipo (DESIGN.md §4.9): el equipo vive en el navegador, así que el
 // servidor pinta fantasmas y el equipo aparece tras la hidratación
 export default function TeamBuilder({ locale }: { locale: Locale }) {
@@ -55,8 +63,9 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   const members = useTeamMembers(slugs, locale);
   const [pickerOpen, setPickerOpen] = useState(false);
   const fieldsRef = useRef<HTMLDivElement>(null);
-  // Hueco que recibe el foco en cuanto su miembro esté pintado
-  const pendingFocus = useRef<number | null>(null);
+  // Dónde va el foco en cuanto esté pintado, en orden de preferencia: un
+  // control desactivado (← en el primero) no puede recibirlo
+  const pendingFocus = useRef<string[] | null>(null);
 
   let slots: TeamSlot[] | null = null;
   if (members) {
@@ -67,23 +76,71 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
     });
   }
 
-  // Al añadir, el foco va al campo nuevo. El diálogo, al cerrarse, devuelve
+  // Tras cada cambio el foco va a su sitio. El diálogo, al cerrarse, devuelve
   // el foco al hueco que lo abrió; este efecto corre después y lo mueve
   useEffect(() => {
-    const index = pendingFocus.current;
-    if (index === null || slots?.[index]?.kind !== "member") return;
-    pendingFocus.current = null;
-    fieldsRef.current?.querySelector<HTMLElement>(`[data-slot="${index}"]`)?.focus();
+    const selectors = pendingFocus.current;
+    const root = fieldsRef.current;
+    if (!selectors || !root) return;
+    for (const selector of selectors) {
+      const el = root.querySelector<HTMLElement>(selector);
+      if (el && !(el as HTMLButtonElement).disabled) {
+        pendingFocus.current = null;
+        el.focus();
+        return;
+      }
+    }
   });
 
   const count = slugs?.length ?? 0;
+  const slot = (i: number) => `[data-slot="${i}"]`;
 
   function add(slug: string) {
     const current = getTeamSnapshot();
     if (current.length >= TEAM_SIZE) return;
-    pendingFocus.current = current.length;
+    pendingFocus.current = [slot(current.length)];
     setTeam([...current, slug]);
     setPickerOpen(false);
+  }
+
+  // El foco sigue al miembro en la misma flecha; en un extremo, la otra
+  function move(index: number, step: -1 | 1) {
+    const current = getTeamSnapshot();
+    const to = index + step;
+    if (to < 0 || to >= current.length) return;
+    const arrow = step < 0 ? "left" : "right";
+    const other = step < 0 ? "right" : "left";
+    pendingFocus.current = [
+      `${slot(to)} [data-control="${arrow}"]`,
+      `${slot(to)} [data-control="${other}"]`,
+    ];
+    setTeam(moveItem(current, index, to));
+  }
+
+  // Arrastre: el miembro cae en el sitio del campo de destino
+  function reorder(from: number, to: number) {
+    pendingFocus.current = [slot(to)];
+    setTeam(moveItem(getTeamSnapshot(), from, to));
+  }
+
+  // Sustituye al miembro en su sitio. La forma nueva se pide antes de
+  // cambiarla, para que el campo no pase por fantasma
+  function changeForm(index: number, slug: string) {
+    pendingFocus.current = [`${slot(index)} [data-control="form"]`, slot(index)];
+    const replace = () => {
+      const current = getTeamSnapshot();
+      if (index >= current.length) return;
+      setTeam(current.map((s, i) => (i === index ? slug : s)));
+    };
+    loadTeamMembers([slug], locale).then(replace, replace);
+  }
+
+  // Los siguientes se desplazan a la izquierda: el foco va al campo que ocupa
+  // ahora ese sitio, o al hueco vacío si era el último
+  function remove(index: number) {
+    const current = getTeamSnapshot();
+    pendingFocus.current = [slot(index), slot(Math.max(0, index - 1))];
+    setTeam(current.filter((_, i) => i !== index));
   }
 
   return (
@@ -94,6 +151,10 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
         count={count}
         onAdd={() => setPickerOpen(true)}
         onClear={() => setTeam([])}
+        onMove={move}
+        onReorder={reorder}
+        onChangeForm={changeForm}
+        onRemove={remove}
       />
       <TeamPicker
         open={pickerOpen}

@@ -1,6 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { ArrowLeft, ArrowRight, RefreshCw, X, type LucideIcon } from "lucide-react";
 import Artwork from "@/components/common/Artwork";
 import { artworkUrl } from "@/lib/artwork";
 import { TEAM_SIZE, type TeamMember } from "@/lib/team";
@@ -13,7 +14,16 @@ export type TeamSlot =
   | { kind: "loading" }
   | { kind: "empty" };
 
-interface TeamFieldsProps {
+// Lo que se puede hacer con un miembro; quien usa la fila guarda el cambio y
+// lleva el foco a su sitio
+export interface MemberActions {
+  onMove: (index: number, step: -1 | 1) => void;
+  onReorder: (from: number, to: number) => void;
+  onChangeForm: (index: number, slug: string) => void;
+  onRemove: (index: number) => void;
+}
+
+interface TeamFieldsProps extends MemberActions {
   locale: Locale;
   // null en el primer pintado: el servidor no conoce el equipo guardado
   slots: TeamSlot[] | null;
@@ -26,11 +36,24 @@ interface TeamFieldsProps {
 // Curva de rebote de la dirección Pop (§6)
 const spring = "ease-[cubic-bezier(.34,1.56,.64,1)] duration-[350ms]";
 
-// Altura del campo (§4.9): 290px desde 1024px y 300px por debajo
-const SLOT_HEIGHT = "h-[300px] lg:h-[290px]";
+// Altura del campo (§4.9): 290px desde 1024px y 300px por debajo. En táctil
+// crece a 330px para la fila de controles, así la ficha no se mueve
+const SLOT_HEIGHT = "h-[300px] lg:h-[290px] no-hover:h-[330px] lg:no-hover:h-[330px]";
 
 // Botones de la columna de balance: secundario en tinta y terciario en superficie
 const sideButton = `h-11 w-full px-4.5 rounded-pill font-extrabold text-small motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-0.5 active:scale-[0.96]`;
+
+// Clave estable de cada miembro: su slug y cuántas veces ha salido antes (se
+// permiten repetidos). Al reordenar, cada campo conserva su clave
+function memberKeys(slots: TeamSlot[]): string[] {
+  const seen = new Map<string, number>();
+  return slots.map((slot, i) => {
+    if (slot.kind !== "member") return `${slot.kind}-${i}`;
+    const n = seen.get(slot.member.slug) ?? 0;
+    seen.set(slot.member.slug, n + 1);
+    return `${slot.member.slug}#${n}`;
+  });
+}
 
 // Fila de los seis campos (DESIGN.md §4.9). Desde 1024px comparte columnas con
 // la matriz de Defensa: el recuento a la izquierda, los seis campos y los
@@ -43,9 +66,14 @@ export default function TeamFields({
   onAdd,
   onShare,
   onClear,
+  ...actions
 }: TeamFieldsProps) {
   const { team } = getDictionary(locale);
-  const shown = slots ?? Array.from({ length: TEAM_SIZE }, () => ({ kind: "loading" }) as const);
+  const shown: TeamSlot[] = slots ?? Array.from({ length: TEAM_SIZE }, () => ({ kind: "loading" }));
+  const keys = memberKeys(shown);
+  // Arrastre con puntero: el campo arrastrado y el campo de destino
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
 
   // Un único tamaño de nombre para todo el equipo: el que permite el nombre
   // más largo, con un mínimo de 7 letras
@@ -75,16 +103,38 @@ export default function TeamFields({
       >
         {shown.map((slot, i) => {
           if (slot.kind === "member") {
-            return <MemberField key={`${slot.member.slug}-${i}`} member={slot.member} index={i} locale={locale} />;
+            return (
+              <MemberField
+                key={keys[i]}
+                member={slot.member}
+                index={i}
+                last={i === count - 1}
+                locale={locale}
+                actions={actions}
+                dragging={dragFrom === i}
+                dropTarget={dragOver === i && dragFrom !== null && dragFrom !== i}
+                onDragStart={() => setDragFrom(i)}
+                onDragEnter={() => setDragOver(i)}
+                onDragEnd={() => {
+                  setDragFrom(null);
+                  setDragOver(null);
+                }}
+                onDrop={(from) => {
+                  if (from !== i) actions.onReorder(from, i);
+                  setDragFrom(null);
+                  setDragOver(null);
+                }}
+              />
+            );
           }
           if (slot.kind === "empty") {
             return (
-              <li key={`empty-${i}`} className={SLOT_HEIGHT}>
-                <EmptySlot label={team.add} shortLabel={team.addShort} onAdd={onAdd} />
+              <li key={keys[i]} className={SLOT_HEIGHT}>
+                <EmptySlot index={i} label={team.add} shortLabel={team.addShort} onAdd={onAdd} />
               </li>
             );
           }
-          return <GhostField key={`ghost-${i}`} />;
+          return <GhostField key={keys[i]} />;
         })}
       </ol>
 
@@ -105,11 +155,42 @@ export default function TeamFields({
   );
 }
 
+interface MemberFieldProps {
+  member: TeamMember;
+  index: number;
+  last: boolean;
+  locale: Locale;
+  actions: MemberActions;
+  dragging: boolean;
+  dropTarget: boolean;
+  onDragStart: () => void;
+  onDragEnter: () => void;
+  onDragEnd: () => void;
+  // Recibe el sitio del campo arrastrado, que viaja con el propio arrastre
+  onDrop: (from: number) => void;
+}
+
 // Campo de un miembro: el campo de su tipo principal, el artwork que se sale
-// 64px por arriba (48px en móvil) y la ficha de alto fijo abajo
-function MemberField({ member, index, locale }: { member: TeamMember; index: number; locale: Locale }) {
-  const { common, typeNames } = getDictionary(locale);
+// 64px por arriba (48px en móvil), la ficha de alto fijo abajo y los controles
+function MemberField({
+  member,
+  index,
+  last,
+  locale,
+  actions,
+  dragging,
+  dropTarget,
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
+  onDrop,
+}: MemberFieldProps) {
+  const { team, common, typeNames } = getDictionary(locale);
   const label = member.form ? `${member.name}, ${member.form.full}` : member.name;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const formButtonRef = useRef<HTMLButtonElement>(null);
+  const hasForms = member.forms.length > 1;
+  const withName = (text: string) => text.replace("{name}", member.name);
 
   return (
     <li
@@ -117,7 +198,27 @@ function MemberField({ member, index, locale }: { member: TeamMember; index: num
       data-slot={index}
       aria-label={label}
       data-type={member.types[0] ?? "normal"}
-      className={`group relative ${SLOT_HEIGHT} flex flex-col p-1.5 rounded-surface bg-field text-field-ink overflow-x-clip focus-visible:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5`}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", String(index));
+        onDragStart();
+      }}
+      onDragEnter={onDragEnter}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }}
+      onDragEnd={onDragEnd}
+      onDrop={(e) => {
+        e.preventDefault();
+        // Solo un sitio del equipo: un texto arrastrado desde fuera no cuenta
+        const from = e.dataTransfer.getData("text/plain");
+        if (/^[0-5]$/.test(from)) onDrop(Number(from));
+      }}
+      className={`group relative ${SLOT_HEIGHT} flex flex-col p-1.5 rounded-surface bg-field text-field-ink overflow-x-clip focus-visible:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 ${
+        dragging ? "opacity-50" : ""
+      } ${dropTarget ? "outline-3 outline-offset-4 outline-ink" : ""}`}
     >
       {/* Su alto manda; el ancho puede llegar al 140 % de la columna porque el
           lienzo tiene márgenes transparentes. Los lados se recortan con clip */}
@@ -132,6 +233,7 @@ function MemberField({ member, index, locale }: { member: TeamMember; index: num
           height={475}
           sizes="200px"
           loading="eager"
+          draggable={false}
           className={`h-full w-auto max-w-[140%] max-h-[475px] aspect-square flex-none object-contain motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.06]`}
         />
       </div>
@@ -163,16 +265,198 @@ function MemberField({ member, index, locale }: { member: TeamMember; index: num
           ))}
         </ul>
       </div>
+
+      {/* Controles: con puntero flotan sobre la parte alta del campo y aparecen
+          al pasar el ratón o con el foco dentro; en táctil, fila propia bajo
+          la ficha, siempre visible */}
+      <div
+        className={`z-3 flex justify-between gap-1 can-hover:absolute can-hover:top-2 can-hover:inset-x-1.5 can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100 no-hover:order-3 no-hover:mt-1.5 ${
+          menuOpen ? "" : "can-hover:opacity-0"
+        }`}
+      >
+        <div className="flex gap-1">
+          <ControlButton
+            icon={ArrowLeft}
+            control="left"
+            label={withName(team.moveLeft)}
+            disabled={index === 0}
+            onClick={() => actions.onMove(index, -1)}
+          />
+          <ControlButton
+            icon={ArrowRight}
+            control="right"
+            label={withName(team.moveRight)}
+            disabled={last}
+            onClick={() => actions.onMove(index, 1)}
+          />
+        </div>
+        <div className="flex gap-1">
+          <ControlButton
+            ref={formButtonRef}
+            icon={RefreshCw}
+            control="form"
+            label={hasForms ? team.changeForm : team.noOtherForms}
+            disabled={!hasForms}
+            expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+          />
+          <ControlButton
+            icon={X}
+            control="remove"
+            label={withName(team.remove)}
+            onClick={() => actions.onRemove(index)}
+          />
+        </div>
+      </div>
+
+      {menuOpen && (
+        <FormMenu
+          member={member}
+          label={team.changeForm}
+          baseLabel={team.baseForm}
+          trigger={formButtonRef}
+          onClose={(returnFocus) => {
+            setMenuOpen(false);
+            if (returnFocus) formButtonRef.current?.focus();
+          }}
+          onChoose={(slug) => {
+            setMenuOpen(false);
+            if (slug === member.slug) formButtonRef.current?.focus();
+            else actions.onChangeForm(index, slug);
+          }}
+        />
+      )}
     </li>
+  );
+}
+
+interface ControlButtonProps {
+  icon: LucideIcon;
+  control: string;
+  label: string;
+  disabled?: boolean;
+  expanded?: boolean;
+  onClick: () => void;
+  ref?: React.Ref<HTMLButtonElement>;
+}
+
+// Botón redondo sobre el campo: 28px con puntero (con el área ampliada por un
+// pseudoelemento) y 36px en táctil (44px de área). Desactivado, al 35 %
+function ControlButton({ icon: Icon, control, label, disabled, expanded, onClick, ref }: ControlButtonProps) {
+  return (
+    <button
+      ref={ref}
+      type="button"
+      data-control={control}
+      aria-label={label}
+      title={label}
+      aria-haspopup={expanded !== undefined ? "true" : undefined}
+      aria-expanded={expanded}
+      disabled={disabled}
+      onClick={onClick}
+      className={`relative grid place-items-center rounded-pill type-tag text-ink cursor-pointer after:absolute after:content-[''] size-9 after:-inset-1 can-hover:size-7 can-hover:after:-inset-1.5 motion-safe:transition-transform ${spring} motion-safe:hover:scale-[1.08] active:scale-[0.96] disabled:opacity-35 disabled:cursor-default disabled:scale-100`}
+    >
+      <Icon aria-hidden="true" strokeWidth={2.5} className="size-4" />
+    </button>
+  );
+}
+
+interface FormMenuProps {
+  member: TeamMember;
+  label: string;
+  baseLabel: string;
+  trigger: React.RefObject<HTMLButtonElement | null>;
+  // returnFocus: con Esc el foco vuelve al botón; al tocar fuera, se queda
+  // donde se tocó
+  onClose: (returnFocus: boolean) => void;
+  onChoose: (slug: string) => void;
+}
+
+// Menú «Cambiar forma»: capa flotante dentro del campo, bajo los controles
+// (encima de la fila táctil en móvil), con una opción por forma. La actual va
+// rellena en tinta. Las flechas recorren las opciones
+function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: FormMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  // El último onClose, sin volver a montar los escuchadores en cada render
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    const menu = menuRef.current;
+    menu?.querySelector<HTMLElement>('[aria-checked="true"]')?.focus();
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (menu?.contains(target) || trigger.current?.contains(target)) return;
+      onCloseRef.current(false);
+    };
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onCloseRef.current(true);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [trigger]);
+
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (!["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) return;
+    e.preventDefault();
+    const options = [...(menuRef.current?.querySelectorAll<HTMLElement>('[role="radio"]') ?? [])];
+    const current = options.indexOf(document.activeElement as HTMLElement);
+    let next: number;
+    if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = options.length - 1;
+    else if (e.key === "ArrowDown" || e.key === "ArrowRight") next = (current + 1) % options.length;
+    else next = (current - 1 + options.length) % options.length;
+    options[next]?.focus();
+  }
+
+  return (
+    <div
+      ref={menuRef}
+      role="radiogroup"
+      aria-label={label}
+      data-field="raised"
+      onKeyDown={onKeyDown}
+      className="absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:top-11 no-hover:bottom-[52px]"
+    >
+      {member.forms.map((form) => {
+        const checked = form.slug === member.slug;
+        return (
+          <button
+            key={form.slug}
+            type="button"
+            role="radio"
+            aria-checked={checked}
+            tabIndex={checked ? 0 : -1}
+            title={form.name?.full}
+            onClick={() => onChoose(form.slug)}
+            className="flex min-h-10 cursor-pointer items-center rounded-[12px] px-2.5 text-left text-small font-extrabold hover:bg-step aria-checked:bg-ink aria-checked:text-bone"
+          >
+            {form.name?.short ?? baseLabel}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
 // Hueco vacío: todo el campo es un único botón que abre el selector
 function EmptySlot({
+  index,
   label,
   shortLabel,
   onAdd,
 }: {
+  index: number;
   label: string;
   shortLabel: string;
   onAdd?: () => void;
@@ -180,6 +464,7 @@ function EmptySlot({
   return (
     <button
       type="button"
+      data-slot={index}
       aria-label={label}
       onClick={onAdd}
       className={`group flex h-full w-full flex-col items-center justify-center gap-4 rounded-surface bg-step text-ink cursor-pointer focus-visible:outline-ink hover:bg-[color-mix(in_srgb,var(--ink)_9%,var(--step))] focus-visible:bg-[color-mix(in_srgb,var(--ink)_9%,var(--step))] motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:active:-translate-y-1.5 motion-safe:active:scale-[0.98]`}

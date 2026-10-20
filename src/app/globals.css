@@ -13,6 +13,11 @@
   }
 }
 
+/* Con puntero o táctil (§4.9): los controles de cada miembro flotan y
+   aparecen al pasar el ratón, o van en su propia fila siempre visibles */
+@custom-variant can-hover (@media (hover: hover));
+@custom-variant no-hover (@media (hover: none));
+
 /* =========================================================================
    Tokens de la dirección «Pop» (DESIGN.md §2, §3 y §4.0). Ningún otro archivo
    escribe a mano un color de tipo: todo sale de aquí o de src/constants/typeColors.ts.
