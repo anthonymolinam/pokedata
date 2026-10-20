@@ -23,6 +23,7 @@ export default function SiteFooter({ locale }: { locale: Locale }) {
     { key: "pokedex", href: `/${locale}`, label: nav.pokedex },
     { key: "types", href: getLocalizedPath(locale, "types"), label: nav.types },
     { key: "compare", href: getLocalizedPath(locale, "compare"), label: nav.compare },
+    { key: "team", href: getLocalizedPath(locale, "team"), label: nav.team },
   ];
 
   // Pie compacto (DESIGN.md §4.7): campo --footer a sangre con dos filas,

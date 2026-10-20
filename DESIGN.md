@@ -218,7 +218,10 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 ### 4.1 Cabecera (todas las páginas)
 
-**Composición:** el logo (Pokébola + «PokéData», Nunito 900, 24px), la navegación («Pokédex», «Tipos», «Comparador», «Equipo» / «Pokédex», «Types», «Compare», «Team»), el buscador compacto, el selector de idioma y el selector de tema. Con cuatro enlaces, la cabecera de tableta (768–1023px) se vuelve a medir: si no cabe, las pastillas de navegación bajan a 10px de relleno lateral antes que quitar nada.
+**Composición:** el logo (Pokébola + «PokéData», Nunito 900, 24px), la navegación («Pokédex», «Tipos», «Comparador», «Equipo» / «Pokédex», «Types», «Compare», «Team»), el buscador compacto, el selector de idioma y el selector de tema. Con cuatro enlaces, la cabecera se volvió a medir (20 de octubre de 2026): en español invadía 58px del margen a 768px y 45px a 1024px, y bajar las pastillas a 10px no bastaba. Para no quitar nada:
+  - **768–1023px:** logo a su tamaño de móvil (20px, Pokébola de 28px), pastillas de navegación a 8px de relleno lateral y sin hueco entre ellas, 8px entre bloques y 6px dentro del grupo de la derecha. Quedan 12px libres en español.
+  - **1024–1279px:** pastillas a 12px, 16px entre bloques y buscador compacto de 208px. Quedan 19px libres.
+  - **Desde 1280px:** todo como antes (pastillas de 16px, 24px entre bloques, buscador de 240px).
 
 - **Fija al hacer scroll** (`position: sticky; top: 0`) y con fondo `--ground` sólido, sin desenfoque ni transparencia.
 - **Sombra solo con la página desplazada:** a partir de 4px de scroll aparece `0 6px 20px rgba(21,22,28,.08)` con un fundido de 200ms. En reposo arriba del todo no hay sombra.
@@ -236,7 +239,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Al enfocarla, despliega los resultados en una capa flotante (blanca, radio 22px, con sombra).
   - **En la portada,** el buscador compacto está oculto mientras el buscador grande del hero está en pantalla. Cuando el del hero sale por arriba, el compacto aparece (opacidad y 8px de subida, 200ms).
   - Ctrl K funciona siempre: enfoca el buscador del hero si se ve; si no, el de la cabecera.
-  - **Tableta (768–1023px):** el buscador compacto no cabe junto a los selectores de idioma y tema, así que la cabecera muestra solo la lupa de 44px, que abre el buscador a pantalla completa como en móvil, y Ctrl K abre ese mismo buscador. La separación entre bloques baja a 12px y las pastillas de navegación a 12px de relleno lateral.
+  - **Tableta (768–1023px):** el buscador compacto no cabe junto a los selectores de idioma y tema, así que la cabecera muestra solo la lupa de 44px, que abre el buscador a pantalla completa como en móvil, y Ctrl K abre ese mismo buscador. La separación entre bloques y el relleno de las pastillas son los de la composición, arriba.
 - **Logo:** al pasar el ratón (o al enfocarlo), la Pokébola da una vuelta completa en 600ms con un ligero rebote. Con movimiento reducido no gira.
 - **Móvil (< 768px):**
   - La cabecera mide 60px y muestra el logo, un botón de lupa que abre el buscador a pantalla completa, ES/EN y un botón «Menú».
