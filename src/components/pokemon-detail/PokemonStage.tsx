@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Artwork from "@/components/common/Artwork";
+import AddToTeamButton from "@/components/pokemon-detail/AddToTeamButton";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { PokemonDetail, PokemonVariety } from "@/lib/pokeapi";
@@ -226,25 +227,29 @@ export default function PokemonStage({
           </div>
         </div>
 
-        {varieties.length > 1 && (
-          <div
-            role="group"
-            aria-label={detail.forms}
-            className="flex max-w-xl flex-wrap gap-2 md:justify-end"
-          >
-            {varieties.map((variant) => (
-              <button
-                key={variant.name}
-                type="button"
-                aria-pressed={(selectedVariant?.name ?? pokemon.name) === variant.name}
-                onClick={() => onVariantChange(variant)}
-                className={control}
-              >
-                {formatVariantLabel(variant.label, isEs)}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Las formas y, al final de la misma fila, «Añadir al equipo» con la
+            forma que se ve (sin variocolor: el equipo usa el artwork normal) */}
+        <div className="flex max-w-xl flex-wrap gap-2 md:justify-end">
+          {varieties.length > 1 && (
+            <div role="group" aria-label={detail.forms} className="contents">
+              {varieties.map((variant) => (
+                <button
+                  key={variant.name}
+                  type="button"
+                  aria-pressed={(selectedVariant?.name ?? pokemon.name) === variant.name}
+                  onClick={() => onVariantChange(variant)}
+                  className={control}
+                >
+                  {formatVariantLabel(variant.label, isEs)}
+                </button>
+              ))}
+            </div>
+          )}
+          <AddToTeamButton
+            slug={selectedVariant && !selectedVariant.isDefault ? selectedVariant.name : pokemon.name}
+            locale={locale}
+          />
+        </div>
       </div>
     </section>
   );

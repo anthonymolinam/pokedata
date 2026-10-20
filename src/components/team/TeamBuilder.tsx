@@ -6,7 +6,7 @@ import TeamDefense from "@/components/team/TeamDefense";
 import TeamFields, { type TeamSlot } from "@/components/team/TeamFields";
 import TeamPicker from "@/components/team/TeamPicker";
 import TeamStats from "@/components/team/TeamStats";
-import TeamToast, { type ToastMessage } from "@/components/team/TeamToast";
+import Toast, { type ToastMessage } from "@/components/common/Toast";
 import {
   TEAM_SIZE,
   getSharedServerSnapshot,
@@ -244,7 +244,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
       <TeamDefense locale={locale} slots={slots} />
       <TeamCoverage locale={locale} members={loaded} />
       <TeamStats locale={locale} members={loaded} />
-      <TeamToast message={toast} onDone={hideToast} />
+      <Toast message={toast} onDone={hideToast} />
     </div>
   );
 }
