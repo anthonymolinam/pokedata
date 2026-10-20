@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Artwork from "@/components/common/Artwork";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { PokemonDetail, PokemonVariety } from "@/lib/pokeapi";
-import { ARTWORK_SIZE, figureStyle } from "@/lib/artwork";
+import { ARTWORK_SIZE, figureStyle, spriteUrl } from "@/lib/artwork";
 import { formatPokemonHeroName, formatVariantLabel } from "@/lib/pokemon-names";
 import { isPokemonType } from "@/constants/typeColors";
 import { getDictionary } from "@/constants/translations";
@@ -31,6 +31,48 @@ const control =
 function artworkId(url: string): number {
   const match = url.match(/\/(\d+)\.png$/);
   return match ? Number(match[1]) : 0;
+}
+
+// Descarga y decodifica el artwork antes de cruzarlo: mientras tanto se queda
+// el anterior en lugar de un escenario vacío. Si falla se cruza igual y el
+// respaldo de Artwork ocupa su sitio.
+function useLoadedImage(url: string): string {
+  const [loaded, setLoaded] = useState(url);
+
+  useEffect(() => {
+    let cancelled = false;
+    const img = new window.Image();
+    img.src = spriteUrl(url);
+    img
+      .decode()
+      .catch(() => {})
+      .then(() => {
+        if (!cancelled) setLoaded(url);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  return loaded;
+}
+
+// La variocolor solo se pide al pulsar y jsDelivr tarda hasta un par de
+// segundos con lo que no tiene en caché: se adelanta su descarga cuando la
+// página ya ha cargado, para que el cambio sea inmediato
+function usePreload(url: string | undefined) {
+  useEffect(() => {
+    if (!url) return;
+    const preload = () => {
+      new window.Image().src = spriteUrl(url);
+    };
+    if (document.readyState === "complete") {
+      preload();
+      return;
+    }
+    window.addEventListener("load", preload, { once: true });
+    return () => window.removeEventListener("load", preload);
+  }, [url]);
 }
 
 // Escenario de la ficha (DESIGN.md §4.4): campo del tipo principal con el
@@ -61,7 +103,8 @@ export default function PokemonStage({
     selectedVariant && !selectedVariant.isDefault
       ? formatVariantLabel(selectedVariant.label, isEs)
       : null;
-  const image = shiny && active.shinyImage ? active.shinyImage : active.image;
+  const image = useLoadedImage(shiny && active.shinyImage ? active.shinyImage : active.image);
+  usePreload(active.shinyImage ?? undefined);
   const varieties = pokemon.varieties ?? [];
   const measure = new Intl.NumberFormat(isEs ? "es-ES" : "en-US", {
     maximumFractionDigits: 1,
