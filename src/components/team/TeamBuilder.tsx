@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import TeamDefense from "@/components/team/TeamDefense";
 import TeamFields, { type TeamSlot } from "@/components/team/TeamFields";
 import TeamPicker from "@/components/team/TeamPicker";
 import {
@@ -163,6 +164,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
         full={count >= TEAM_SIZE}
         onAdd={add}
       />
+      <TeamDefense locale={locale} slots={slots} />
     </div>
   );
 }

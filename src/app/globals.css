@@ -727,7 +727,8 @@ body {
 }
 
 @media (hover: hover) {
-  .type-matrix td[data-tip]:hover::after {
+  .type-matrix td[data-tip]:hover::after,
+  .defense-row [data-tip]:hover::after {
     content: attr(data-tip);
     position: absolute;
     z-index: 30;
@@ -756,6 +757,29 @@ body {
     left: auto;
     right: 0;
     translate: none;
+  }
+}
+
+/* Matriz de Defensa del equipo (§4.9). La fila de mayor riesgo se tiñe con el
+   field del atacante mezclado con la superficie, como la selección de la tabla
+   de tipos; el hover de fila (solo con puntero) es un gris muy suave. El
+   contorno del mismo color desborda 4px para que el tinte no quede pegado a
+   las celdas. */
+.defense-row {
+  --row-tint: color-mix(in srgb, var(--ink) 5%, var(--surface));
+  border-radius: 10px;
+}
+
+.defense-row[data-risk] {
+  --row-tint: color-mix(in srgb, var(--field) var(--cross-mix), var(--surface));
+  background-color: var(--row-tint);
+  outline: 4px solid var(--row-tint);
+}
+
+@media (hover: hover) {
+  .defense-row:hover {
+    background-color: var(--row-tint);
+    outline: 4px solid var(--row-tint);
   }
 }
 

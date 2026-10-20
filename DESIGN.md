@@ -527,7 +527,7 @@ Panel `--surface`, radio 28px. Título «Defensa» / «Defense» en `--step-head
   - Tamaño, forma y texto distinguen cada valor; nunca solo el color.
   - Tooltip con puntero, el mismo globo de la tabla de tipos (`attr(data-tip)`): «Roca → Charizard: ×4».
 - **Balance:** tres subcolumnas con el recuento de miembros débiles (×2 y ×4), resistentes (×½ y ×¼) e inmunes. Cifras en 900 tabulares; el 0 se escribe «–» en `--ink-soft`. Los débiles se marcan: **3 o más**, pastilla en `--ink` con texto hueso; **2**, pastilla en `--step`.
-- **Fila de mayor riesgo:** la del aviso se tiñe con su `field` mezclado con `--surface` según `--cross-mix` (35 % en claro, 80 % en oscuro, como la selección de la tabla de tipos), con 4px de desborde (`outline`) y radio 10px. Su etiqueta lleva el aro de selección por dentro en `field-ink`, y sus ×4 cambian el aro al `field-ink` (el `field` no se vería sobre el tinte).
+- **Fila de mayor riesgo:** la del aviso se tiñe con su `field` mezclado con `--surface` según `--cross-mix` (35 % en claro, 80 % en oscuro, como la selección de la tabla de tipos), con 4px de desborde (`outline`) y radio 10px. Su etiqueta lleva el aro de selección por dentro en `field-ink`, y sus ×4 cambian el aro al `field-ink` (el `field` no se vería sobre el tinte). Las cifras sueltas de su balance, «–» incluido, van en `field-ink`: en oscuro el tinte llega al 80 % y ni `--ink-soft` ni `--ink` se leen sobre él.
 - Hover de fila (solo con puntero): `--ink` al 5 % sobre `--surface`, salvo la fila de riesgo, que conserva su tinte.
 
 #### Panel «Cobertura ofensiva»
