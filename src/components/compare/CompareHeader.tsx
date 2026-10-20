@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Artwork from "@/components/common/Artwork";
 import Link from "next/link";
 import { ArrowLeftRight, ChevronDown } from "lucide-react";
 import { PokemonDetail } from "@/lib/pokeapi";
@@ -201,12 +201,11 @@ function CompareStage({
               centerY: "54%",
             })}
           >
-            <Image
+            <Artwork
               src={pokemon.image}
               alt=""
               fill
               priority
-              quality={90}
               sizes="(min-width: 1024px) 420px, (min-width: 768px) 41vw, 80vw"
               className="object-contain"
             />

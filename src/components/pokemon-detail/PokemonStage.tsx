@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Artwork from "@/components/common/Artwork";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { PokemonDetail, PokemonVariety } from "@/lib/pokeapi";
@@ -135,14 +135,11 @@ export default function PokemonStage({
                   maxSize: `${ARTWORK_SIZE}px`,
                 })}
               >
-                {/* Nunca pasa de 475px en pantalla, así que se pide a ese
-                    ancho (el optimizador no amplía) y con calidad 90 */}
-                <Image
+                <Artwork
                   src={image}
                   alt=""
                   fill
                   priority
-                  quality={90}
                   sizes={`(min-width: 768px) ${ARTWORK_SIZE}px, 90vw`}
                   className="object-contain"
                 />

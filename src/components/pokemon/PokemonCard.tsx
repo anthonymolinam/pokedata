@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Artwork from "@/components/common/Artwork";
 import { PokemonSummary, formatPokemonDisplayName } from "@/lib/pokeapi";
 import { ART_TOP_ZONE, getArtworkFit } from "@/lib/artwork";
 import { isPokemonType } from "@/constants/typeColors";
@@ -72,7 +72,7 @@ export default function PokemonCard({
             transformOrigin: fit.origin,
           }}
         >
-          <Image
+          <Artwork
             src={pokemon.image}
             alt=""
             fill

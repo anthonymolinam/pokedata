@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import Artwork from "@/components/common/Artwork";
 import { Search, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatPokemonDisplayName, PokemonSummary } from "@/lib/pokeapi";
@@ -266,7 +266,7 @@ export default function GlobalSearchBar({
                 }`}
               >
                 <span className="relative w-10 h-10 shrink-0">
-                  <Image
+                  <Artwork
                     src={p.image}
                     alt=""
                     fill

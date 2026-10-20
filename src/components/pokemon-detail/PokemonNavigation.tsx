@@ -2,7 +2,7 @@
 
 import { useEffect, useTransition } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Artwork from "@/components/common/Artwork";
 import { useRouter } from "next/navigation";
 import { AdjacentPokemon } from "@/lib/pokeapi";
 import { figureStyle } from "@/lib/artwork";
@@ -77,7 +77,7 @@ export default function PokemonNavigation({ prev, next, locale }: PokemonNavigat
             centerY: "var(--art-y)",
           })}
         >
-          <Image src={pokemon.image} alt="" fill sizes="(min-width: 768px) 260px, 140px" className="object-contain" />
+          <Artwork src={pokemon.image} alt="" fill sizes="(min-width: 768px) 260px, 140px" className="object-contain" />
         </span>
       </span>
       <span className="relative text-small font-extrabold">

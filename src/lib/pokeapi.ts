@@ -1,4 +1,5 @@
 import { GENERATIONS } from "@/constants/generations";
+import { artworkUrl } from "@/lib/artwork";
 import {
   MULTILINGUAL_ALIASES,
   normalizeQuery,
@@ -746,7 +747,7 @@ export async function getPokemonListByType(
           return {
             id: item.id,
             name: item.name,
-            image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`,
+            image: artworkUrl(item.id),
             types: [typeName.toLowerCase()],
           };
         }
@@ -907,7 +908,7 @@ export async function getFilteredPokemonList({
           return {
             id,
             name: `pokemon-${id}`,
-            image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
+            image: artworkUrl(id),
             types: types,
           };
         }

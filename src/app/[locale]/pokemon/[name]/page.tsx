@@ -11,6 +11,7 @@ import {
   CANONICAL_TO_SPANISH,
 } from "@/constants/pokemonAliases";
 import PokemonDetailView from "@/components/pokemon-detail/PokemonDetailView";
+import { artworkUrl, spriteUrl } from "@/lib/artwork";
 
 interface PageProps {
   params: Promise<{ locale: string; name: string }>;
@@ -81,9 +82,7 @@ export async function generateMetadata({
       ? `Datos completos de ${localizedName} (#${String(pokemon.id).padStart(4, "0")}) en PokéData: estadísticas base, tabla de debilidades de tipo ${typesFormatted}, habilidades y evoluciones.`
       : `Complete data for ${localizedName} (#${String(pokemon.id).padStart(4, "0")}) on PokéData: base stats, weakness chart for type ${typesFormatted}, abilities, and evoluciones.`;
 
-    const imageUrl =
-      pokemon.image ||
-      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
+    const imageUrl = pokemon.image ? spriteUrl(pokemon.image) : artworkUrl(pokemon.id);
 
     // 4. Slugs limpios sin depender de pokemon.species
     const baseCanonicalSlug = resolveCanonicalPokemonName(pokemon.name);

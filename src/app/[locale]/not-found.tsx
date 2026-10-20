@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Artwork from "@/components/common/Artwork";
 import { usePathname } from "next/navigation";
 import { artworkUrl, figureStyle } from "@/lib/artwork";
 import { getDictionary } from "@/constants/translations";
@@ -42,7 +42,7 @@ export default function NotFound() {
               centerY: "52%",
             })}
           >
-            <Image
+            <Artwork
               src={artworkUrl(GENGAR)}
               alt=""
               fill

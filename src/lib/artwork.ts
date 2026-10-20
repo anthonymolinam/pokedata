@@ -30,14 +30,22 @@ export interface ArtworkFit {
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
-const ARTWORK_URL =
-  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork";
+// El repositorio de sprites de PokéAPI, servido por jsDelivr
+const SPRITES_CDN = "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master";
+const SPRITES_GITHUB = "https://raw.githubusercontent.com/PokeAPI/sprites/master";
+
+const ARTWORK_URL = `${SPRITES_CDN}/sprites/pokemon/other/official-artwork`;
 
 // Lado real del artwork oficial de PokéAPI, en píxeles
 export const ARTWORK_SIZE = 475;
 
 export function artworkUrl(id: number): string {
   return `${ARTWORK_URL}/${id}.png`;
+}
+
+// PokéAPI devuelve sus sprites en raw.githubusercontent.com: se pasan a jsDelivr
+export function spriteUrl(url: string): string {
+  return url.startsWith(SPRITES_GITHUB) ? SPRITES_CDN + url.slice(SPRITES_GITHUB.length) : url;
 }
 
 interface FigureBox {

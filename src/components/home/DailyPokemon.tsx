@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Artwork from "@/components/common/Artwork";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { formatPokemonDisplayName } from "@/lib/pokeapi";
 import { ARTWORK_SIZE, artworkUrl, figureStyle } from "@/lib/artwork";
@@ -126,12 +126,11 @@ export default function DailyPokemon({ locale, today }: DailyPokemonProps) {
                       maxSize: `${ARTWORK_SIZE}px`,
                     })}
                   >
-                    <Image
+                    <Artwork
                       src={artworkUrl(pokemon.id)}
                       alt=""
                       fill
                       sizes="(min-width: 768px) 475px, 240px"
-                      quality={90}
                       loading="eager"
                       className="object-contain"
                     />
