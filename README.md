@@ -8,15 +8,13 @@ PokéData is a modern, fast Pokémon database built with **Next.js 16 (App Route
 
 ## 📸 Screenshots
 
-<!-- TODO: add screenshots (home, filters panel, Pokémon detail, type chart, comparator, 404) -->
-
 | Home | Pokémon detail |
 | :--: | :------------: |
-| _Screenshot pending_ | _Screenshot pending_ |
+| ![Home with the Pokémon of the day and the National Pokédex](docs/screenshots/home.png) | ![Scizor's detail page](docs/screenshots/pokemon-detail.png) |
 
 | Type chart | Comparator |
 | :--------: | :--------: |
-| _Screenshot pending_ | _Screenshot pending_ |
+| ![Type effectiveness chart](docs/screenshots/type-chart.png) | ![Kyogre and Groudon in the comparator](docs/screenshots/comparator.png) |
 
 ---
 
