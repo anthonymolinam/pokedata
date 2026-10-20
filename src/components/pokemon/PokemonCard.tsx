@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import Artwork from "@/components/common/Artwork";
 import { PokemonSummary, formatPokemonDisplayName } from "@/lib/pokeapi";
@@ -9,7 +9,10 @@ import { Locale } from "@/proxy";
 
 interface PokemonCardProps {
   pokemon: PokemonSummary;
-  href: string;
+  // Enlace a la ficha o, en el selector del equipo, un botón que la marca
+  href?: string;
+  onSelect?: () => void;
+  selected?: boolean;
   locale: Locale;
   // Las primeras tarjetas de la página cargan su artwork sin esperar al scroll
   eager?: boolean;
@@ -27,6 +30,8 @@ const spring = "ease-[cubic-bezier(.34,1.56,.64,1)] duration-[350ms]";
 export default function PokemonCard({
   pokemon,
   href,
+  onSelect,
+  selected = false,
   locale,
   eager = false,
   headingAs: Heading = "h3",
@@ -50,12 +55,19 @@ export default function PokemonCard({
     "--name-stacked": `max(0.875rem, min(var(--step-lead), calc(${inner} / ${Math.max(name.length, 1) * 0.68})))`,
   } as CSSProperties;
 
+  // En el selector, el foco cae en el botón que cubre la tarjeta: la subida
+  // del foco sale de has-focus-visible
+  const className = `group type-glow relative flex h-full flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:outline-3 aria-[current=page]:outline-offset-3 aria-[current=page]:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:has-focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`;
+
   return (
-    <Link
+    <CardRoot
       href={href}
-      data-type={types[0] ?? "normal"}
-      aria-current={current ? "page" : undefined}
-      className={`group type-glow relative flex h-full flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:outline-3 aria-[current=page]:outline-offset-3 aria-[current=page]:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`}
+      onSelect={onSelect}
+      selected={selected}
+      type={types[0] ?? "normal"}
+      current={current}
+      className={className}
+      label={`${name}, ${card.number} ${pokemon.id}`}
     >
       <div
         aria-hidden="true"
@@ -136,6 +148,47 @@ export default function PokemonCard({
           )}
         </div>
       </div>
+    </CardRoot>
+  );
+}
+
+interface CardRootProps {
+  href?: string;
+  onSelect?: () => void;
+  selected: boolean;
+  type: string;
+  current: boolean;
+  className: string;
+  label: string;
+  children: ReactNode;
+}
+
+// Un enlace a la ficha o, con onSelect, la tarjeta con un botón encima que la
+// cubre entera (un botón no puede contener el título ni las listas) y que se
+// marca con un aro de 3px en la tinta del campo, por dentro (§4.9)
+function CardRoot({ href, onSelect, selected, type, current, className, label, children }: CardRootProps) {
+  if (onSelect) {
+    return (
+      <div data-type={type} className={className}>
+        {children}
+        <button
+          type="button"
+          onClick={onSelect}
+          aria-pressed={selected}
+          aria-label={label}
+          className="absolute inset-0 z-20 rounded-surface cursor-pointer focus-visible:outline-ink aria-pressed:outline-3 aria-pressed:-outline-offset-3 aria-pressed:outline-field-ink"
+        />
+      </div>
+    );
+  }
+  return (
+    <Link
+      href={href ?? "#"}
+      data-type={type}
+      aria-current={current ? "page" : undefined}
+      className={className}
+    >
+      {children}
     </Link>
   );
 }

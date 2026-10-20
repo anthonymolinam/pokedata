@@ -1,21 +1,17 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import TeamFields, { type TeamSlot } from "@/components/team/TeamFields";
+import TeamPicker from "@/components/team/TeamPicker";
 import {
   TEAM_SIZE,
   getTeamServerSnapshot,
   getTeamSnapshot,
   setTeam,
   subscribeToTeam,
-  type TeamMember,
 } from "@/lib/team";
+import { getCachedMember, loadTeamMembers } from "@/lib/team-members";
 import { Locale } from "@/proxy";
-
-// Datos de los miembros ya pedidos a /api/team, por idioma y slug: reordenar
-// o quitar no vuelve a pedir nada. null es un slug que PokéAPI no conoce.
-const memberCache = new Map<string, TeamMember | null>();
-const cacheKey = (locale: Locale, slug: string) => `${locale}:${slug}`;
 
 // Pide los miembros que faltan y, cuando llegan, limpia el equipo guardado:
 // descarta los slugs desconocidos y cambia cada slug por el que devuelve la
@@ -29,25 +25,15 @@ function useTeamMembers(slugs: string[] | null, locale: Locale) {
   useEffect(() => {
     if (key === null) return;
     const requested = key ? key.split(",") : [];
-    const missing = [...new Set(requested)].filter((s) => !memberCache.has(cacheKey(locale, s)));
-    if (missing.length === 0) return;
+    if (requested.every((s) => getCachedMember(locale, s) !== undefined)) return;
 
     const controller = new AbortController();
-    const params = new URLSearchParams({ slugs: missing.join(","), locale });
-    fetch(`/api/team?${params}`, { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
-      .then(({ members }: { members: (TeamMember | null)[] }) => {
-        const canonical = new Map<string, string | null>();
-        missing.forEach((slug, i) => {
-          const member = members[i] ?? null;
-          memberCache.set(cacheKey(locale, slug), member);
-          if (member) memberCache.set(cacheKey(locale, member.slug), member);
-          canonical.set(slug, member?.slug ?? null);
-        });
-        const current = getTeamSnapshot();
-        const cleaned = current.flatMap((slug) => {
-          const next = canonical.has(slug) ? canonical.get(slug) : slug;
-          return next ? [next] : [];
+    loadTeamMembers(requested, locale, controller.signal)
+      .then((members) => {
+        const cleaned = getTeamSnapshot().flatMap((slug) => {
+          const member = members.has(slug) ? members.get(slug) : undefined;
+          if (member === null) return [];
+          return [member?.slug ?? slug];
         });
         setTeam(cleaned);
         setVersion((v) => v + 1);
@@ -59,7 +45,7 @@ function useTeamMembers(slugs: string[] | null, locale: Locale) {
   }, [key, locale]);
 
   if (slugs === null) return null;
-  return slugs.map((slug) => memberCache.get(cacheKey(locale, slug)));
+  return slugs.map((slug) => getCachedMember(locale, slug));
 }
 
 // Equipo (DESIGN.md §4.9): el equipo vive en el navegador, así que el
@@ -67,6 +53,10 @@ function useTeamMembers(slugs: string[] | null, locale: Locale) {
 export default function TeamBuilder({ locale }: { locale: Locale }) {
   const slugs = useSyncExternalStore(subscribeToTeam, getTeamSnapshot, getTeamServerSnapshot);
   const members = useTeamMembers(slugs, locale);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const fieldsRef = useRef<HTMLDivElement>(null);
+  // Hueco que recibe el foco en cuanto su miembro esté pintado
+  const pendingFocus = useRef<number | null>(null);
 
   let slots: TeamSlot[] | null = null;
   if (members) {
@@ -77,12 +67,41 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
     });
   }
 
+  // Al añadir, el foco va al campo nuevo. El diálogo, al cerrarse, devuelve
+  // el foco al hueco que lo abrió; este efecto corre después y lo mueve
+  useEffect(() => {
+    const index = pendingFocus.current;
+    if (index === null || slots?.[index]?.kind !== "member") return;
+    pendingFocus.current = null;
+    fieldsRef.current?.querySelector<HTMLElement>(`[data-slot="${index}"]`)?.focus();
+  });
+
+  const count = slugs?.length ?? 0;
+
+  function add(slug: string) {
+    const current = getTeamSnapshot();
+    if (current.length >= TEAM_SIZE) return;
+    pendingFocus.current = current.length;
+    setTeam([...current, slug]);
+    setPickerOpen(false);
+  }
+
   return (
-    <TeamFields
-      locale={locale}
-      slots={slots}
-      count={slugs?.length ?? 0}
-      onClear={() => setTeam([])}
-    />
+    <div ref={fieldsRef}>
+      <TeamFields
+        locale={locale}
+        slots={slots}
+        count={count}
+        onAdd={() => setPickerOpen(true)}
+        onClear={() => setTeam([])}
+      />
+      <TeamPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        locale={locale}
+        full={count >= TEAM_SIZE}
+        onAdd={add}
+      />
+    </div>
   );
 }

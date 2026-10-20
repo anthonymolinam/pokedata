@@ -75,7 +75,7 @@ export default function TeamFields({
       >
         {shown.map((slot, i) => {
           if (slot.kind === "member") {
-            return <MemberField key={`${slot.member.slug}-${i}`} member={slot.member} locale={locale} />;
+            return <MemberField key={`${slot.member.slug}-${i}`} member={slot.member} index={i} locale={locale} />;
           }
           if (slot.kind === "empty") {
             return (
@@ -107,13 +107,14 @@ export default function TeamFields({
 
 // Campo de un miembro: el campo de su tipo principal, el artwork que se sale
 // 64px por arriba (48px en móvil) y la ficha de alto fijo abajo
-function MemberField({ member, locale }: { member: TeamMember; locale: Locale }) {
+function MemberField({ member, index, locale }: { member: TeamMember; index: number; locale: Locale }) {
   const { common, typeNames } = getDictionary(locale);
   const label = member.form ? `${member.name}, ${member.form.full}` : member.name;
 
   return (
     <li
       tabIndex={-1}
+      data-slot={index}
       aria-label={label}
       data-type={member.types[0] ?? "normal"}
       className={`group relative ${SLOT_HEIGHT} flex flex-col p-1.5 rounded-surface bg-field text-field-ink overflow-x-clip focus-visible:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5`}

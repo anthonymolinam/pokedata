@@ -531,7 +531,8 @@ body {
 }
 
 .type-glow:hover::before,
-.type-glow:focus-visible::before {
+.type-glow:focus-visible::before,
+.type-glow:has(:focus-visible)::before {
   opacity: 1;
 }
 
