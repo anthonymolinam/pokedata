@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getDictionary } from "@/constants/translations";
 import { getLocalizedPath } from "@/constants/routes";
+import TeamBuilder from "@/components/team/TeamBuilder";
 import { Locale } from "@/proxy";
 
 interface TeamPageProps {
@@ -52,6 +53,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
         <h1 className="text-hero font-black">{team.title}</h1>
         <p className="mt-3 text-body text-ink-soft max-sm:hidden">{team.lead}</p>
       </div>
+      <TeamBuilder locale={locale} />
     </div>
   );
 }

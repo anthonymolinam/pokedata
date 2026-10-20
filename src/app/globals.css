@@ -488,6 +488,17 @@ body {
   padding-inline: var(--gutter);
 }
 
+/* Equipo (§4.9): la fila de campos y la matriz de Defensa usan la misma
+   plantilla y el mismo relleno, así que cada columna de la matriz cae bajo su
+   miembro. Etiquetas · seis miembros · balance. Solo desde 1024px (lg:) */
+@utility team-grid {
+  --team-cols: 104px repeat(6, minmax(0, 1fr)) 186px;
+  display: grid;
+  grid-template-columns: var(--team-cols);
+  column-gap: 12px;
+  padding-inline: 24px;
+}
+
 /* Foco visible (§2.3, regla 7): 3px en la tinta del campo, separado 3px.
    Sobre un campo de tinta hueso, el contorno sale en hueso. Va en la capa
    base para que un componente pueda cambiarlo con utilidades (la tarjeta lo

@@ -471,7 +471,7 @@ Los campos y la matriz usan **la misma plantilla de columnas y el mismo relleno 
 column-gap: 12px;   padding-inline: 24px;               /* el relleno del panel de Defensa */
 ```
 
-La fila de campos no está dentro de un panel, pero lleva el mismo `padding-inline: 24px` para alinearse con el interior del panel. A 1440px cada columna de miembro mide unos 132px. Esta alineación solo existe desde 1024px; por debajo, ver «Móvil».
+La fila de campos no está dentro de un panel, pero lleva el mismo `padding-inline: 24px` para alinearse con el interior del panel. A 1440px cada columna de miembro mide unos 143px (132px en la maqueta, que tiene un contenedor más estrecho). Esta alineación solo existe desde 1024px; por debajo, ver «Móvil».
 
 #### Fila de los seis campos
 
