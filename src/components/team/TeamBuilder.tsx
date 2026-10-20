@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import TeamCoverage from "@/components/team/TeamCoverage";
 import TeamDefense from "@/components/team/TeamDefense";
 import TeamFields, { type TeamSlot } from "@/components/team/TeamFields";
 import TeamPicker from "@/components/team/TeamPicker";
+import TeamStats from "@/components/team/TeamStats";
 import {
   TEAM_SIZE,
   getTeamServerSnapshot,
@@ -76,6 +78,10 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
       return member ? { kind: "member", member } : { kind: "loading" };
     });
   }
+
+  // Los miembros ya cargados, en orden: los paneles de cobertura y
+  // estadísticas los analizan sin huecos. null hasta la hidratación
+  const loaded = slots?.flatMap((s) => (s.kind === "member" ? [s.member] : [])) ?? null;
 
   // Tras cada cambio el foco va a su sitio. El diálogo, al cerrarse, devuelve
   // el foco al hueco que lo abrió; este efecto corre después y lo mueve
@@ -165,6 +171,8 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
         onAdd={add}
       />
       <TeamDefense locale={locale} slots={slots} />
+      <TeamCoverage locale={locale} members={loaded} />
+      <TeamStats locale={locale} members={loaded} />
     </div>
   );
 }

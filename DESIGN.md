@@ -534,14 +534,14 @@ Panel `--surface`, radio 28px. Título «Defensa» / «Defense» en `--step-head
 
 Título «Cobertura ofensiva» / «Offensive coverage» y nota «Según los tipos de tus miembros, no sus movimientos.» / «Based on your members' types, not their moves.». Dos grupos lado a lado (3fr / 2fr; apilados por debajo de 1024px):
 - **«Súper eficaz contra 13»:** bajo el subtítulo (`--step-lead` 900), una **clave** en `--step-small` 800, `--ink-soft`: una pastilla neutra «Tipo rival» / «Opposing type», una flecha ← y «tipos de tu equipo que lo golpean ×2» / «your team's types that hit it ×2» (`aria-hidden`; la información accesible va en cada pastilla).
-  - Cada tipo cubierto es una **pastilla compuesta** de 44px en `--step`: primero el tipo rival como pastilla de 36px en su `field` con `field-ink`; luego una flecha ← en tinta (con «lo golpean» / «hit by» para lectores de pantalla); luego una etiqueta de 24px por cada tipo del equipo que lo cubre, en su propio `field`. La flecha apunta al rival: se lee «Fuego ← Agua», nunca «Fuego · Agua», que parecía decir que Fuego pega a Agua.
+  - Cada tipo cubierto es una **pastilla compuesta** de 44px en `--step`: primero el tipo rival como pastilla de 36px en su `field` con `field-ink`; luego una flecha ← en tinta (con «lo golpean» / «hit by» para lectores de pantalla); luego una etiqueta de 24px por cada tipo del equipo que lo cubre, en su propio `field`. Si no cabe en una línea (en un móvil, un rival con cuatro tipos), la pastilla parte en dos y se queda con radio 22px. La flecha apunta al rival: se lee «Fuego ← Agua», nunca «Fuego · Agua», que parecía decir que Fuego pega a Agua.
 - **«Sin súper eficaz contra 5»:** pastillas `--step` de 44px con el nombre en tinta, sin campo de color (no hay nada que celebrar).
 - Ambos grupos en el orden de la tabla de tipos. Con el equipo vacío, solo «Añade Pokémon para ver el análisis.».
 
 #### Panel «Estadísticas base»
 
 Dos columnas (1fr / 2.4fr; apiladas por debajo de 1024px):
-- **Izquierda:** el título «Estadísticas base» / «Base stats» en `--step-head` y debajo el **total medio** del equipo en `--step-hero` 900 tabular, con «Total medio, media de los miembros» / «Average total, across members» en 800, `--ink-soft`.
+- **Izquierda:** el título «Estadísticas base» / «Base stats» en `--step-head` y debajo el **total medio** del equipo en `--step-hero` 900 tabular, con «Total medio, media de los miembros» / «Average total, across members» en 800, `--ink-soft`. Con el equipo vacío, el total es «–» en `--ink-soft`.
 - **Derecha:** seis filas (PS, Ataque, Defensa, At. esp., Def. esp., Velocidad / HP, Attack, Defense, Sp. Atk, Sp. Def, Speed): nombre en `--step-small` 800, media del equipo en 900 tabular alineada a la derecha, barra de 12px (relleno `--ink`, pista `--step`, escala sobre 255, como §2.3 regla 5 para paneles sin tipo) y, a la derecha, «Mejor: Scizor 130» en `--step-small` 700, `--ink-soft`. La columna «Mejor» se oculta por debajo de 1024px.
 - Las barras crecen con `scaleX` como en la ficha (§6) cada vez que cambia el equipo.
 
