@@ -342,6 +342,13 @@ export async function getPokemonDetail(
   const queryName = nameOrId.toLowerCase().trim();
   const effectiveLookup = DEFAULT_FORM_FALLBACKS[queryName] || queryName;
 
+  // La especie casi siempre se llama como lo buscado: se pide a la vez que el
+  // Pokémon en lugar de esperar a saberlo (PokéAPI tarda segundos sin caché)
+  const guessedSpecies = getCleanSpeciesSlug(queryName);
+  const speciesGuess = pokeFetch<ApiPokemonSpeciesResponse>(
+    `pokemon-species/${encodeURIComponent(guessedSpecies)}`,
+  ).catch(() => null);
+
   let data: ApiPokemonResponse;
 
   try {
@@ -372,9 +379,11 @@ export async function getPokemonDetail(
 
   let varieties: PokemonVariety[] = [];
   try {
-    const speciesData = await pokeFetch<ApiPokemonSpeciesResponse>(
-      `pokemon-species/${encodeURIComponent(speciesIdentifier)}`,
-    );
+    const speciesData =
+      (speciesIdentifier === guessedSpecies && (await speciesGuess)) ||
+      (await pokeFetch<ApiPokemonSpeciesResponse>(
+        `pokemon-species/${encodeURIComponent(speciesIdentifier)}`,
+      ));
 
     if (speciesData.varieties && speciesData.varieties.length > 1) {
       varieties = await Promise.all(
@@ -456,6 +465,11 @@ export async function getEvolutionChain(
       const speciesName = node.species.name.toLowerCase();
       const lookupName = DEFAULT_FORM_FALLBACKS[speciesName] || speciesName;
 
+      // Las etapas siguientes se piden a la vez que esta, no nivel a nivel
+      const evolvesToPromise = Promise.all(
+        node.evolves_to.map((child) => formatNode(child)),
+      );
+
       let pData: ApiPokemonResponse | null = null;
       try {
         pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${lookupName}`);
@@ -532,9 +546,7 @@ export async function getEvolutionChain(
         };
       }
 
-      const evolvesTo = await Promise.all(
-        node.evolves_to.map((child) => formatNode(child)),
-      );
+      const evolvesTo = await evolvesToPromise;
 
       return {
         id: pData?.id ?? 0,

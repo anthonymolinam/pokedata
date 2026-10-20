@@ -173,6 +173,15 @@ export default async function PokemonPage({ params, searchParams }: PageProps) {
 
   const BASE_URL = "https://pokeapi.co/api/v2";
 
+  // PokéAPI tarda segundos con lo que no tiene en caché, así que todo se pide
+  // a la vez en lugar de en cadena. Las peticiones repetidas (la de la
+  // redirección y la de getPokemonDetail) Next las sirve una sola vez. Si al
+  // final se redirige, estas promesas se descartan.
+  const detailPromise = getPokemonDetail(canonicalName);
+  detailPromise.catch(() => {});
+  const evolutionPromise = getEvolutionChain(canonicalName).catch(() => null);
+  let adjacentPromise: ReturnType<typeof getAdjacentPokemon> | null = null;
+
   // 1. Redireccionar variantes regionales o formas secundarias a la especie base
   try {
     // Con la misma caché que getPokemonDetail, que pide esta misma URL
@@ -183,6 +192,7 @@ export default async function PokemonPage({ params, searchParams }: PageProps) {
     if (rawRes.ok) {
       const rawData = await rawRes.json();
       const baseSpeciesName = rawData.species?.name;
+      adjacentPromise = getAdjacentPokemon(rawData.id).catch(() => ({ prev: null, next: null }));
 
       if (
         baseSpeciesName &&
@@ -206,16 +216,17 @@ export default async function PokemonPage({ params, searchParams }: PageProps) {
   // 2. Cargar datos de la especie base
   let pokemon;
   try {
-    pokemon = await getPokemonDetail(canonicalName);
+    pokemon = await detailPromise;
   } catch (error) {
     console.error("Error fetching Pokémon details:", error);
     notFound();
   }
 
-  // Carga protegida en paralelo de evoluciones y adyacentes
+  // Evoluciones y adyacentes, ya en camino desde el principio
   const [evolutionChain, adjacent] = await Promise.all([
-    getEvolutionChain(canonicalName).catch(() => null),
-    getAdjacentPokemon(pokemon.id).catch(() => ({ prev: null, next: null })),
+    evolutionPromise,
+    adjacentPromise ??
+      getAdjacentPokemon(pokemon.id).catch(() => ({ prev: null, next: null })),
   ]);
 
   return (
