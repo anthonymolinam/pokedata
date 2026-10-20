@@ -776,6 +776,18 @@ body {
   outline: 4px solid var(--row-tint);
 }
 
+/* La etiqueta fija del scroll de móvil lleva el fondo de su fila (solo
+   por debajo de 1024px: en escritorio taparía el hover de fila) */
+@media (width < 1024px) {
+  .defense-label {
+    background-color: var(--surface);
+  }
+
+  .defense-row[data-risk] .defense-label {
+    background-color: var(--row-tint);
+  }
+}
+
 @media (hover: hover) {
   .defense-row:hover {
     background-color: var(--row-tint);

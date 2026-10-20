@@ -199,8 +199,31 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
     leaveSharedTeam();
   }
 
+  // El botón se desactiva al vaciar: el foco va al primer hueco
+  function clear() {
+    pendingFocus.current = [slot(0)];
+    setTeam([]);
+  }
+
+  const pressable = "cursor-pointer motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96]";
+
   return (
-    <div ref={fieldsRef}>
+    <div ref={fieldsRef} className="flex flex-col gap-5 md:gap-8">
+      {/* Por debajo de 1024px la columna de botones desaparece y «Compartir
+          enlace» sube aquí, junto al título (§4.9 «Móvil y tableta») */}
+      <div className="flex items-end justify-between gap-x-6 gap-y-4 max-sm:flex-col max-sm:items-start">
+        <div>
+          <h1 className="text-hero font-black">{team.title}</h1>
+          <p className="mt-3 text-body text-ink-soft max-sm:hidden">{team.lead}</p>
+        </div>
+        <button
+          type="button"
+          onClick={share}
+          className={`h-11 shrink-0 px-4.5 rounded-pill bg-ink text-small font-extrabold text-bone lg:hidden ${pressable}`}
+        >
+          {team.share}
+        </button>
+      </div>
       {shared && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 px-[18px] py-3.5 rounded-[20px] bg-step">
           <p className="font-extrabold">{team.sharedNotice}</p>
@@ -208,7 +231,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
             <button
               type="button"
               onClick={saveShared}
-              className="h-11 cursor-pointer px-4.5 rounded-pill bg-ink text-small font-extrabold text-bone motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96]"
+              className={`h-11 px-4.5 rounded-pill bg-ink text-small font-extrabold text-bone ${pressable}`}
             >
               {team.saveShared}
             </button>
@@ -222,28 +245,39 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
           </div>
         </div>
       )}
-      <TeamFields
-        locale={locale}
-        slots={slots}
-        count={count}
-        onAdd={() => setPickerOpen(true)}
-        onShare={share}
-        onClear={() => setTeam([])}
-        onMove={move}
-        onReorder={reorder}
-        onChangeForm={changeForm}
-        onRemove={remove}
-      />
-      <TeamPicker
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        locale={locale}
-        full={count >= TEAM_SIZE}
-        onAdd={add}
-      />
-      <TeamDefense locale={locale} slots={slots} />
-      <TeamCoverage locale={locale} members={loaded} />
-      <TeamStats locale={locale} members={loaded} />
+      <div>
+        <TeamFields
+          locale={locale}
+          slots={slots}
+          count={count}
+          onAdd={() => setPickerOpen(true)}
+          onShare={share}
+          onClear={clear}
+          onMove={move}
+          onReorder={reorder}
+          onChangeForm={changeForm}
+          onRemove={remove}
+        />
+        <TeamPicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          locale={locale}
+          full={count >= TEAM_SIZE}
+          onAdd={add}
+        />
+        <TeamDefense locale={locale} slots={slots} />
+        <TeamCoverage locale={locale} members={loaded} />
+        <TeamStats locale={locale} members={loaded} />
+        {/* «Vaciar equipo» al final de la página, como enlace de texto */}
+        <button
+          type="button"
+          onClick={clear}
+          disabled={count === 0}
+          className="mt-8 cursor-pointer text-small font-extrabold underline decoration-2 underline-offset-4 hover:decoration-ink-soft disabled:cursor-not-allowed disabled:text-ink-soft disabled:no-underline lg:hidden"
+        >
+          {team.clear}
+        </button>
+      </div>
       <Toast message={toast} onDone={hideToast} />
     </div>
   );

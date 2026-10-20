@@ -405,7 +405,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - **La tabla ocupa todo el ancho del panel** (`table-fixed`): la columna de atacantes tiene ancho fijo y las 18 columnas se reparten el resto a partes iguales (unos 57px a 1440px). Celdas de 32px de alto con 3px de separación y radio de 6px; las cifras en `--step-small` y 900. En móvil la tabla tiene un ancho mínimo de 800px y se desplaza.
   - **Cabeceras de fila y columna con la misma pastilla:** 32px de alto, `--step-small` en 800 y 8px de relleno. Las de columna llenan su columna y llevan la **abreviatura de tres letras en horizontal** (Nor, Fue, Agu… / Nor, Fir, Wat…), sacada del nombre del tipo en cada idioma; el nombre completo va en `title` y para lectores de pantalla. Las de fila miden 104px y llevan el nombre completo.
   - Celdas: ×2 en `--ink` con «2» en hueso; ×½ en `--step` con «½» en tinta; ×0 en `--ink` con «0» y rayas a 45°; ×1 vacía. El multiplicador nunca depende solo del color.
-- **Móvil:** la matriz va en un contenedor con scroll horizontal y la columna de tipos atacantes fija a la izquierda. **Solo ese contenedor se desplaza; la página nunca.** El contenedor es `relative` para que las etiquetas ocultas para lectores de pantalla (absolutas) queden dentro de él: si se escapaban, ensanchaban la página y el menú del header se abría desplazado.
+- **Móvil:** la matriz va en un contenedor con scroll horizontal y la columna de tipos atacantes fija a la izquierda. **Solo ese contenedor se desplaza; la página nunca. Cada etiqueta fija (y «Ataca») lleva detrás el fondo de su fila, que cubre también los 8px hasta la primera columna, para que las celdas que pasan por debajo no asomen por sus bordes redondos.** El contenedor es `relative` para que las etiquetas ocultas para lectores de pantalla (absolutas) queden dentro de él: si se escapaban, ensanchaban la página y el menú del header se abría desplazado.
 
 ### 4.6 Comparador
 
@@ -556,7 +556,7 @@ Dos columnas (1fr / 2.4fr; apiladas por debajo de 1024px):
 
 #### Móvil y tableta (< 1024px)
 
-- La alineación campo-columna se abandona: los campos pasan a una rejilla propia de **3 columnas** (640–1023px) o **2** (< 640px), con 64px entre filas y 12px entre columnas, sin la columna de recuento ni la de botones (el botón de compartir sube a la cabecera de página y «Vaciar equipo» se mueve al final de la página, como enlace de texto). Campo de 300px (330px táctil, con su fila de controles).
+- La alineación campo-columna se abandona: los campos pasan a una rejilla propia de **3 columnas** (640–1023px) o **2** (< 640px), con 64px entre filas y 12px entre columnas, sin la columna de recuento ni la de botones (el botón de compartir sube a la cabecera de página, a la derecha del título y debajo por debajo de 640px, y «Vaciar equipo» se mueve al final de la página, como enlace de texto; al vaciar, el foco va al primer hueco). Campo de 300px (330px táctil, con su fila de controles).
 - La matriz va en un contenedor con scroll horizontal, como la tabla de tipos (§4.5): columnas `96px repeat(6, 56px) 168px`, 8px de separación, etiquetas de fila fijas a la izquierda y la cabecera de avatares no fija (dentro de un contenedor con scroll no puede pegarse a la página). Solo ese contenedor se desplaza; la página nunca.
 - Cobertura y estadísticas se apilan.
 

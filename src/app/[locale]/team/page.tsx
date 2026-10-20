@@ -45,15 +45,8 @@ export async function generateMetadata({
 export default async function TeamPage({ params }: TeamPageProps) {
   const { locale: rawLocale } = await params;
   const locale: Locale = rawLocale === "en" ? "en" : "es";
-  const { team } = getDictionary(locale);
 
-  return (
-    <div className="flex flex-col gap-5 md:gap-8">
-      <div>
-        <h1 className="text-hero font-black">{team.title}</h1>
-        <p className="mt-3 text-body text-ink-soft max-sm:hidden">{team.lead}</p>
-      </div>
-      <TeamBuilder locale={locale} />
-    </div>
-  );
+  // El título y la frase los pinta TeamBuilder, porque por debajo de 1024px
+  // «Compartir enlace» va a su lado
+  return <TeamBuilder locale={locale} />;
 }

@@ -101,7 +101,13 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
             role="row"
             className="col-span-full grid grid-cols-subgrid items-center py-2 mb-1 bg-surface text-small font-extrabold text-ink-soft lg:sticky lg:top-18 lg:z-5"
           >
-            <span role="columnheader">{team.attacks}</span>
+            {/* En el scroll de móvil, «Ataca» y las etiquetas se quedan fijas a la izquierda */}
+            <span
+              role="columnheader"
+              className="self-stretch flex items-center bg-surface max-lg:sticky max-lg:left-0 max-lg:z-2 max-lg:-mr-2 max-lg:pr-2"
+            >
+              {team.attacks}
+            </span>
             {columns.map((member, i) =>
               member ? (
                 <span
@@ -144,13 +150,16 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
                 data-risk={isRisk || undefined}
                 className="defense-row col-span-full grid grid-cols-subgrid items-center"
               >
-                <span
-                  role="rowheader"
-                  className={`flex items-center h-8 px-3 rounded-pill bg-field text-field-ink text-small font-extrabold whitespace-nowrap ${
-                    isRisk ? "outline-3 -outline-offset-3 outline-field-ink" : ""
-                  }`}
-                >
-                  {typeNames[attacker]}
+                {/* El fondo de la fila tapa las celdas que pasan por debajo de la
+                    etiqueta fija y por el hueco hasta la primera columna */}
+                <span role="rowheader" className="defense-label max-lg:sticky max-lg:left-0 max-lg:z-2 max-lg:-mr-2 max-lg:pr-2">
+                  <span
+                    className={`flex items-center h-8 px-3 rounded-pill bg-field text-field-ink text-small font-extrabold whitespace-nowrap ${
+                      isRisk ? "outline-3 -outline-offset-3 outline-field-ink" : ""
+                    }`}
+                  >
+                    {typeNames[attacker]}
+                  </span>
                 </span>
                 {columns.map((member, i) =>
                   member ? (
