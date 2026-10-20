@@ -1,4 +1,4 @@
-import { TYPE_CHART, POKEMON_TYPES, PokemonType } from "@/constants/typeChart";
+import { TYPE_CHART, POKEMON_TYPES, type PokemonType } from "@/constants/typeChart";
 
 export interface TypeEffectiveness {
   weaknesses4x: string[];
