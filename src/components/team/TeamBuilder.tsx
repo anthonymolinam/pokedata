@@ -1,25 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import TeamCoverage from "@/components/team/TeamCoverage";
 import TeamDefense from "@/components/team/TeamDefense";
 import TeamFields, { type TeamSlot } from "@/components/team/TeamFields";
 import TeamPicker from "@/components/team/TeamPicker";
 import TeamStats from "@/components/team/TeamStats";
+import TeamToast, { type ToastMessage } from "@/components/team/TeamToast";
 import {
   TEAM_SIZE,
+  getSharedServerSnapshot,
   getTeamServerSnapshot,
   getTeamSnapshot,
+  isViewingSharedTeam,
+  leaveSharedTeam,
+  replaceShownTeam,
   setTeam,
+  shareTeamUrl,
   subscribeToTeam,
 } from "@/lib/team";
+import { getDictionary } from "@/constants/translations";
 import { getCachedMember, loadTeamMembers } from "@/lib/team-members";
 import { Locale } from "@/proxy";
 
-// Pide los miembros que faltan y, cuando llegan, limpia el equipo guardado:
+// Pide los miembros que faltan y, cuando llegan, limpia el equipo que se ve:
 // descarta los slugs desconocidos y cambia cada slug por el que devuelve la
 // API (la forma por defecto vuelve como la especie). Si la API falla, esos
-// huecos se quedan como fantasmas hasta la próxima visita.
+// huecos se quedan como fantasmas hasta la próxima visita. Un equipo
+// compartido se limpia en su enlace, sin convertirse en el propio.
 function useTeamMembers(slugs: string[] | null, locale: Locale) {
   // Se incrementa al llegar datos nuevos para volver a leer la caché
   const [, setVersion] = useState(0);
@@ -38,7 +46,7 @@ function useTeamMembers(slugs: string[] | null, locale: Locale) {
           if (member === null) return [];
           return [member?.slug ?? slug];
         });
-        setTeam(cleaned);
+        replaceShownTeam(cleaned);
         setVersion((v) => v + 1);
       })
       .catch(() => {
@@ -62,9 +70,14 @@ function moveItem<T>(list: T[], from: number, to: number): T[] {
 // Equipo (DESIGN.md §4.9): el equipo vive en el navegador, así que el
 // servidor pinta fantasmas y el equipo aparece tras la hidratación
 export default function TeamBuilder({ locale }: { locale: Locale }) {
+  const { team } = getDictionary(locale);
   const slugs = useSyncExternalStore(subscribeToTeam, getTeamSnapshot, getTeamServerSnapshot);
+  const shared = useSyncExternalStore(subscribeToTeam, isViewingSharedTeam, getSharedServerSnapshot);
   const members = useTeamMembers(slugs, locale);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  // Estable: el aviso reinicia su temporizador si cambia
+  const hideToast = useCallback(() => setToast(null), []);
   const fieldsRef = useRef<HTMLDivElement>(null);
   // Dónde va el foco en cuanto esté pintado, en orden de preferencia: un
   // control desactivado (← en el primero) no puede recibirlo
@@ -150,13 +163,71 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
     setTeam(current.filter((_, i) => i !== index));
   }
 
+  function notify(text: string) {
+    setToast((prev) => ({ text, id: (prev?.id ?? 0) + 1 }));
+  }
+
+  // Escribe ?t= en la URL y la comparte: en táctil con la hoja nativa; si
+  // no, al portapapeles. Si nada funciona, el aviso manda a la barra, que ya
+  // tiene el enlace.
+  async function share() {
+    const url = shareTeamUrl();
+    if (window.matchMedia("(hover: none)").matches && typeof navigator.share === "function") {
+      try {
+        await navigator.share({ url, title: document.title });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      notify(team.linkCopied);
+    } catch {
+      notify(team.copyFallback);
+    }
+  }
+
+  // La banda desaparece: el foco va al primer campo del equipo que queda
+  function saveShared() {
+    pendingFocus.current = [slot(0)];
+    setTeam(getTeamSnapshot());
+  }
+
+  function backToMine() {
+    pendingFocus.current = [slot(0)];
+    leaveSharedTeam();
+  }
+
   return (
     <div ref={fieldsRef}>
+      {shared && (
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 px-[18px] py-3.5 rounded-[20px] bg-step">
+          <p className="font-extrabold">{team.sharedNotice}</p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:ml-auto">
+            <button
+              type="button"
+              onClick={saveShared}
+              className="h-11 cursor-pointer px-4.5 rounded-pill bg-ink text-small font-extrabold text-bone motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96]"
+            >
+              {team.saveShared}
+            </button>
+            <button
+              type="button"
+              onClick={backToMine}
+              className="cursor-pointer text-small font-extrabold underline decoration-2 underline-offset-4 hover:decoration-ink-soft"
+            >
+              {team.backToMine}
+            </button>
+          </div>
+        </div>
+      )}
       <TeamFields
         locale={locale}
         slots={slots}
         count={count}
         onAdd={() => setPickerOpen(true)}
+        onShare={share}
         onClear={() => setTeam([])}
         onMove={move}
         onReorder={reorder}
@@ -173,6 +244,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
       <TeamDefense locale={locale} slots={slots} />
       <TeamCoverage locale={locale} members={loaded} />
       <TeamStats locale={locale} members={loaded} />
+      <TeamToast message={toast} onDone={hideToast} />
     </div>
   );
 }

@@ -140,44 +140,120 @@ export function withoutTeamParam(href: string): string {
 
 // --- Almacén para useSyncExternalStore ---
 
-// El equipo en memoria es la fuente: se carga del almacenamiento en la primera
-// lectura y cada cambio se guarda después. Así la página funciona igual cuando
-// localStorage falla, y la instantánea es la misma lista mientras no cambie.
+// El equipo guardado en memoria es la fuente: se carga del almacenamiento en la
+// primera lectura y cada cambio se guarda después. Así la página funciona igual
+// cuando localStorage falla, y la instantánea es la misma lista mientras no
+// cambie.
+//
+// Un enlace compartido no pisa el equipo guardado: si la URL trae ?t= y es
+// distinto del guardado, se muestra ese equipo y la página ofrece guardarlo o
+// volver al propio. El equipo compartido se deduce de la URL y del guardado,
+// así que «Volver al mío» solo quita ?t= y «Compartir enlace» puede escribirlo
+// sin que aparezca la banda (es igual al guardado).
 const TEAM_EVENT = "pokedata-team";
-let currentTeam: string[] | null = null;
+let savedTeam: string[] | null = null;
+let shared: { search: string; saved: string[]; team: string[] | null } | null = null;
 
-export function getTeamSnapshot(): string[] {
-  if (currentTeam === null) currentTeam = readStoredTeam();
-  return currentTeam;
+function getSavedTeam(): string[] {
+  if (savedTeam === null) savedTeam = readStoredTeam();
+  return savedTeam;
 }
 
-// El servidor no conoce localStorage: pinta los campos fantasma
+// El equipo del enlace, o null si no hay ?t= o es el guardado. Se recalcula
+// solo cuando cambia la URL o el guardado, para devolver la misma lista
+function getSharedTeam(): string[] | null {
+  const search = window.location.search;
+  const saved = getSavedTeam();
+  if (shared?.search !== search || shared.saved !== saved) {
+    const fromUrl = readTeamParam(search);
+    shared = { search, saved, team: fromUrl && !sameTeam(fromUrl, saved) ? fromUrl : null };
+  }
+  return shared.team;
+}
+
+function notify() {
+  window.dispatchEvent(new Event(TEAM_EVENT));
+}
+
+function replaceUrl(href: string) {
+  if (href !== window.location.href) window.history.replaceState(null, "", href);
+}
+
+// El equipo que se ve: el del enlace compartido o el guardado
+export function getTeamSnapshot(): string[] {
+  return getSharedTeam() ?? getSavedTeam();
+}
+
+export function isViewingSharedTeam(): boolean {
+  return getSharedTeam() !== null;
+}
+
+// El servidor no conoce localStorage ni la URL del navegador: pinta los campos
+// fantasma y ninguna banda
 export function getTeamServerSnapshot(): null {
   return null;
 }
 
-export function setTeam(slugs: readonly string[]) {
-  const next = sanitizeTeam(slugs);
-  if (currentTeam !== null && sameTeam(currentTeam, next)) return;
-  currentTeam = next;
-  writeStoredTeam(next);
-  window.dispatchEvent(new Event(TEAM_EVENT));
+export function getSharedServerSnapshot(): boolean {
+  return false;
 }
 
-// Cambios desde esta pestaña (setTeam) y desde otras (evento storage, que
-// recarga el equipo guardado sin volver a escribirlo)
+// Guarda el equipo como propio. Quita ?t= de la URL: editar un equipo
+// compartido lo convierte en el propio, y un ?t= viejo de «Compartir enlace»
+// mostraría al recargar un equipo que ya no es el tuyo.
+export function setTeam(slugs: readonly string[]) {
+  const next = sanitizeTeam(slugs);
+  const hadParam = readTeamParam(window.location.search) !== null;
+  if (hadParam) replaceUrl(withoutTeamParam(window.location.href));
+  if (!sameTeam(getSavedTeam(), next)) {
+    savedTeam = next;
+    writeStoredTeam(next);
+  } else if (!hadParam) {
+    return;
+  }
+  notify();
+}
+
+// Sustituye el equipo que se ve sin convertirlo en propio: si es un enlace
+// compartido, solo cambia ?t= (lo usa la limpieza de slugs al cargar)
+export function replaceShownTeam(slugs: readonly string[]) {
+  const next = sanitizeTeam(slugs);
+  if (sameTeam(getTeamSnapshot(), next)) return;
+  if (!isViewingSharedTeam()) return setTeam(next);
+  replaceUrl(teamParamUrl(window.location.href, next));
+  notify();
+}
+
+// «Volver al mío»: deja de ver el equipo compartido
+export function leaveSharedTeam() {
+  replaceUrl(withoutTeamParam(window.location.href));
+  notify();
+}
+
+// Escribe ?t= con el equipo que se ve y devuelve el enlace para compartirlo
+export function shareTeamUrl(): string {
+  const href = teamParamUrl(window.location.href, getTeamSnapshot());
+  replaceUrl(href);
+  notify();
+  return href;
+}
+
+// Cambios desde esta pestaña, desde otras (evento storage, que recarga el
+// equipo guardado sin volver a escribirlo) y al moverse por el historial
 export function subscribeToTeam(onChange: () => void) {
   const onStorage = (e: StorageEvent) => {
     if (e.key !== TEAM_STORAGE_KEY && e.key !== null) return;
     const stored = readStoredTeam();
-    if (currentTeam !== null && sameTeam(currentTeam, stored)) return;
-    currentTeam = stored;
+    if (savedTeam !== null && sameTeam(savedTeam, stored)) return;
+    savedTeam = stored;
     onChange();
   };
   window.addEventListener(TEAM_EVENT, onChange);
   window.addEventListener("storage", onStorage);
+  window.addEventListener("popstate", onChange);
   return () => {
     window.removeEventListener(TEAM_EVENT, onChange);
     window.removeEventListener("storage", onStorage);
+    window.removeEventListener("popstate", onChange);
   };
 }
