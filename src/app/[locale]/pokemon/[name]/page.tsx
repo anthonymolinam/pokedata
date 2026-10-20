@@ -175,8 +175,10 @@ export default async function PokemonPage({ params, searchParams }: PageProps) {
 
   // 1. Redireccionar variantes regionales o formas secundarias a la especie base
   try {
+    // Con la misma caché que getPokemonDetail, que pide esta misma URL
     const rawRes = await fetch(
       `${BASE_URL}/pokemon/${encodeURIComponent(canonicalName.toLowerCase())}`,
+      { next: { revalidate: 86400 } },
     );
     if (rawRes.ok) {
       const rawData = await rawRes.json();
