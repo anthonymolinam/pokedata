@@ -25,10 +25,10 @@ export default function SiteFooter({ locale }: { locale: Locale }) {
     { key: "compare", href: getLocalizedPath(locale, "compare"), label: nav.compare },
   ];
 
-  // Pie compacto (DESIGN.md §4.7): campo de tinta a sangre con dos filas,
+  // Pie compacto (DESIGN.md §4.7): campo --footer a sangre con dos filas,
   // marca y enlaces arriba, aviso legal y versión abajo
   return (
-    <footer data-field="ink" className="mt-16 bg-field text-field-ink">
+    <footer data-field="footer" className="mt-16 bg-field text-field-ink">
       <div className="shell py-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
           <div>
@@ -36,7 +36,7 @@ export default function SiteFooter({ locale }: { locale: Locale }) {
               <Pokeball className="size-7" />
               PokéData
             </p>
-            <p className="mt-2 text-small text-bone-soft">{footer.tagline}</p>
+            <p className="mt-2 text-small text-on-dark-soft">{footer.tagline}</p>
           </div>
 
           <nav aria-label={footer.nav}>
@@ -66,12 +66,12 @@ export default function SiteFooter({ locale }: { locale: Locale }) {
           </nav>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-bone/15 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-8">
-          <p className="text-small text-bone-soft">
+        <div className="mt-6 pt-4 border-t border-on-dark/15 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-8">
+          <p className="text-small text-on-dark-soft">
             {footer.legal}{" "}
             <a
               href="https://pokeapi.co"
-              className="font-extrabold text-bone underline-offset-4 decoration-2 hover:underline focus-visible:underline"
+              className="font-extrabold text-on-dark underline-offset-4 decoration-2 hover:underline focus-visible:underline"
             >
               {footer.pokeapi}
             </a>

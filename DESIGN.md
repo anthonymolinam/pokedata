@@ -13,7 +13,8 @@ Este documento es la referencia visual de PokéData. Si el código y este docume
 > En PokéData, **el color de cada tipo** se convierte en **la tarjeta de la que sale cada Pokémon**.
 
 - Cada Pokémon vive dentro de un campo de color del tipo que le corresponde, y su artwork oficial se sale de ese campo por arriba. El artwork manda desde la primera pantalla.
-- El tono es el de una app moderna y alegre: fondo claro, campos de color planos, esquinas redondeadas, letra redonda y gruesa y movimientos con un pequeño rebote.
+- El tono es el de una app moderna y alegre: fondo claro u oscuro (§2.4), campos de color planos, esquinas redondeadas, letra redonda y gruesa y movimientos con un pequeño rebote.
+- **Los dos temas comparten los campos de tipo.** En oscuro cambia lo que rodea a las tarjetas, no las tarjetas: los 18 colores se ven igual de vivos y llevan la misma tinta.
 - El color nunca es decoración: el verde es Planta en la tarjeta de Bulbasaur, en el filtro, en la etiqueta y en su ficha.
 
 **Elemento vivo:** el **Pokémon del día** (§4.2). Son tres Pokémon que cambian cada día, iguales para todos y siempre de tipos distintos, y un dado para barajar otros tres.
@@ -24,67 +25,146 @@ Este documento es la referencia visual de PokéData. Si el código y este docume
 
 ### 2.1 Tokens globales
 
-| Token | Valor | Uso |
+Cada token tiene un valor por tema. El código usa siempre el token, nunca el valor, así que cambiar de tema es cambiar estas variables y nada más.
+
+| Token | Claro | Oscuro | Uso |
+| --- | --- | --- | --- |
+| `--ground` | `#F3F4F8` | `#14161D` | Fondo de todas las páginas |
+| `--surface` | `#FFFFFF` | `#1D2029` | Paneles: hero, buscador, panel de filtros, bloques de la ficha, chips sin color |
+| `--step` | `#E6E8EF` | `#282C37` | Un tono por debajo del fondo en claro y por encima en oscuro: buscador enfocado, pista de controles segmentados, hover de enlaces |
+| `--raised` | `#FFFFFF` | `#262A35` | Capas flotantes: desplegable del buscador, hoja móvil, modales |
+| `--raised-step` | `#E6E8EF` | `#363B48` | El `--step` dentro de una capa flotante (`data-field="raised"`): en oscuro `--step` casi coincide con `--raised` |
+| `--ink` | `#15161C` | `#EEF0F5` | Tinta principal, botón secundario, pastilla «Total», tooltips |
+| `--ink-soft` | `#5C6070` | `#A3A8B8` | Solo texto secundario: subtítulos y notas. Nunca en texto principal |
+| `--bone` | `#F7F5F0` | `#14161D` | Texto sobre un relleno en `--ink` (botón secundario, «Total», tooltip, nav activa) |
+| `--footer` | `#15161C` | `#1D2029` | Campo del pie (§4.7) |
+| `--ok` | `#3FB950` | `#3FB950` | Punto verde del SHA en el pie. Es una marca gráfica, nunca texto |
+| `--accent` | `#CC2E0B` | `#CC2E0B` | Rojo Pokébola. Solo en la mitad superior del logo (3.4:1 sobre el fondo oscuro, suficiente para un gráfico). Si algún día vuelve una acción principal, texto blanco: 5.3:1 |
+
+**Constantes que no cambian con el tema.** Todo lo que se pinta sobre un campo de tipo usa estas dos, no `--ink` ni `--bone`, porque el campo es el mismo en los dos temas:
+
+| Constante | Valor | Uso |
 | --- | --- | --- |
-| `--ground` | `#F3F4F8` | Fondo de todas las páginas |
-| `--surface` | `#FFFFFF` | Paneles blancos: hero, buscador, panel de filtros, bloques de la ficha, chips sin color |
-| `--step` | `#E6E8EF` | Un tono por debajo del fondo: buscador enfocado, pista de controles segmentados, hover de enlaces |
-| `--ink` | `#15161C` | Tinta principal, botón secundario, pastilla «Total», pie (16.4:1 sobre el fondo) |
-| `--ink-soft` | `#5C6070` | Solo texto secundario: subtítulos y notas (5.7:1 sobre el fondo). Nunca en texto principal |
-| `--bone` | `#F7F5F0` | Tinta sobre campos oscuros y sobre `--ink` |
-| `--bone-soft` | `#B9BCC8` | Texto secundario sobre `--ink`: la frase y la fila legal del pie |
-| `--ok` | `#3FB950` | Punto verde del SHA en el pie. Es una marca gráfica, nunca texto |
-| `--accent` | `#CC2E0B` | Rojo Pokébola. Solo en la mitad superior del logo. Si algún día vuelve una acción principal, texto blanco: 5.3:1 |
+| `--on-light` | `#15161C` | Tinta sobre campos claros, contorno y banda de la Pokébola, base translúcida de la pastilla «Total» estrecha |
+| `--on-dark` | `#F7F5F0` | Tinta sobre campos oscuros, mitad inferior de la Pokébola, texto del pie |
+| `--on-dark-soft` | `#B9BCC8` | Texto secundario del pie (antes `--bone-soft`) |
+| `--pokeball-white` | `#FFFFFF` | Mitad inferior y centro de la Pokébola del logo |
+
+En oscuro, `--ink` y `--bone` intercambian su papel: la tinta es clara y los rellenos en tinta (botón secundario, «Total», navegación activa, tooltips, celdas ×2 de la tabla) pasan a ser pastillas claras con texto oscuro. Es intencionado: el elemento más fuerte de cada pantalla sigue siendo el de más contraste.
 
 El acento rojo no se usa nunca para marcar estados ni selecciones; eso lo hace la tinta.
 
-**Tema oscuro:** no entra en el alcance. La web es clara.
+**Contraste de los tokens (WCAG 2.x).** Generada con `npm run check-contrast -- --md`; umbral 4.5:1, salvo el acento, que es un gráfico (3:1):
+
+| Par | Claro | Oscuro |
+| --- | --- | --- |
+| `--ink` sobre `--ground` / `--surface` / `--step` / `--raised` / `--raised-step` | 16.42 / 18.05 / 14.74 / 18.05 / 14.74 | 15.84 / 14.26 / 12.23 / 12.57 / 9.81 |
+| `--ink-soft` sobre `--ground` / `--surface` / `--step` / `--raised` | 5.68 / 6.24 / 5.10 / 6.24 | 7.61 / 6.85 / 5.87 / 6.04 |
+| `--bone` sobre `--ink` (botones, «Total», tooltips) | 16.56 | 15.84 |
+| `--on-dark` / `--on-dark-soft` sobre `--footer` | 16.56 / 9.53 | 14.93 / 8.59 |
+| `--accent` sobre `--ground` (mitad del logo, gráfico) | 4.82 | 3.40 |
 
 ### 2.2 Los 18 tipos
 
 Se conservan los valores actuales de `src/constants/typeColors.ts`. Cada tipo tiene cuatro tokens:
 
 - **`field`**: el color del tipo. Es el fondo de las tarjetas, de las columnas del Pokémon del día, de los bloques de tipo del panel de filtros y del escenario de la ficha.
-- **`field-ink`**: tinta sobre ese campo, negra (`--ink`) u hueso (`--bone`), la que dé más contraste. Nunca gris.
+- **`field-ink`**: tinta sobre ese campo, negra (`--on-light`) u hueso (`--on-dark`), la que dé más contraste. Nunca gris. Es una constante: no cambia con el tema.
 - **`step`**: el campo oscurecido un 14 %. Es la superficie secundaria dentro del campo, por ejemplo una pista de barra o un bloque de evolución.
 - **`deep`**: variante oscurecida para usar el color del tipo como texto o como marca sobre blanco (`--surface`).
 
 | Tipo | `field` | `field-ink` | field/ink | `step` | `deep` | deep/blanco | deep/fondo |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Normal | `#A8A77A` | ink | 7.28 | `#909069` | `#727253` | 4.94 | 4.50 |
-| Fuego | `#EE8130` | ink | 6.72 | `#CD6F29` | `#A95C22` | 4.95 | 4.51 |
-| Agua | `#6390F0` | ink | 5.83 | `#557CCE` | `#4C6FB9` | 4.90 | *4.46* |
-| Eléctrico | `#F7D02C` | ink | 12.05 | `#D4B326` | `#836E17` | 4.99 | 4.54 |
-| Planta | `#7AC74C` | ink | 8.68 | `#69AB41` | `#4C7B2F` | 5.02 | 4.57 |
-| Hielo | `#96D9D6` | ink | 11.34 | `#81BBB8` | `#527776` | 4.93 | *4.49* |
-| Lucha | `#C22E28` | bone | 5.19 | `#A72822` | `#C22E28` | 5.65 | 5.14 |
+| Normal | `#A8A77A` | ink | 7.28 | `#909069` | `#727253` | 4.94 | *4.49* |
+| Fuego | `#EE8130` | ink | 6.72 | `#CD6F29` | `#A95C22` | 4.95 | 4.50 |
+| Agua | `#6390F0` | ink | 5.82 | `#557CCE` | `#4C6FB9` | 4.90 | *4.46* |
+| Eléctrico | `#F7D02C` | ink | 12.04 | `#D4B326` | `#836E17` | 4.99 | 4.54 |
+| Planta | `#7AC74C` | ink | 8.68 | `#69AB41` | `#4C7B2F` | 5.02 | 4.56 |
+| Hielo | `#96D9D6` | ink | 11.33 | `#81BBB8` | `#527776` | 4.93 | *4.48* |
+| Lucha | `#C22E28` | bone | 5.18 | `#A72822` | `#C22E28` | 5.65 | 5.14 |
 | Veneno | `#A33EA1` | bone | 5.12 | `#8C358A` | `#A33EA1` | 5.58 | 5.08 |
-| Tierra | `#E2BF65` | ink | 10.21 | `#C2A457` | `#816D3A` | 5.02 | 4.57 |
-| Volador | `#A98FF3` | ink | 6.80 | `#917BD1` | `#7664AA` | 5.03 | 4.58 |
-| Psíquico | `#F95587` | ink | 5.74 | `#D64974` | `#C24269` | 4.91 | *4.47* |
-| Bicho | `#A6B91A` | ink | 8.23 | `#8F9F16` | `#6A7611` | 4.99 | 4.54 |
-| Roca | `#B6A136` | ink | 7.00 | `#9D8A2E` | `#7E6F25` | 5.01 | 4.56 |
-| Fantasma | `#735797` | bone | 5.45 | `#634B82` | `#735797` | 5.93 | 5.40 |
-| Dragón | `#6F35FC` | bone | 5.37 | `#5F2ED9` | `#6F35FC` | 5.85 | 5.32 |
-| Siniestro | `#705746` | bone | 6.14 | `#604B3C` | `#705746` | 6.69 | 6.08 |
-| Acero | `#B7B7CE` | ink | 9.18 | `#9D9DB1` | `#6E6E7C` | 5.02 | 4.57 |
-| Hada | `#D685AD` | ink | 6.72 | `#B87295` | `#985E7B` | 4.97 | 4.53 |
+| Tierra | `#E2BF65` | ink | 10.20 | `#C2A457` | `#816D3A` | 5.02 | 4.56 |
+| Volador | `#A98FF3` | ink | 6.79 | `#917BD1` | `#7664AA` | 5.03 | 4.57 |
+| Psíquico | `#F95587` | ink | 5.73 | `#D64974` | `#C24269` | 4.90 | *4.46* |
+| Bicho | `#A6B91A` | ink | 8.23 | `#8F9F16` | `#6A7611` | 4.98 | 4.53 |
+| Roca | `#B6A136` | ink | 6.99 | `#9D8A2E` | `#7E6F25` | 5.01 | 4.56 |
+| Fantasma | `#735797` | bone | 5.44 | `#634B82` | `#735797` | 5.93 | 5.39 |
+| Dragón | `#6F35FC` | bone | 5.36 | `#5F2ED9` | `#6F35FC` | 5.84 | 5.32 |
+| Siniestro | `#705746` | bone | 6.13 | `#604B3C` | `#705746` | 6.68 | 6.08 |
+| Acero | `#B7B7CE` | ink | 9.17 | `#9D9DB1` | `#6E6E7C` | 5.01 | 4.56 |
+| Hada | `#D685AD` | ink | 6.71 | `#B87295` | `#985E7B` | 4.97 | 4.52 |
 
-Los contrastes están calculados con WCAG 2.x, con la tinta `--ink` (`#15161C`). Las cifras en cursiva no llegan a 4.5:1, y de ahí sale la regla 1 del §2.3.
+Los contrastes están calculados con WCAG 2.x por `npm run check-contrast` (dos decimales hacia abajo, para que ninguna cifra prometa más de lo que hay). Las cifras en cursiva no llegan a 4.5:1, y de ahí sale la regla 1 del §2.3.
+
+El código no usa `deep` directamente para texto: usa **`--type-*-text`**, que vale `deep` en claro y `glow` en oscuro (§2.4).
 
 Los tokens viven en un único sitio: `typeColors.ts` y las variables `--type-*` de `globals.css`. Ningún otro fichero escribe a mano un color de tipo. Veneno, Fantasma y Dragón son violetas canónicos y llevan el comentario `taste-skill-ignore`.
 
 ### 2.3 Reglas de contraste
 
-1. **El texto con color de tipo va en `deep` y sobre blanco (`--surface`).** Sobre `--ground`, Agua, Hielo y Psíquico bajan de 4.5:1, así que nunca hay texto `deep` apoyado directamente en el fondo gris.
+1. **El texto con color de tipo va en `--type-*-text` y sobre `--surface`.** En claro es `deep`, y sobre `--ground` Normal, Agua, Hielo y Psíquico bajan de 4.5:1, así que nunca hay texto de tipo apoyado directamente en el fondo. En oscuro (`glow`) pasa de 4.5:1 en los dos, pero la regla es la misma para no tener dos.
 2. **Ningún texto se pinta con `field` sobre blanco o sobre el fondo.** Eléctrico, Hielo, Normal y Hada caen a entre 1.4 y 2.5:1.
 3. **Todo bloque de color lleva su texto dentro, en su `field-ink`.** Eso incluye tarjetas, columnas del día, bloques del panel de filtros y chips activos. Así, un Eléctrico que apenas se distingue del fondo no pierde información.
-4. **Las etiquetas de tipo dentro de un campo de color son pastillas blancas** (`--surface` al 80 %) con texto en `--ink`, como en la maqueta. No se pone un color claro sobre otro claro sin una tinta de por medio.
-5. **Barras de estadísticas:** sobre blanco, relleno en `deep` y pista en `--step`. Sobre un campo de tipo, relleno en `field-ink` y pista en `step`.
+4. **Las etiquetas de tipo dentro de un campo de color son pastillas de superficie:** en claro, blancas (`--surface` al 80 %) con texto en `--ink`, como en la maqueta; en oscuro, `--ground` al 80 % con texto en `--ink` (clara). Peor caso en oscuro: 9.84:1, sobre Eléctrico. La pastilla se pinta ya mezclada con el campo (`.type-tag`, con `--tag-base`), opaca: da los mismos píxeles que una base translúcida y así cualquier medidor ve el contraste real. No se pone un color claro sobre otro claro sin una tinta de por medio.
+5. **Barras de estadísticas:** sobre `--surface`, relleno en `--type-*-text` y pista en `--step`. Sobre un campo de tipo, relleno en `field-ink` y pista en `step`.
 6. **Jerarquía con tamaño y peso, no con opacidad.** Las únicas excepciones son decorativas, marcadas con `aria-hidden`: la marca de agua del número (§4.3) y el nombre gigante de la ficha (§4.4).
-7. **Foco visible:** contorno de 3px en `--ink` separado 3px. Sobre un campo de tipo con tinta hueso, el contorno va en `--bone`.
+7. **Foco visible:** contorno de 3px en `--ink` separado 3px. Sobre un campo de tipo, el contorno va en su `field-ink`, en los dos temas.
+8. **Anillos de selección sobre campos de tipo:** la tabla de tipos ya los pone en `field-ink` (§4.5). Las pastillas de tipo del panel de filtros los llevan en `--ink`: en claro se queda así; en oscuro pasan a `field-ink`, porque un anillo en `--ink` (que ahí es clara) desaparece sobre Eléctrico o Hielo.
 
-Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon (Hielo), Snorlax (Normal), Sylveon (Hada) y Gengar (tinta hueso).
+Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon (Hielo), Snorlax (Normal), Sylveon (Hada) y Gengar (tinta hueso), **en los dos temas**. En oscuro se añade Umbreon (Siniestro, el único campo que cambia).
+
+### 2.4 Tema oscuro
+
+**Idea:** de noche, las tarjetas son lo que da la luz. El fondo es casi negro con un tinte azul apenas perceptible (`#14161D`: el azul va 9 puntos por encima del rojo), para que no se sienta plano ni gris de pantalla apagada; los campos de tipo se quedan exactamente como en claro.
+
+**Tres modos:** claro, oscuro y automático según el sistema (por defecto). El selector está en la cabecera (§4.1).
+
+**Campos de tipo en oscuro.** Sobre `#14161D`, un campo necesita 3:1 con el fondo para que el borde de la tarjeta se vea (WCAG 1.4.11). Diecisiete tipos lo cumplen sin tocar nada. Solo **Siniestro** (2.70:1) se aclara un 5 %, a `field-dark` `#775F4F` (3.04:1), y su tinta hueso sigue en 5.45:1. Su `step` en oscuro es `#665244`.
+
+**`glow`:** el tipo como texto o como marca sobre `--surface` y `--ground` oscuros (≥ 4.5:1 en los dos). Trece tipos usan su `field` tal cual; los cinco de tinta hueso se aclaran mezclándolos con blanco.
+
+| Tipo | `field` en oscuro | campo/fondo | field/ink | `glow` | glow/superficie | glow/fondo |
+| --- | --- | --- | --- | --- | --- | --- |
+| Normal | `#A8A77A` | 7.29 | 7.28 | = field | 6.56 | 7.29 |
+| Fuego | `#EE8130` | 6.72 | 6.72 | = field | 6.05 | 6.72 |
+| Agua | `#6390F0` | 5.83 | 5.82 | = field | 5.25 | 5.83 |
+| Eléctrico | `#F7D02C` | 12.05 | 12.04 | = field | 10.85 | 12.05 |
+| Planta | `#7AC74C` | 8.69 | 8.68 | = field | 7.82 | 8.69 |
+| Hielo | `#96D9D6` | 11.35 | 11.33 | = field | 10.22 | 11.35 |
+| Lucha | `#C22E28` | 3.19 | 5.18 | `#D26662` | 4.50 | 5.00 |
+| Veneno | `#A33EA1` | 3.23 | 5.12 | `#B96CB8` | 4.57 | 5.07 |
+| Tierra | `#E2BF65` | 10.21 | 10.20 | = field | 9.19 | 10.21 |
+| Volador | `#A98FF3` | 6.80 | 6.79 | = field | 6.12 | 6.80 |
+| Psíquico | `#F95587` | 5.74 | 5.73 | = field | 5.17 | 5.74 |
+| Bicho | `#A6B91A` | 8.23 | 8.23 | = field | 7.41 | 8.23 |
+| Roca | `#B6A136` | 7.00 | 6.99 | = field | 6.30 | 7.00 |
+| Fantasma | `#735797` | 3.04 | 5.44 | `#937EAF` | 4.52 | 5.02 |
+| Dragón | `#6F35FC` | 3.08 | 5.36 | `#966CFD` | 4.53 | 5.04 |
+| Siniestro | **`#775F4F`** | 3.04 | 5.45 | `#978478` | 4.56 | 5.06 |
+| Acero | `#B7B7CE` | 9.18 | 9.17 | = field | 8.27 | 9.18 |
+| Hada | `#D685AD` | 6.72 | 6.71 | = field | 6.05 | 6.72 |
+
+Cada `glow` se obtuvo mezclando el campo con blanco en pasos del 1 % hasta llegar al umbral. Las cifras de la tabla las genera `npm run check-contrast`; si se toca un token, se vuelve a ejecutar y se pega su salida.
+
+**Lo que cambia en oscuro y nada más.** Casi todo sale de los tokens; lo poco que no, usa la variante `dark:` de Tailwind (definida en `globals.css`), que cubre el tema forzado y el automático:
+- **Brillo de hover de las tarjetas** (§4.3): mismo alcance, más intensidad. Sobre fondo oscuro el color de tipo luce de verdad, y se aprovecha: dos capas en lugar de una.
+- **Sombras:** las de claro no se ven sobre `#14161D`. La cabecera al desplazar usa `0 6px 20px rgba(0,0,0,.45)` y las capas flotantes van en `--raised` con `0 16px 40px rgba(0,0,0,.55)`. La separación la da sobre todo el escalón de tono.
+- **Pokébola del logo:** contorno, banda y botón en `--on-light`, mitad inferior y centro en `--pokeball-white`, mitad superior en `--accent`. Con colores fijos el logo es el mismo en los dos temas; sobre el fondo oscuro la silueta la dibujan el rojo y el blanco (18.07:1).
+- **Tabla de tipos:** la fila o columna seleccionada se tiñe con su `field` mezclado con `--surface` (en claro, que es blanco, queda igual que ahora). La proporción es `--cross-mix`: 35 % en claro y 80 % en oscuro, porque al 35 % sobre la superficie oscura el campo se ensucia (el naranja de Fuego sale marrón). La guía de hover usa `--ink` al 5 %, que en oscuro aclara.
+- **Velo bajo modales y hojas:** `--on-light` al 40 % en los dos temas. Con `--ink` se volvería un velo claro en oscuro.
+- **Pastilla «Total» estrecha:** base `--on-light` al 15 % en los dos temas, con texto en `field-ink`. Con `--ink` se aclararía en oscuro y bajaría el contraste de la tinta hueso.
+- **Controles nativos y barras de scroll:** `color-scheme: light` o `dark` en `:root`, según el tema activo.
+- **Barra del navegador:** `<meta name="theme-color">` con `--ground` de cada tema (`#F3F4F8` / `#14161D`), con `media` para el modo automático; si el tema está forzado, el script de arranque antepone otro `theme-color` sin `media`, que gana porque el navegador usa el primero que encaja.
+
+**Carga sin parpadeo** (guía de Next 16: `node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md`, apartado «Themes»):
+- La preferencia vive en `localStorage` con la clave `pokedata-theme` (`light` o `dark`). Si no existe, el modo es automático. No se usa cookie: obligaría a renderizar en dinámico las páginas que hoy son estáticas.
+- Un `<script>` inline en el `<head>` del layout raíz, antes de cualquier hoja de estilo que pinte, lee la clave y pone en `<html>`:
+  - `data-theme="light"` o `"dark"` solo si el tema está forzado; en automático no pone nada y manda `prefers-color-scheme`.
+  - `data-theme-pref="light" | "dark" | "system"`, que es lo que marca el segmento activo del selector **por CSS**, ya correcto en el primer pintado y sin esperar a la hidratación.
+- El script va envuelto en `try/catch` (navegación privada, almacenamiento bloqueado): si falla, el modo es automático. `<html>` lleva `suppressHydrationWarning`. El `<script>` se pinta con `InlineScript`, que en el cliente lo marca `text/plain`: React no avisa de un script que no ejecutaría (guía «Preventing Flash» de Next).
+- **CSS:** los valores claros en `:root`; los oscuros en `:root[data-theme="dark"]` y en `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }`. En automático, si el sistema cambia de tema con la página abierta, la página cambia sola.
+- **El cambio es instantáneo**, sin fundido. Como solo se animan `transform` y `opacity` (§6), ningún color se queda a medio camino.
+- Otras pestañas abiertas se enteran con el evento `storage` y cambian también.
 
 ---
 
@@ -126,7 +206,8 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Esquinas, decididas una vez:**
   - Superficies (tarjetas, paneles, columnas): 28px en escritorio y 22px en móvil.
   - Controles (botones, chips, buscador, etiquetas): pastilla completa (`999px`).
-- **Sombras permitidas:** la cabecera cuando la página se ha desplazado, las capas flotantes (desplegable del buscador, hoja móvil de filtros, modales) y el brillo de las tarjetas en hover (§4.3). Nada más lleva sombra en reposo.
+- **Sombras permitidas:** la cabecera cuando la página se ha desplazado, las capas flotantes (desplegable del buscador, hoja móvil de filtros, modales, tooltips) y el brillo de las tarjetas en hover (§4.3). Nada más lleva sombra en reposo. Los valores oscuros están en §2.4.
+- **«Blanco» quiere decir `--surface`** (o `--raised` en lo que flota). Donde este documento dice «panel blanco» o «pastilla blanca», en oscuro es la superficie oscura. Ningún componente escribe `#FFF` ni `bg-white`.
 - **Sin degradados.** La Pokébola del logo es un SVG de formas planas.
 - **Botones:** no hay botón principal en rojo; la búsqueda es automática y no lo necesita.
   - Secundario: relleno `--ink` con texto hueso.
@@ -137,22 +218,29 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 ### 4.1 Cabecera (todas las páginas)
 
-**Composición:** el logo (Pokébola + «PokéData», Nunito 900, 24px), la navegación («Pokédex», «Tipos», «Comparador»), el buscador compacto y el selector de idioma.
+**Composición:** el logo (Pokébola + «PokéData», Nunito 900, 24px), la navegación («Pokédex», «Tipos», «Comparador»), el buscador compacto, el selector de idioma y el selector de tema.
 
 - **Fija al hacer scroll** (`position: sticky; top: 0`) y con fondo `--ground` sólido, sin desenfoque ni transparencia.
 - **Sombra solo con la página desplazada:** a partir de 4px de scroll aparece `0 6px 20px rgba(21,22,28,.08)` con un fundido de 200ms. En reposo arriba del todo no hay sombra.
 - **Navegación:** pastillas de texto. La activa va rellena en `--ink` con texto hueso, como en la maqueta.
 - **Selector de idioma:** un control segmentado con **ES** y **EN** visibles a la vez, sobre una pista `--step`. El idioma activo se rellena en `--surface` y el otro es un enlace a la misma página en ese idioma.
+- **Selector de tema:** a la derecha del de idioma, con la misma pista `--step` y la misma altura, pero con iconos en vez de texto.
+  - Tres segmentos redondos de 36px (44px de área táctil), en este orden: **sol** (claro), **luna** (oscuro) y **monitor** (según el sistema). Iconos de `lucide-react` (`Sun`, `Moon`, `Monitor`) a 18px y trazo 2.25, para que pesen como Nunito 800.
+  - El activo se rellena en `--surface` con el icono en `--ink`; los otros, icono en `--ink-soft` (5.88:1 sobre la pista en oscuro). El segmento activo lo marca el CSS a partir de `data-theme-pref` (§2.4), así que es correcto desde el primer pintado.
+  - **Tooltip** con el nombre: «Claro», «Oscuro», «Según el sistema» / «Light», «Dark», «Match system». Mismo globo que el de la tabla de tipos (§4.5): `--ink` con texto `--bone`, `--step-small` en 800, radio de 8px, sombra y fundido de 120ms. Se abre **debajo** del segmento (la cabecera está arriba del todo), con el puntero y también con el foco del teclado, y Esc lo cierra.
+  - Semántica: `role="radiogroup"` con la etiqueta «Tema» / «Theme», y cada segmento un `role="radio"` con `aria-checked` y su nombre accesible (el del tooltip). Las flechas mueven la selección, como en cualquier grupo de radios.
+  - Pulsar un segmento aplica el tema al momento y lo guarda; pulsar «Según el sistema» borra la clave.
 - **Buscador global (Ctrl K / ⌘K):**
   - En reposo es una pastilla compacta de 40px de alto y unos 240px de ancho, con el texto «Buscar» y la pista del atajo a la derecha.
   - El atajo muestra «Ctrl K», o «⌘K» en Mac, y va como texto en `--ink-soft`, no en una caja con borde.
   - Al enfocarla, despliega los resultados en una capa flotante (blanca, radio 22px, con sombra).
   - **En la portada,** el buscador compacto está oculto mientras el buscador grande del hero está en pantalla. Cuando el del hero sale por arriba, el compacto aparece (opacidad y 8px de subida, 200ms).
   - Ctrl K funciona siempre: enfoca el buscador del hero si se ve; si no, el de la cabecera.
+  - **Tableta (768–1023px):** el buscador compacto no cabe junto a los selectores de idioma y tema, así que la cabecera muestra solo la lupa de 44px, que abre el buscador a pantalla completa como en móvil, y Ctrl K abre ese mismo buscador. La separación entre bloques baja a 12px y las pastillas de navegación a 12px de relleno lateral.
 - **Logo:** al pasar el ratón (o al enfocarlo), la Pokébola da una vuelta completa en 600ms con un ligero rebote. Con movimiento reducido no gira.
 - **Móvil (< 768px):**
   - La cabecera mide 60px y muestra el logo, un botón de lupa que abre el buscador a pantalla completa, ES/EN y un botón «Menú».
-  - «Menú» abre una hoja inferior con la navegación.
+  - «Menú» abre una hoja inferior con la navegación y, debajo, el **selector de tema**: el mismo control de tres segmentos, a todo el ancho de la hoja, con el icono **y su nombre visible** en cada segmento (en táctil no hay hover, así que no hay tooltip). «Según el sistema» no cabe en un tercio de la hoja a 360px, así que ahí se lee «Sistema» / «System»; el nombre accesible sigue siendo el completo, que lo contiene. Fuera de la hoja, la cabecera móvil no lo muestra.
   - El buscador del hero sigue siendo el principal en la portada.
 
 ### 4.2 Portada: hero compacto
@@ -206,7 +294,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - **Fila de cabecera:** «Región» a la izquierda y el botón «×» de cerrar a la derecha.
   - **Regiones:** las 9 (Kanto … Paldea) en una sola fila de pastillas compactas de 40px y ancho igual, con selección única (`?gen=`), en `--step` con texto en tinta.
   - **Tipos:** «Tipos» con la nota «Hasta dos» y los 18 tipos en dos filas de 9 pastillas compactas de 40px, cada una en su `field` con el nombre en `field-ink`. Se pueden elegir hasta dos (`?types=`), porque ningún Pokémon tiene más y el filtro es la intersección; al elegir un tercero sustituye al segundo.
-  - **Selección, igual en tipos y regiones (también en la hoja móvil):** una marca ✓ delante del nombre y un borde de 3px en `--ink` por dentro de la pastilla (`inset-ring`). No cambia el tamaño, no se sale de la pastilla ni toca a las vecinas, y no depende solo del color.
+  - **Selección, igual en tipos y regiones (también en la hoja móvil):** una marca ✓ delante del nombre y un borde de 3px en `--ink` por dentro de la pastilla (`inset-ring`); en oscuro, sobre las pastillas de tipo, el borde va en su `field-ink` (§2.3, regla 8). No cambia el tamaño, no se sale de la pastilla ni toca a las vecinas, y no depende solo del color.
   - **Pie:** «Limpiar» y «Aplicar», alineados a la derecha bajo los tipos.
   - **Tableta (768–1023px):** las regiones pasan a dos filas (5 + 4) y los tipos a tres filas de 6.
   - Es una sección desplegable, no un diálogo: al abrir, el foco se queda en el botón «Filtros». Se cierra con el mismo botón, con «×» o con Esc, y lo no aplicado se descarta.
@@ -261,6 +349,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - La tarjeta sube 6px.
   - El artwork crece a `scale(1.08)`.
   - Aparece un brillo suave del color del tipo: `box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--field) 70%, transparent)`, con un fundido de 250ms.
+  - **En oscuro el brillo se luce más:** la capa de abajo sube al 90 % y se añade un halo alrededor, `0 0 28px 0 color-mix(in srgb, var(--field) 40%, transparent)`. Es el momento en que la tarjeta parece encenderse. El alcance no crece (46px por abajo y 28px por los lados, como en claro), así que los rellenos calculados para la cadena evolutiva y el modal del comparador siguen valiendo. Siniestro usa su `field-dark`.
   - Todo con curva de rebote (`cubic-bezier(.34,1.56,.64,1)`, 350ms). En reposo, sin brillo.
 - **Paginación:** se mantiene `?page=`. Los botones anterior y siguiente son pastillas secundarias y el indicador «3 / 43» va en 800 con cifras tabulares.
 - **Estado vacío:** texto centrado «Nada por aquí. Prueba con otro nombre o tipo.» y un botón «Borrar filtros».
@@ -286,9 +375,9 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Estadísticas base:** seis filas con el nombre, el valor y la barra (relleno `deep`, pista `--step`, escala sobre 255). El total va en `--step-head`.
 - **Debilidades:** etiquetas de tipo en su `field` con el multiplicador (×4, ×2, ×½, ×0) dentro de la propia etiqueta.
 - **Cadena evolutiva:** mini tarjetas con la misma anatomía que las de la portada (§4.3), unidas por flechas. La condición («Nivel 22», «Usar Piedra Trueno», «Intercambio») va **encima de la flecha**, en `--step-small` y 800, nunca debajo de la tarjeta.
-  - **Escritorio (≥1024px):** la cadena corre de izquierda a derecha con flechas →. Si una etapa se ramifica en cadenas propias (Wurmple → Silcoon → Beautifly / Cascoon → Dustox), cada rama es una fila con su flecha, apiladas a la derecha del origen.
-  - **Abanico:** cuatro o más evoluciones finales desde una misma etapa (Eevee) van en un bloque en `--ground` con una sola flecha desde el origen; la condición se pone encima de cada tarjeta. Así ninguna flecha parece salir de una hermana. Cuatro columnas desde 1280px, dos entre 1024 y 1279.
-  - **Móvil:** en vertical, con flechas ↓. Las ramas van en dos columnas y el abanico, sin bloque, en una rejilla de dos.
+  - **Escritorio (≥1024px):** la cadena corre de izquierda a derecha con flechas →. Si una etapa se ramifica en cadenas propias (Wurmple → Silcoon → Beautifly / Cascoon → Dustox), cada rama es una fila con su flecha, apiladas a la derecha del origen. Las flechas de una bifurcación se abren desde el origen: la primera rama sube en diagonal (↗), la última baja (↘) y las del medio siguen rectas. Cada flecha, con su condición justo encima, cae en la altura media de la tarjeta a la que llega. Todos los huecos entre columnas miden lo mismo (144px) y la flecha con su condición va centrada en el hueco, a la misma distancia de las dos tarjetas que une.
+  - **Abanico:** cuatro o más evoluciones finales desde una misma etapa (Eevee) van en un bloque en `--ground` con una sola flecha desde el origen; la condición va pegada debajo de cada tarjeta, con más aire entre filas que entre la tarjeta y su condición, para que en la segunda fila no parezca de la tarjeta de arriba. Así ninguna flecha parece salir de una hermana. En las cadenas lineales la condición sigue encima de la flecha. Cuatro columnas desde 1280px, dos entre 1024 y 1279.
+  - **Móvil:** en vertical, con flechas ↓. Las ramas van en dos columnas que comparten filas (subgrid): en cada nivel los requisitos reservan el mismo alto y las tarjetas empiezan a la misma altura y miden lo mismo, aunque un texto tenga más líneas (Scyther → Scizor / Kleavor). El abanico, sin bloque, va en una rejilla de dos.
   - **Nada se recorta:** el contenedor con scroll horizontal recorta todo lo que sale de su caja, así que ocupa también el relleno del panel (margen negativo y el mismo relleno: 24px en móvil, 40px desde 768px). El brillo de hover (hasta 46px por abajo y 28px por los lados), la subida y el aro de selección caben enteros y el recorte cae en el borde del panel, donde el brillo ya se ha desvanecido.
   - **Requisitos:** de los detalles de PokéAPI (uno por juego) manda el marcado como actual (`is_default`). Si en otros juegos también evoluciona junto a una roca (`near_special_rock`), se añade como alternativa: «Usar Piedra Hoja o subir de nivel junto a la Roca Musgo». Sylveon: «Amistad ≥ 160 · Conocer un movimiento de tipo Hada» (`known_move_type`). Una ubicación sola se muestra como «Subir de nivel en …». «Evolución especial» queda solo para lo que PokéAPI no describe.
 - **Anterior y siguiente:** dos tarjetas grandes al final, cada una en el `field` del Pokémon al que lleva.
@@ -300,7 +389,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Franja superior:** un título pequeño («Tabla de tipos», `<h1>` en `--step-lead`) y una línea de explicación («Las filas atacan y las columnas reciben. Toca un tipo para resaltarlo.»). Sin tarjeta grande de título, sin subtítulo y **sin leyenda**: el significado de cada celda lo da el tooltip.
 - **Tooltip de celda** (solo con puntero): al pasar el ratón por una celda aparece encima un globo breve con el enfrentamiento, «Fuego → Planta: ×2» / «Fire → Grass: ×2» (×2, ×½, ×0 o ×1), con los nombres de tipo en el idioma de la página. Va en `--ink` con texto hueso, `--step-small` en 800, radio de 8px y sombra (es una capa flotante), y aparece con un fundido de 120ms. En las dos primeras y las dos últimas columnas se abre hacia dentro para no salirse de la tabla. Es CSS (`attr(data-tip)` en `globals.css`).
 - **Sin selector aparte ni panel de información:** la propia matriz es el selector. Pulsar el tipo de una fila elige ese tipo **como atacante** (`?atk=`); pulsar el de una columna, **como defensor** (`?def=`). Pulsarlo otra vez quita la selección y pulsar otro la cambia. No hay resumen de debilidades ni botón «Quitar la selección». Los enlaces antiguos con `?type=` abren la fila.
-- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con blanco) y su cabecera lleva el aro en tinta; el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
+- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con `--surface` según `--cross-mix`) y su cabecera lleva el aro en tinta; el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
 - **Guía de hover** (solo con puntero): al pasar por una celda se marcan su fila y su columna, y lo atenuado vuelve a leerse. Es CSS puro (`:has()` en `globals.css`).
   - **El aro en tinta es solo de la selección.** En hover, las cabeceras se oscurecen un poco (`brightness(0.92)`), sin borde, para que nunca parezca que hay dos tipos seleccionados.
   - **Un solo criterio de color:** la fila o columna seleccionada se tiñe con un tono claro de su tipo; la fila y columna bajo el ratón, con un gris neutro muy suave (`--ink` al 5 % sobre `--ground`), solo en las celdas ×1 que no están teñidas.
@@ -320,7 +409,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 ### 4.7 Pie
 
-Un pie **compacto** sobre el campo `--ink` a sangre, sin la palabra gigante. Mide unos 180px de alto en escritorio y tiene un margen superior de 64px respecto al contenido.
+Un pie **compacto** sobre el campo `--footer` a sangre, sin la palabra gigante. En claro es la tinta; en oscuro, un escalón por encima del fondo (`#1D2029`). Todo su texto usa las constantes `--on-dark` y `--on-dark-soft`, que valen igual en los dos temas: donde abajo dice «hueso» es `--on-dark` y donde dice `--bone-soft` es `--on-dark-soft`. Mide unos 180px de alto en escritorio y tiene un margen superior de 64px respecto al contenido.
 
 **Fila principal:** dos extremos.
 - **Izquierda:** el logo (Pokébola + «PokéData», Nunito 900, 22px, en hueso) y debajo una frase corta en `--step-small`, en `--bone-soft`: «Los 1025 Pokémon, con su artwork oficial.»
@@ -377,8 +466,9 @@ Solo se animan `transform` y `opacity`. Todo tiene alternativa con `prefers-redu
 | Panel de filtros | Escritorio: se despliega en altura con fundido y empuja la rejilla (con movimiento reducido, solo el fundido). Móvil: la hoja sube desde abajo | 250ms · `cubic-bezier(.22,.8,.24,1)` |
 | Chips activos | Entrada con escala y salida con fundido | 200ms |
 | Ficha | Flotación lenta del artwork y cambio de forma | 6s en bucle · 400ms |
-| Barras de estadísticas | `scaleX` de 0 a su valor al entrar en pantalla | 600ms · 70ms de escalonado |
+| Barras de estadísticas | `scaleX` de 0 a su valor cuando su fila entra en pantalla (cada fila por separado: las visibles al cargar crecen enseguida y las de abajo, al bajar hasta ellas), cada vez que se muestra un Pokémon o una forma nuevos (ficha y comparador). Salen vacías desde el primer pintado; sin JavaScript o con movimiento reducido, ya llenas | 600ms · 70ms de escalonado |
 | Controles | Pulsación `scale(0.96)` y hover con rebote | 150ms |
+| Selector de tema | El relleno del segmento activo se desliza al nuevo (`transform`); el tema cambia sin fundido | 250ms con rebote · tooltip 120ms |
 
 ---
 
@@ -397,6 +487,7 @@ Lo que ya está en el código de los últimos commits (tokens, Chivo, cabecera y
 | Ficha en un campo a sangre en toda la página | Escenario de color con el nombre gigante y paneles blancos debajo |
 | Ninguna sombra fuera de capas flotantes | Además, la cabecera al desplazar y el brillo de tipo en hover |
 | Pie con «POKÉDATA» gigante a todo el ancho | Pie compacto de dos filas: marca y enlaces, aviso legal y versión |
+| Solo tema claro | Claro, oscuro y automático, con el selector en la cabecera (§2.4) |
 
 Se mantiene todo lo demás de la casa:
 - Ni monoespaciada, ni etiquetas diminutas en mayúsculas espaciadas, ni `backdrop-blur`, ni `transition-all`, ni `animate-pulse`.
@@ -406,33 +497,33 @@ Se mantiene todo lo demás de la casa:
 
 ---
 
-## 8. Orden de trabajo
+## 8. Orden de trabajo: tema oscuro
 
-1. **Tokens.**
-   - Fondo, superficie, tinta, acento y `--step` en `globals.css` (`@theme` de Tailwind v4).
-   - Nunito con `next/font` en lugar de Chivo.
-   - Escala de cinco tamaños y radios (28px y pastilla).
-   - Revisar que los 18 tipos siguen intactos.
-2. **Cabecera.** Logo con la Pokébola en SVG y su giro, navegación, ES/EN segmentado, cabecera fija con sombra al desplazar y buscador compacto con Ctrl K (sin la lógica de la portada todavía).
-3. **Pie compacto** (§4.7). Fila principal con logo, frase y enlaces; fila inferior con el aviso legal y el SHA con el punto verde.
-4. **Tarjeta.** Anatomía con zona reservada, marca de agua y «Total», más el script `artwork-bounds.json` y la normalización del artwork. Se prueba aislada con Caterpie, Venusaur, Wailord y Pikachu.
-5. **Rejilla de la portada.** Columnas, paginación, estado vacío y tarjetas fantasma de carga.
-6. **Filtros.** Botón con contador, panel (desplegable en la página en escritorio y hoja en móvil) con «Limpiar» y «Aplicar» y chips removibles, todo conectado a `?types=` y `?gen=`.
-7. **Hero.**
-   - Titular y buscador grande.
-   - Pokémon del día en el servidor (semilla UTC y regla de tipos distintos).
-   - El dado con el índice id → tipos.
-   - Columnas enlazadas.
-   - Comprobar el presupuesto de altura (§4.2) en español y en inglés.
-8. **Buscador de cabecera en la portada:** aparece cuando el del hero sale de la pantalla, y Ctrl K enfoca el que se ve.
-9. **Ficha.** Escenario con el nombre gigante, formas, estadísticas, debilidades, evolución y anterior/siguiente.
-10. **Comparador.**
-11. **Tabla de tipos.**
-12. **404.**
-13. **Movimiento** (§6): pasada completa y alternativas de movimiento reducido.
-14. **Revisión.**
-    - `lint.mjs` sin FAIL. Las excepciones permitidas son el brillo de hover, la sombra de la cabecera y el acento rojo, cada una justificada en una frase.
-    - `inspect.mjs` contra `npm run dev` a 1440, 768 y 390px.
-    - Verificar que a 1440×900 se ve una fila completa de tarjetas, en `/es` y en `/en`.
-    - Capturas de Pikachu, Glaceon, Snorlax, Sylveon y Gengar (§2.3).
-    - Buscar «Pokédex» usado como nombre de la app en textos, títulos y metadatos y cambiarlo por PokéData. Como nombre de la sección se queda.
+La dirección «Pop» ya está construida (merge 99fcfce); su orden de trabajo queda en el historial de git. Este es el del tema oscuro. Cada paso se cierra con la app funcionando en claro igual que antes.
+
+1. **Tokens en claro, sin cambio visible.**
+   - Añadir `--raised`, `--footer`, `--on-light`, `--on-dark` y `--on-dark-soft` en `globals.css`, con los valores claros.
+   - Las variables `--type-*-ink` pasan a apuntar a `--on-light` / `--on-dark` en vez de a `--ink` / `--bone`.
+   - Añadir `--type-*-text` (de momento igual a `deep`) y `--type-dark-field-dark`.
+   - Pasar a tokens (`--shadow-header`, `--shadow-sheet`, `--shadow-overlay`, `--shadow-modal`, `--shadow-tooltip`) las cinco sombras que los componentes escribían con color fijo. No queda ningún `bg-white` ni `#fff` fuera de `globals.css`.
+   - Comprobar con capturas que el modo claro no ha cambiado ni un píxel.
+2. **Repaso de usos.** Cada componente que pinta sobre un campo de tipo usa `field-ink` o las constantes `--on-*`; cada texto de tipo, `--type-*-text`; cada capa flotante, `--raised`. La Pokébola pasa a colores fijos (§2.4). Así el paso 3 cambia solo variables.
+3. **Valores oscuros.** El bloque oscuro de `globals.css`, en `:root[data-theme="dark"]` y en `@media (prefers-color-scheme: dark)` con `:not([data-theme="light"])`. Incluye `color-scheme`, `field-dark` de Siniestro, `glow` como `--type-*-text` y las sombras oscuras. Se prueba con el modo oscuro del sistema, sin selector todavía.
+4. **Script de arranque.** El `<script>` inline en el `<head>` del layout raíz (§2.4), `suppressHydrationWarning` en `<html>` y `theme-color` con `media` en el `viewport` del layout. Prueba: forzar `localStorage.setItem("pokedata-theme","dark")` con el sistema en claro y recargar con la red y la CPU ralentizadas: el primer pintado ya es oscuro.
+5. **Selector de escritorio** (§4.1). Grupo de radios con sol, luna y monitor, tooltip, marca del activo por `data-theme-pref`, guardado, evento `storage` y textos en `translations.ts` en los dos idiomas. A 768px no cabía: entre 768 y 1023px el buscador compacto se queda en su lupa de 44px (§4.1).
+6. **Selector en la hoja móvil.** El mismo control dentro de «Menú», con iconos y nombres visibles.
+7. **Ajustes propios del oscuro.**
+   - Brillo de hover de dos capas (§4.3) en todo lo que ya lo tiene en claro: tarjetas, mini tarjetas de la evolución y del comparador, y anterior/siguiente. Las columnas del día no llevan brillo en ningún tema (§4.2).
+   - Anillos de selección de las pastillas de tipo del panel de filtros en `field-ink` (§2.3, regla 8).
+   - Etiquetas de tipo en `--ground` al 80 % y pastilla «Total» estrecha sobre `--on-light`.
+   - Tinte de la fila o columna seleccionada de la tabla de tipos mezclado con `--surface`.
+8. **Pantalla por pantalla, en oscuro:** portada (hero, día, filtros, rejilla, carga), ficha, comparador con su modal, tabla de tipos, 404 y pie. En cada una se busca lo que se quedó blanco, tinta oscura sobre fondo oscuro o una sombra que ya no se ve.
+9. **Contraste verificado.** Un script (`npm run check-contrast`) recalcula desde `globals.css` las tablas del §2.1 y del §2.4 y falla si algún par baja de su umbral: 4.5:1 en texto y 3:1 en los bordes de campo y los gráficos. Las cifras de este documento salen de ese script, no a mano. También calcula la tabla del §2.2 y el peor caso de la regla 4, y falla si los dos bloques oscuros de `globals.css` no son iguales o si `typeColors.ts` y `theme.ts` no repiten los valores del CSS. Al pasarlo, Normal resultó estar en 4.49:1 sobre el fondo claro (no en 4.50): se suma a la regla 1, que ya lo cubre.
+10. **Revisión.**
+    - `lint.mjs` sin FAIL. Excepciones: las mismas de siempre más el halo de hover oscuro, justificado en una frase.
+    - `inspect.mjs` contra `npm run dev` a 1440, 768 y 390px, en claro y en oscuro (con el sistema en oscuro y sin clave guardada).
+    - Capturas de Pikachu, Glaceon, Snorlax, Sylveon, Gengar y Umbreon en los dos temas (§2.3).
+    - Recorrer los tres modos con el teclado: foco visible, flechas en el selector, tooltip con el foco y Esc.
+    - Cambiar el tema del sistema con la página abierta en automático: cambia sola. Con un tema forzado: no cambia.
+    - Movimiento reducido: el relleno del selector no se desliza, solo cambia.
+    - **Resultado (19 de octubre de 2026).** `lint.mjs`, `check-contrast`, `tsc` y ESLint sin errores. `inspect.mjs` da exactamente los mismos avisos en claro y en oscuro en la portada, la ficha, la tabla, el comparador y la 404. Esos avisos vienen de la dirección Pop y no del tema: letra de 14px en etiquetas, pocas fotos y ningún vídeo, la cabecera fija que pasa sobre «Pokédex Nacional», el «n.º» sobre el título y la línea del pie. El único aviso propio del oscuro, el contraste de las etiquetas de tipo, era una lectura falsa del inspector, que ignora los fondos translúcidos; se corrigió haciendo la pastilla opaca (regla 4 del §2.3). Las capturas de los seis Pokémon, el teclado, el cambio de tema del sistema en vivo y el movimiento reducido pasan.

@@ -123,7 +123,7 @@ export default function PokemonCard({
             {types.map((type) => (
               <li
                 key={type}
-                className="rounded-pill bg-surface/80 px-2.5 py-0.5 text-small font-extrabold text-ink"
+                className="rounded-pill type-tag px-2.5 py-0.5 text-small font-extrabold text-ink"
               >
                 {typeNames[type]}
               </li>
@@ -152,7 +152,7 @@ interface TotalPillProps {
 // Pastilla «Total 534»: la palabra en 700 y la cifra en 900, tabulares
 function TotalPill({ label, total, className, compact = false }: TotalPillProps) {
   const look = compact
-    ? "bg-ink/15 text-field-ink px-2 py-px text-[0.75rem] leading-[1.4]"
+    ? "bg-on-light/15 text-field-ink px-2 py-px text-[0.75rem] leading-[1.4]"
     : "bg-ink text-bone px-2.5 py-0.5 text-small";
   return (
     <p className={`rounded-pill num ${look} ${className}`}>

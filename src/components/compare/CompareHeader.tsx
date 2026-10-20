@@ -206,7 +206,8 @@ function CompareStage({
               alt=""
               fill
               priority
-              sizes="(min-width: 768px) 360px, 66vw"
+              quality={90}
+              sizes="(min-width: 1024px) 420px, (min-width: 768px) 41vw, 80vw"
               className="object-contain"
             />
           </span>
@@ -247,7 +248,7 @@ function CompareStage({
             {types.map((type) => (
               <li
                 key={type}
-                className="rounded-pill bg-surface/80 px-3.5 py-1 text-small font-extrabold text-ink"
+                className="rounded-pill type-tag px-3.5 py-1 text-small font-extrabold text-ink"
               >
                 {typeNames[type]}
               </li>

@@ -10,7 +10,7 @@ import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { isHeroSearchVisible } from "@/lib/hero-search-visibility";
 
 // El desplegable es una capa flotante: la única sombra permitida en la barra (DESIGN.md §4.1)
-const OVERLAY_SHADOW = "shadow-[0_12px_32px_rgb(10_10_10/0.18)]"; // taste-skill-ignore
+const OVERLAY_SHADOW = "shadow-(--shadow-overlay)";
 
 interface GlobalSearchBarProps {
   locale?: string;
@@ -236,13 +236,13 @@ export default function GlobalSearchBar({
         {isOpen && results.length > 0 && (
           // Capa flotante sobre blanco: el único sitio de la barra con sombra (§4.1)
           <motion.div
-            data-field="surface"
+            data-field="raised"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             ref={resultsListRef}
-            className={`bg-surface text-ink overflow-y-auto overscroll-contain custom-scrollbar py-2 ${
+            className={`bg-raised text-ink overflow-y-auto overscroll-contain custom-scrollbar py-2 ${
               isOverlay
                 ? "mt-3 max-h-[calc(100svh-7rem)]"
                 : `absolute right-0 w-[max(100%,24rem)] top-full mt-2 rounded-[1.375rem] ${OVERLAY_SHADOW} max-h-[min(24rem,60svh)] z-50`

@@ -16,6 +16,11 @@ export const translations = {
       mainNav: "Main navigation",
       home: "PokéData, home",
       language: "Language",
+      theme: "Theme",
+      themeLight: "Light",
+      themeDark: "Dark",
+      themeSystem: "Match system",
+      themeSystemShort: "System",
       searchPlaceholder: "Search Pokémon...",
     },
     footer: {
@@ -185,6 +190,11 @@ export const translations = {
       mainNav: "Navegación principal",
       home: "PokéData, inicio",
       language: "Idioma",
+      theme: "Tema",
+      themeLight: "Claro",
+      themeDark: "Oscuro",
+      themeSystem: "Según el sistema",
+      themeSystemShort: "Sistema",
       searchPlaceholder: "Buscar Pokémon...",
     },
     footer: {

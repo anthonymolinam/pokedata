@@ -11,9 +11,10 @@ interface BaseStatsProps {
 }
 
 // Estadísticas base (DESIGN.md §4.4): seis filas con el nombre, el valor y la
-// barra sobre 255, en el deep del tipo principal sobre una pista --step. Las
-// barras crecen una vez al entrar en pantalla; sin JavaScript o con movimiento
-// reducido se ven ya llenas.
+// barra sobre 255, en el color de texto del tipo principal (deep en claro, glow en oscuro) sobre una pista --step. Cada
+// barra crece cuando su fila entra en pantalla, cada vez que se monta el panel
+// (la ficha le da una key por Pokémon y forma); sin JavaScript o con
+// movimiento reducido se ven ya llenas.
 export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps) {
   const { detail } = getDictionary(locale);
   const ref = useReveal<HTMLElement>();
@@ -36,20 +37,20 @@ export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps
       </div>
 
       <dl className="mt-6 md:mt-8">
-        {stats.map((stat, i) => (
+        {stats.map((stat) => (
           <div
             key={stat.name}
+            data-reveal="pending"
             className="grid grid-cols-[minmax(6.5rem,9rem)_2.75rem_1fr] items-center gap-x-3 md:gap-x-5 py-2"
           >
             <dt className="text-body">{detail.statNames[stat.name] ?? stat.name}</dt>
             <dd className="text-body font-black num text-right">{stat.value}</dd>
             <dd aria-hidden="true" className="h-3 overflow-hidden rounded-pill bg-step">
               <span
-                className="stat-bar block h-full bg-field-deep"
+                className="stat-bar block h-full bg-field-text"
                 style={
                   {
                     "--v": Math.min(stat.value / 255, 1),
-                    "--i": i,
                   } as React.CSSProperties
                 }
               />

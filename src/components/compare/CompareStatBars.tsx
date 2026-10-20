@@ -32,7 +32,10 @@ function valueClass(wins: boolean, base: "body" | "lead"): string {
 }
 
 // Estadísticas enfrentadas (DESIGN.md §4.6): panel blanco con las barras que
-// crecen desde el eje central, cada una en el deep de su Pokémon, sobre 255.
+// crecen desde el eje central, cada una en el color de texto de su Pokémon (deep en claro, glow en oscuro), sobre 255.
+// Cada fila crece cuando entra en pantalla, cada vez que se monta el panel: la
+// página le da una key por pareja, así que cambiar de Pokémon o de forma las
+// repite.
 export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareStatBarsProps) {
   const { compare, detail } = getDictionary(locale);
   const ref = useReveal<HTMLElement>();
@@ -79,7 +82,7 @@ export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareS
           const a = left.values[i];
           const b = right.values[i];
           return (
-            <div key={key} className={`${row} gap-y-1 py-2`}>
+            <div key={key} data-reveal="pending" className={`${row} gap-y-1 py-2`}>
               <dt className="col-span-full text-center text-small font-extrabold md:col-span-1 md:col-start-3 md:row-start-1 md:text-body md:font-semibold">
                 {detail.statNames[key] ?? key}
               </dt>
@@ -93,8 +96,8 @@ export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareS
                 className="flex h-3 justify-end overflow-hidden rounded-pill bg-step md:col-start-2 md:row-start-1"
               >
                 <span
-                  className="stat-bar stat-bar-end block h-full w-full rounded-pill bg-field-deep"
-                  style={{ "--v": Math.min(a / 255, 1), "--i": i } as React.CSSProperties}
+                  className="stat-bar stat-bar-end block h-full w-full rounded-pill bg-field-text"
+                  style={{ "--v": Math.min(a / 255, 1) } as React.CSSProperties}
                 />
               </dd>
               <dd
@@ -103,8 +106,8 @@ export default function CompareStatBars({ pokemon1, pokemon2, locale }: CompareS
                 className="h-3 overflow-hidden rounded-pill bg-step md:col-start-4 md:row-start-1"
               >
                 <span
-                  className="stat-bar block h-full w-full rounded-pill bg-field-deep"
-                  style={{ "--v": Math.min(b / 255, 1), "--i": i } as React.CSSProperties}
+                  className="stat-bar block h-full w-full rounded-pill bg-field-text"
+                  style={{ "--v": Math.min(b / 255, 1) } as React.CSSProperties}
                 />
               </dd>
               <dd className={`num text-right md:col-start-5 md:row-start-1 ${valueClass(b > a, "body")}`}>
