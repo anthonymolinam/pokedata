@@ -1,6 +1,6 @@
 # ⚡ PokéData
 
-PokéData is a modern, fast Pokémon database built with **Next.js 16 (App Router)**, **TypeScript**, and **Tailwind CSS 4**. Engineered with a focus on performance, mobile accessibility, and seamless UX across all 1,025 official Pokémon and their alternate forms, in English and Spanish.
+PokéData is a modern, fast Pokémon database built with **Next.js 16 (App Router)**, **TypeScript**, and **Tailwind CSS 4**. Engineered with a focus on performance, mobile accessibility, and seamless UX across all 1,025 official Pokémon and their alternate forms, in English and Spanish, with a team builder that analyzes your six.
 
 > **Fan-made project.** PokéData is not affiliated with, endorsed by, or connected to Nintendo, Game Freak, or Creatures. Pokémon and Pokémon character names are trademarks of their respective owners.
 
@@ -15,6 +15,10 @@ PokéData is a modern, fast Pokémon database built with **Next.js 16 (App Route
 | Type chart | Comparator |
 | :--------: | :--------: |
 | ![Type effectiveness chart](docs/screenshots/type-chart.png) | ![Kyogre and Groudon in the comparator](docs/screenshots/comparator.png) |
+
+| Team builder | Team defense | Team coverage & stats |
+| :----------: | :----------: | :-------------------: |
+| ![A six-Pokémon team in the team builder](docs/screenshots/team.png) | ![The team's defense matrix with the biggest risk](docs/screenshots/team-defense.png) | ![The team's offensive coverage and base stats](docs/screenshots/team-coverage.png) |
 
 ---
 
@@ -47,6 +51,15 @@ PokéData is a modern, fast Pokémon database built with **Next.js 16 (App Route
   - Full evolution graph supporting multi-branch paths (e.g., Eevee, Tyrogue, Applin).
   - Each step shows its condition: level, item, held item, friendship, time of day, known move, location, gender, or trade.
 
+- **Team Builder:**
+  - Up to six Pokémon, saved in the browser and synced across tabs. Add them from a selector with search and the species' forms (regional, Mega, Gigantamax…), or with **Add to team** on any detail page.
+  - Each member links to its page in the chosen form and can be moved, dragged to reorder, switched to another form, or removed.
+  - A random team die fills the empty slots with species of varied types (or rerolls a full team), and an **Undo** toast brings back the last removal, clear, or reroll in the same slot and form.
+  - **Defense:** an 18-row matrix with what each member takes from every attacking type, weak / resist / immune counts per row, and the biggest risk highlighted.
+  - **Offensive coverage:** which opposing types the team's types hit super effectively, and which ones it can't.
+  - **Base stats:** the team's average total and each stat's average, with the best member for each.
+  - **Share link:** the team travels in the URL (`?t=garchomp,scizor,...`); a shared team opens without overwriting your own, with the option to save it.
+
 - **Interactive Type Chart:**
   - The full 18 × 18 effectiveness table. Select an attacking row or a defending column to highlight its matchups; the selection lives in the URL and works without JavaScript.
 
@@ -60,7 +73,8 @@ PokéData is a modern, fast Pokémon database built with **Next.js 16 (App Route
   - Every page lives under `/en` or `/es`, detected from the browser language, with translated URLs (e.g., `/es/tabla-de-tipos`, `/en/type-chart`) and a language switcher that keeps you on the same page.
 
 - **Pop Design:**
-  - Light design built on the 18 official type colors: cards, stages, and filters take the field color of their type, with contrast-checked text on each.
+  - Light, dark, or system theme, with a switcher in the header and the mobile menu.
+  - Design built on the 18 official type colors: cards, stages, and filters take the field color of their type, with contrast-checked text on each.
   - Cards with large artwork that overflows the card, normalized in size across every Pokémon from measured artwork bounds.
   - A single typeface, **Nunito**, served locally with `next/font/local`.
   - Animations powered by **Framer Motion**, with `prefers-reduced-motion` support.
@@ -89,6 +103,7 @@ PokéData is a modern, fast Pokémon database built with **Next.js 16 (App Route
 ```text
 scripts/
 ├── artwork-bounds.mjs            # Measures each artwork's opaque bounds for size normalization
+├── check-contrast.mjs            # Checks the contrast of every color pair in globals.css
 └── pokemon-index.mjs             # Builds the compact Pokémon index used by the Pokémon of the Day
 src/
 ├── app/
@@ -100,24 +115,29 @@ src/
 │   │   ├── pokemon/
 │   │   │   └── [name]/
 │   │   │       └── page.tsx      # Pokémon detail (stats, forms, weaknesses & evolution)
+│   │   ├── team/
+│   │   │   └── page.tsx          # Team builder (/en/team, /es/equipo)
 │   │   ├── types/
 │   │   │   └── page.tsx          # Type chart (/en/type-chart, /es/tabla-de-tipos)
 │   │   ├── layout.tsx            # Locale layout: Nunito, header and footer
 │   │   ├── not-found.tsx         # 404 page
 │   │   └── page.tsx              # Home: hero, filters, result count and grid
 │   ├── api/
-│   │   └── search/
-│   │       └── route.ts          # Search endpoint with multilingual aliases & pagination offset
+│   │   ├── search/
+│   │   │   └── route.ts          # Search endpoint with multilingual aliases & pagination offset
+│   │   └── team/
+│   │       └── route.ts          # Each team member's data and forms, in both languages
 │   ├── fonts/                    # Nunito WOFF2 files (600, 700, 800, 900) and their licence
 │   ├── globals.css               # Design tokens, type colors and Tailwind theme
-│   ├── robots.txt
+│   ├── robots.ts
 │   └── sitemap.ts
 ├── components/
-│   ├── common/                   # Header, footer, global search, language switcher, Poké Ball, motion
+│   ├── common/                   # Header, footer, global search, language & theme switchers, toast, die, motion
 │   ├── compare/                  # Comparator stages, stat bars and Pokémon picker
 │   ├── home/                     # Hero, hero search, Pokémon of the Day, filters panel and grid
 │   ├── pokemon/                  # Pokémon card and its loading skeleton
-│   ├── pokemon-detail/           # Detail stage, base stats, weaknesses, evolution tree and navigation
+│   ├── pokemon-detail/           # Detail stage, Add to team, base stats, weaknesses, evolution tree and navigation
+│   ├── team/                     # Team fields, picker, random die, defense, coverage and stats panels
 │   └── types/
 │       └── TypeChart.tsx         # Interactive type chart
 ├── constants/
@@ -135,6 +155,12 @@ src/
 │   ├── home-query.ts             # Home search, filters and result count
 │   ├── daily.ts / daily-server.ts # Pokémon of the Day selection
 │   ├── artwork.ts                # Artwork size normalization
+│   ├── team.ts                   # Team store, localStorage and the ?t= share link
+│   ├── team-analysis.ts          # Defense, biggest risk, coverage and stats (with tests)
+│   ├── team-random.ts            # Random team with varied types (with tests)
+│   ├── team-members.ts           # Cache of member data fetched from /api/team
+│   ├── theme.ts                  # Light / dark / system theme
+│   ├── metadata.ts               # Site URL, canonicals, hreflang and social cards
 │   └── ...                       # Type matrix, Pokémon names, reveal and hero search helpers
 └── proxy.ts                      # Locale detection and translated URL rewrites
 ```
@@ -179,6 +205,8 @@ src/
 - `npm run build` - Creates an optimized production build.
 - `npm run start` - Boots the production server.
 - `npm run lint` - Runs ESLint to check for static code errors.
+- `npm test` - Runs the unit tests (team analysis and random team) with Node's test runner.
+- `npm run check-contrast` - Verifies the contrast of the theme colors (WCAG 4.5:1 for text, 3:1 for graphics).
 - `npm run artwork-bounds` - Regenerates `src/data/artwork-bounds.json` (only needed if PokéAPI artwork changes or new Pokémon are added).
 - `npm run pokemon-index` - Regenerates `src/data/pokemon-index.json`.
 
