@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type Ref } from "react";
-import { AnimatePresence, motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
+import { AnimatePresence, motion, useIsPresent, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 import { ArrowLeft, ArrowRight, RefreshCw, X, type LucideIcon } from "lucide-react";
 import Artwork from "@/components/common/Artwork";
 import { artworkUrl } from "@/lib/artwork";
@@ -251,6 +251,8 @@ function MemberField({
   const formButtonRef = useRef<HTMLButtonElement>(null);
   const hasForms = member.forms.length > 1;
   const withName = (text: string) => text.replace("{name}", member.name);
+  // Mientras sale, el campo deja de ser su hueco: el foco va al que lo ocupa
+  const present = useIsPresent();
 
   // El inicio y el final del arrastre nativo van por el DOM: en un elemento
   // de Framer Motion, onDragStart y onDragEnd son los de su propio arrastre
@@ -289,7 +291,7 @@ function MemberField({
       ref={setRefs}
       {...motionProps}
       tabIndex={-1}
-      data-slot={index}
+      data-slot={present ? index : undefined}
       aria-label={label}
       data-type={member.types[0] ?? "normal"}
       draggable
@@ -332,17 +334,19 @@ function MemberField({
         </div>
 
         {/* Ficha: cuatro filas siempre en la misma posición. La de la forma
-            existe aunque no haya forma, y los tipos se apoyan abajo */}
-        <div className="relative z-2 @container flex-none h-[140px] grid grid-rows-[auto_auto_auto_1fr] p-2.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
-          <p className="text-small font-extrabold text-ink-soft num leading-[18px]">
+            existe aunque no haya forma, y los tipos se apoyan abajo. Entre
+            1024 y 1279px la ficha mide menos de 80px: menos relleno lateral y,
+            bajo 72px de contenido, etiquetas de 11px («Fantasma» cabe) */}
+        <div className="relative z-2 @container flex-none h-[140px] grid grid-rows-[auto_auto_auto_1fr] p-2.5 lg:max-xl:px-1.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
+          <p className="text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft num leading-[18px]">
             {String(member.id).padStart(4, "0")}
           </p>
-          <p className="text-[clamp(14px,calc(100cqi/(var(--chars)*0.6+0.4)),20px)] font-black tracking-[-0.03em] leading-6 whitespace-nowrap">
+          <p className="text-[clamp(14px,calc(100cqi/(var(--chars)*0.5+1)),20px)] lg:max-xl:text-[clamp(10px,calc(100cqi/(var(--chars)*0.5+1)),20px)] font-black tracking-[-0.03em] leading-6 whitespace-nowrap">
             {member.name}
           </p>
           <p
             title={member.form?.full}
-            className="text-small font-extrabold text-ink-soft leading-[18px] truncate"
+            className="text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft leading-[18px] truncate"
           >
             {member.form?.short ?? " "}
           </p>
@@ -351,7 +355,7 @@ function MemberField({
               <li
                 key={type}
                 data-type={type}
-                className="inline-flex items-center h-6 px-[9px] rounded-pill bg-field text-field-ink text-[12px] font-extrabold"
+                className="inline-flex items-center h-6 px-[9px] @max-[72px]:px-1.5 rounded-pill bg-field text-field-ink text-[12px] @max-[72px]:text-[11px] font-extrabold"
               >
                 {typeNames[type]}
               </li>
@@ -543,7 +547,8 @@ function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: Form
   );
 }
 
-// Hueco vacío: todo el campo es un único botón que abre el selector
+// Hueco vacío: todo el campo es un único botón que abre el selector. Como el
+// campo, deja de marcar su hueco mientras sale
 function EmptySlot({
   index,
   label,
@@ -555,10 +560,11 @@ function EmptySlot({
   shortLabel: string;
   onAdd?: () => void;
 }) {
+  const present = useIsPresent();
   return (
     <button
       type="button"
-      data-slot={index}
+      data-slot={present ? index : undefined}
       aria-label={label}
       onClick={onAdd}
       className={`group flex h-full w-full flex-col items-center justify-center gap-4 rounded-surface bg-step text-ink cursor-pointer focus-visible:outline-ink hover:bg-[color-mix(in_srgb,var(--ink)_9%,var(--step))] focus-visible:bg-[color-mix(in_srgb,var(--ink)_9%,var(--step))] motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:active:-translate-y-1.5 motion-safe:active:scale-[0.98]`}

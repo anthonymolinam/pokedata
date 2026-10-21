@@ -104,7 +104,7 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
         <div
           role="table"
           aria-label={team.matrixLabel}
-          className="grid gap-y-1 max-lg:w-max max-lg:min-w-full max-lg:px-6 max-lg:gap-x-2 max-lg:grid-cols-[96px_repeat(6,56px)_168px] lg:team-grid"
+          className="grid gap-y-1 max-lg:w-max max-lg:min-w-full max-lg:px-6 max-lg:gap-x-2 max-lg:grid-cols-[96px_repeat(6,56px)_186px] lg:team-grid"
         >
           <div
             role="row"
@@ -257,8 +257,9 @@ function Cell({ value, tip, risk, row }: CellProps) {
 }
 
 // Recuento del balance; el 0 se escribe «–». Los débiles se marcan: 3 o más
-// en tinta, 2 en step. En la fila de riesgo las cifras sueltas van en la tinta
-// del campo: el gris y la tinta normal se pierden sobre el tinte en oscuro
+// en tinta, 2 en step. En la fila de riesgo las cifras sueltas van en tinta
+// sobre el tinte claro (35 %) y en la tinta del campo sobre el oscuro (80 %),
+// donde el gris y la tinta normal se pierden
 interface CountProps {
   value: number;
   label: string;
@@ -267,8 +268,9 @@ interface CountProps {
 }
 
 function Count({ value, label, risk, alarm }: CountProps) {
-  let tone = risk ? "text-field-ink" : "";
-  if (value === 0) tone = `${risk ? "text-field-ink" : "text-ink-soft"} font-bold`;
+  const riskInk = "text-ink dark:text-field-ink";
+  let tone = risk ? riskInk : "";
+  if (value === 0) tone = `${risk ? riskInk : "text-ink-soft"} font-bold`;
   else if (alarm && value >= 3) tone = "bg-ink text-bone";
   else if (alarm && value === 2) tone = "bg-step text-ink";
 
