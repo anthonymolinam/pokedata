@@ -97,7 +97,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
         search(query);
         document.getElementById("pokedex")?.scrollIntoView({ behavior: "smooth" });
       }}
-      className={`flex items-center gap-2 h-14 md:h-15 pl-5 ${query ? "pr-2" : "pr-5"} rounded-pill bg-ground focus-within:bg-step has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-3 has-[input:focus-visible]:outline-ink motion-safe:transition-colors duration-200`}
+      className={`flex items-center gap-2 h-14 md:h-15 pl-5 ${query ? "pr-2" : "pr-5"} rounded-pill bg-ground focus-within:bg-step has-[input:focus-visible]:ring-selected motion-safe:transition-colors duration-200`}
     >
       <Search aria-hidden="true" strokeWidth={2.5} className="size-5 shrink-0" />
       <label htmlFor="hero-search" className="sr-only">

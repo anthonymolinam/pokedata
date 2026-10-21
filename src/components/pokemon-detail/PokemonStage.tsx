@@ -24,7 +24,7 @@ const CROSSFADE = { duration: 0.4, ease: "easeOut" } as const;
 
 // Pulsación y hover con rebote de los controles (§4.0)
 const control =
-  "min-h-11 rounded-pill px-4 text-small font-extrabold cursor-pointer bg-surface text-ink aria-pressed:bg-ink aria-pressed:text-bone motion-safe:transition-transform duration-150 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:-translate-y-0.5 active:scale-[0.96]";
+  "min-h-11 rounded-pill px-4 text-small font-extrabold cursor-pointer bg-surface text-ink aria-pressed:ring-selected motion-safe:transition-transform duration-150 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:-translate-y-0.5 active:scale-[0.96]";
 
 // El id sale de la URL del artwork (…/official-artwork/6.png, también la
 // variocolor) para normalizar la figura; las formas sin medidas caen a

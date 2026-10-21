@@ -187,7 +187,7 @@ export function PokemonSelectDialog({
           </button>
         </div>
 
-        <div className="flex h-14 items-center gap-2 rounded-pill bg-step px-5 has-[input:focus-visible]:outline-3 has-[input:focus-visible]:outline-offset-3 has-[input:focus-visible]:outline-ink">
+        <div className="flex h-14 items-center gap-2 rounded-pill bg-step px-5 has-[input:focus-visible]:ring-selected">
           {loading ? (
             <Loader2 aria-hidden="true" strokeWidth={2.5} className="size-5 shrink-0 animate-spin" />
           ) : (

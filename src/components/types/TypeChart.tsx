@@ -93,9 +93,9 @@ function Cell({ value, col, state, tip, edge }: CellProps) {
 
 // Fila y columna comparten pastilla: misma altura, letra y relleno
 const HEAD = `type-head flex items-center h-8 px-2 rounded-pill bg-field text-field-ink text-small font-extrabold focus-visible:outline-ink ${press}`;
-// Aro de selección por dentro de la pastilla, en la tinta de su campo (tinta
-// sobre los claros, hueso sobre los oscuros): nunca invade a las vecinas
-const HEAD_SELECTED = "inset-ring-3 inset-ring-field-ink";
+// El borde único de selección (§2.3, regla 8), por dentro de la pastilla:
+// nunca invade a las vecinas
+const HEAD_SELECTED = "ring-selected";
 
 // Multiplicador tal y como se lee en el tooltip
 const MULTIPLIER: Record<number, string> = { 2: "×2", 1: "×1", 0.5: "×½", 0: "×0" };

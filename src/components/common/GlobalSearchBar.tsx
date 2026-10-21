@@ -202,7 +202,7 @@ export default function GlobalSearchBar({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           aria-label={label}
-          className={`w-full rounded-pill bg-surface focus:bg-step text-ink placeholder:text-ink-soft pl-10 font-semibold [&::-webkit-search-cancel-button]:appearance-none ${
+          className={`w-full rounded-pill bg-surface focus:bg-step focus-visible:outline-none focus-visible:ring-selected text-ink placeholder:text-ink-soft pl-10 font-semibold [&::-webkit-search-cancel-button]:appearance-none ${
             isOverlay ? "h-12 pr-12 text-body" : "h-10 pr-10 lg:pr-20 text-small"
           }`}
         />
@@ -261,7 +261,7 @@ export default function GlobalSearchBar({
                 onClick={() => handleSelect(p.name)}
                 className={`w-full flex items-center gap-3 px-4 py-1.5 text-left cursor-pointer focus-visible:-outline-offset-3 ${
                   idx === selectedIndex
-                    ? "bg-ink text-bone"
+                    ? "bg-step ring-selected"
                     : "hover:bg-step"
                 }`}
               >

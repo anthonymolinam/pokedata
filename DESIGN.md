@@ -109,7 +109,7 @@ Los tokens viven en un único sitio: `typeColors.ts` y las variables `--type-*` 
 5. **Barras de estadísticas:** sobre `--surface`, relleno en `--type-*-text` y pista en `--step`. Sobre un campo de tipo, relleno en `field-ink` y pista en `step`.
 6. **Jerarquía con tamaño y peso, no con opacidad.** Las únicas excepciones son decorativas, marcadas con `aria-hidden`: la marca de agua del número (§4.3) y el nombre gigante de la ficha (§4.4).
 7. **Foco visible:** contorno de 3px en `--ink` separado 3px. Sobre un campo de tipo, el contorno va en su `field-ink`, en los dos temas.
-8. **Anillos de selección sobre campos de tipo:** la tabla de tipos ya los pone en `field-ink` (§4.5). Las pastillas de tipo del panel de filtros los llevan en `--ink`: en claro se queda así; en oscuro pasan a `field-ink`, porque un anillo en `--ink` (que ahí es clara) desaparece sobre Eléctrico o Hielo.
+8. **Un único estilo de selección en toda la web:** un borde de 3px en `--ink` (oscuro en claro, claro en oscuro), de un solo trazo y **dibujado por dentro** del elemento (`inset-ring`), así que no cambia su tamaño ni invade a los vecinos. Es la utilidad `ring-selected` de `globals.css` y nada más marca una selección: ni rellenos en tinta, ni anillos en `field-ink`, ni dobles trazos. Lo llevan los filtros (tipos y regiones), las cabeceras elegidas de la tabla de tipos, la etiqueta de la fila de riesgo de la Defensa, los buscadores enfocados (el del hero, el global y el del modal) y el resultado marcado con las flechas, la tarjeta de la cadena evolutiva en la que estás, la tarjeta marcada del selector y las formas activas (ficha, selector del equipo y menú «Cambiar forma»). Sobre los campos de tipo va igualmente en `--ink`; donde el contraste baja (oscuro sobre Eléctrico o Hielo) la selección no depende solo de él: los filtros llevan ✓ y la tabla tiñe la fila o columna. Fuera quedan la navegación y el selector de tema, que marcan dónde estás, no lo que eliges.
 
 Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon (Hielo), Snorlax (Normal), Sylveon (Hada) y Gengar (tinta hueso), **en los dos temas**. En oscuro se añade Umbreon (Siniestro, el único campo que cambia).
 
@@ -214,6 +214,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Terciario: relleno `--surface` con texto en tinta.
   - Pulsación con `scale(0.96)` y hover con un pequeño rebote.
 - **Área táctil mínima** de 44px en todo.
+- **Cursor de mano** en todo lo que se pulsa: botones, enlaces, opciones y pastillas (regla base de `globals.css`, porque Tailwind deja los botones con la flecha). Lo desactivado no la lleva.
 - **Sin scroll horizontal de página:** solo lo tienen contenedores concretos (la tabla de tipos, la cadena evolutiva). El `<main>` lleva `overflow-x: clip` como red de seguridad; `clip` no crea contenedor de scroll, así que no rompe los elementos fijos ni `sticky`. Un elemento absoluto dentro de un contenedor con scroll necesita un antepasado posicionado dentro de ese contenedor.
 
 ### 4.1 Cabecera (todas las páginas)
@@ -236,6 +237,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Buscador global (Ctrl K / ⌘K):**
   - En reposo es una pastilla compacta de 40px de alto y unos 240px de ancho, con el texto «Buscar» y la pista del atajo a la derecha.
   - El atajo muestra «Ctrl K», o «⌘K» en Mac, y va como texto en `--ink-soft`, no en una caja con borde.
+  - Enfocada, lleva el borde de selección por dentro (§2.3, regla 8), como el buscador del hero y el del modal. El resultado marcado con las flechas va en `--step` con ese mismo borde.
   - Al enfocarla, despliega los resultados en una capa flotante (blanca, radio 22px, con sombra).
   - **En la portada,** el buscador compacto está oculto mientras el buscador grande del hero está en pantalla. Cuando el del hero sale por arriba, el compacto aparece (opacidad y 8px de subida, 200ms).
   - Ctrl K funciona siempre: enfoca el buscador del hero si se ve; si no, el de la cabecera.
@@ -297,7 +299,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - **Fila de cabecera:** «Región» a la izquierda y el botón «×» de cerrar a la derecha.
   - **Regiones:** las 9 (Kanto … Paldea) en una sola fila de pastillas compactas de 40px y ancho igual, con selección única (`?gen=`), en `--step` con texto en tinta.
   - **Tipos:** «Tipos» con la nota «Hasta dos» y los 18 tipos en dos filas de 9 pastillas compactas de 40px, cada una en su `field` con el nombre en `field-ink`. Se pueden elegir hasta dos (`?types=`), porque ningún Pokémon tiene más y el filtro es la intersección; al elegir un tercero sustituye al segundo.
-  - **Selección, igual en tipos y regiones (también en la hoja móvil):** una marca ✓ delante del nombre y un borde de 3px en `--ink` por dentro de la pastilla (`inset-ring`); en oscuro, sobre las pastillas de tipo, el borde va en su `field-ink` (§2.3, regla 8). No cambia el tamaño, no se sale de la pastilla ni toca a las vecinas, y no depende solo del color.
+  - **Selección, igual en tipos y regiones (también en la hoja móvil):** una marca ✓ delante del nombre y el borde único de selección (§2.3, regla 8), en `--ink` por dentro de la pastilla, también sobre las de tipo. No cambia el tamaño, no se sale de la pastilla ni toca a las vecinas, y no depende solo del color.
   - **Pie:** «Limpiar» y «Aplicar», alineados a la derecha bajo los tipos.
   - **Tableta (768–1023px):** las regiones pasan a dos filas (5 + 4) y los tipos a tres filas de 6.
   - Es una sección desplegable, no un diálogo: al abrir, el foco se queda en el botón «Filtros». Se cierra con el mismo botón, con «×» o con Esc, y lo no aplicado se descarta.
@@ -370,7 +372,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Debajo, sobre el campo:**
   - El nombre real (`<h1>`, `--step-hero`, en `field-ink`).
   - El número, las etiquetas de tipo, la altura y el peso.
-  - El selector de formas: pastillas blancas, con la activa en `--ink`. Solo formas; el variocolor va aparte (arriba).
+  - El selector de formas: pastillas blancas, con la activa marcada por el borde de selección (§2.3, regla 8). Solo formas; el variocolor va aparte (arriba).
   - Los nombres de forma con siglas se escriben como tales: «PhD», no «Phd».
   - **«Añadir al equipo»** (§4.9): pastilla terciaria (`--surface`, texto en tinta, icono `Plus` de `lucide-react`) en la misma fila que el selector de formas, al final. Añade **la forma que se está viendo** (Mega, regional…); el variocolor no cuenta, el equipo usa siempre el artwork normal.
     - Al pulsarla aparece un aviso flotante («Añadido a tu equipo · Ver equipo», `--ink` con texto hueso, 2,5s) y el botón pasa a **«En tu equipo»** con una marca ✓, relleno `--ink` y texto hueso; en ese estado es un enlace a la página del equipo.
@@ -396,11 +398,11 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Franja superior:** un título pequeño («Tabla de tipos», `<h1>` en `--step-lead`) y una línea de explicación («Las filas atacan y las columnas reciben. Toca un tipo para resaltarlo.»). Sin tarjeta grande de título, sin subtítulo y **sin leyenda**: el significado de cada celda lo da el tooltip.
 - **Tooltip de celda** (solo con puntero): al pasar el ratón por una celda aparece encima un globo breve con el enfrentamiento, «Fuego → Planta: ×2» / «Fire → Grass: ×2» (×2, ×½, ×0 o ×1), con los nombres de tipo en el idioma de la página. Va en `--ink` con texto hueso, `--step-small` en 800, radio de 8px y sombra (es una capa flotante), y aparece con un fundido de 120ms. En las dos primeras y las dos últimas columnas se abre hacia dentro para no salirse de la tabla. Es CSS (`attr(data-tip)` en `globals.css`).
 - **Sin selector aparte ni panel de información:** la propia matriz es el selector. Pulsar el tipo de una fila elige ese tipo **como atacante** (`?atk=`); pulsar el de una columna, **como defensor** (`?def=`). Pulsarlo otra vez quita la selección y pulsar otro la cambia. No hay resumen de debilidades ni botón «Quitar la selección». Los enlaces antiguos con `?type=` abren la fila.
-- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con `--surface` según `--cross-mix`) y su cabecera lleva el aro en tinta; el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
+- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con `--surface` según `--cross-mix`) y su cabecera lleva el borde de selección (§2.3, regla 8); el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
 - **Guía de hover** (solo con puntero): al pasar por una celda se marcan su fila y su columna, y lo atenuado vuelve a leerse. Es CSS puro (`:has()` en `globals.css`).
-  - **El aro en tinta es solo de la selección.** En hover, las cabeceras se oscurecen un poco (`brightness(0.92)`), sin borde, para que nunca parezca que hay dos tipos seleccionados.
+  - **El borde es solo de la selección.** En hover, las cabeceras se oscurecen un poco (`brightness(0.92)`), sin borde, para que nunca parezca que hay dos tipos seleccionados.
   - **Un solo criterio de color:** la fila o columna seleccionada se tiñe con un tono claro de su tipo; la fila y columna bajo el ratón, con un gris neutro muy suave (`--ink` al 5 % sobre `--ground`), solo en las celdas ×1 que no están teñidas.
-- **Aro de selección por dentro:** 3px **por dentro de la pastilla** (`inset-ring`), en la tinta de su campo: tinta sobre los tipos claros y hueso sobre los oscuros. Así nunca invade las pastillas vecinas, ni en filas ni en columnas, ni toca el borde de la tarjeta.
+- **Borde de selección por dentro:** el único de la web (§2.3, regla 8), 3px en `--ink` **por dentro de la pastilla**. Así nunca invade las pastillas vecinas, ni en filas ni en columnas, ni toca el borde de la tarjeta.
 - **Matriz 18×18:** es una tabla real, así que se permiten líneas finas.
   - **La tabla ocupa todo el ancho del panel** (`table-fixed`): la columna de atacantes tiene ancho fijo y las 18 columnas se reparten el resto a partes iguales (unos 57px a 1440px). Celdas de 32px de alto con 3px de separación y radio de 6px; las cifras en `--step-small` y 900. En móvil la tabla tiene un ancho mínimo de 800px y se desplaza.
   - **Cabeceras de fila y columna con la misma pastilla:** 32px de alto, `--step-small` en 800 y 8px de relleno. Las de columna llenan su columna y llevan la **abreviatura de tres letras en horizontal** (Nor, Fue, Agu… / Nor, Fir, Wat…), sacada del nombre del tipo en cada idioma; el nombre completo va en `title` y para lectores de pantalla. Las de fila miden 104px y llevan el nombre completo.
@@ -478,7 +480,7 @@ La fila de campos no está dentro de un panel, pero lleva el mismo `padding-inli
 Es una `<ol>` (el orden importa; sin números visibles) con 64px de margen superior para el artwork que sobresale.
 
 - **Columna de etiquetas:** el recuento «4/6» en `--step-head` 900 con cifras tabulares y debajo «miembros» / «members» en `--step-small`, `--ink-soft`, apoyados abajo. Es decorativo (`aria-hidden`): el recuento accesible lo da la lista.
-- **Columna de balance:** «Compartir enlace» (secundario, `--ink`) y debajo «Vaciar equipo» (terciario, `--surface`; desactivado con el equipo vacío), apoyados abajo, a todo el ancho de la columna.
+- **Columna de balance:** «Compartir enlace» (secundario, `--ink`) y debajo «Vaciar equipo» (terciario, `--surface`). Con el equipo vacío los dos están desactivados (fondo `--step`, texto `--ink-soft`), apoyados abajo, a todo el ancho de la columna.
 - **Campo de un miembro:** 290px de alto, radio 28px, 6px de relleno, en el `field` de su tipo principal.
   - **Artwork:** ocupa todo el alto libre por encima de la ficha y se sale **64px por arriba** (48px en móvil). Su alto manda y su ancho puede llegar al 140 % de la columna: el lienzo tiene márgenes transparentes y así la figura llena el campo. Los lados se recortan con `overflow-x: clip` (no crea contenedor de scroll), así que nunca invade la columna vecina; por arriba no se recorta. Nunca pasa de 475px. Mismo `artworkUrl` que el resto de la app; `sizes` de unos 200px.
   - **Ficha de información:** bloque de **140px de alto fijo**, radio 20px, 10px de relleno, en `--tag-base` al 80 % mezclado con el campo (opaca, como `.type-tag`, regla 4 del §2.3), con texto en `--ink`. Cuatro filas en este orden, siempre en la misma posición:
@@ -487,10 +489,10 @@ Es una `<ol>` (el orden importa; sin números visibles) con 64px de margen super
     3. La forma en `--step-small` 800, `--ink-soft`, en una línea. **La línea existe aunque no haya forma**, para que todas las fichas tengan la misma estructura. Se usa el nombre corto de la forma («Alola», «Mega X»); el completo («Forma de Alola») va en `title` y en el nombre accesible del campo.
     4. Las etiquetas de tipo **apoyadas abajo** (`align-content: end`): pastillas de 24px en su `field` con `field-ink`, 12px 800. Si no caben en una fila, pasan a dos; un Pokémon de un solo tipo deja su etiqueta en la fila de abajo.
   - **Controles por miembro:** mover a la izquierda (←), mover a la derecha (→), cambiar forma (icono `RefreshCw`) y quitar (×). Los dos de mover a la izquierda del campo y los otros dos a la derecha. Botones redondos en `--tag-base` al 80 % sobre el campo, icono en tinta, con su `aria-label` y `title`.
-    - **Con puntero** (`@media (hover: hover)`): flotan sobre la parte alta del campo, de 28px (área táctil ampliada con un pseudoelemento), y aparecen con un fundido de 150ms al pasar el ratón **o al recibir el foco** cualquier elemento del campo (`:focus-within`).
+    - **Con puntero** (`@media (hover: hover)`): van **dentro de la ficha**, en una fila bajo el nombre, en el sitio de la forma, para no tapar nunca el artwork. Botones de 24px (menos entre 1024 y 1279px, donde los cuatro no caben: `(100cqi − 4px) / 4`; área ampliada con un pseudoelemento) en `--ink` al 9 % sobre la ficha (16 % en hover), opacos. Aparecen con un fundido de 150ms al pasar el ratón **o al recibir el foco** cualquier elemento del campo (`:focus-within`), y la forma se funde a la vez para dejarles su sitio (sigue en `title` y en el nombre accesible). La fila de la forma mide 24px con puntero, así que la ficha no cambia de tamaño y las etiquetas de tipo caben en dos filas.
     - **Táctil** (`@media (hover: none)`): una fila propia bajo la ficha, siempre visible, de 36px (44px de área). El campo crece a 330px para que la ficha no se mueva.
     - Los extremos se desactivan (← en el primero, → en el último) y «Cambiar forma» se desactiva con «Sin otras formas» si la especie solo tiene una. Desactivado = opacidad 35 %, es un gráfico y no lleva texto.
-    - **Cambiar forma** abre un menú flotante (`--raised`, radio 18px, sombra de capa flotante) dentro del campo, bajo los controles (encima de la fila táctil en móvil), con una opción por forma (`role="radio"`); la actual va rellena en `--ink`. Elegir una sustituye al miembro en su sitio. Se cierra con Esc, al tocar fuera o al elegir, y el foco vuelve al botón.
+    - **Cambiar forma** abre un menú flotante (`--raised`, radio 18px, sombra de capa flotante) dentro del campo, encima de los controles (sobre la ficha con puntero, sobre la fila táctil en móvil), con una opción por forma (`role="radio"`); la actual lleva el borde de selección (§2.3, regla 8). Elegir una sustituye al miembro en su sitio. Se cierra con Esc, al tocar fuera o al elegir, y el foco vuelve al botón.
     - **Arrastrar** también reordena con puntero (el campo arrastrado al 50 % de opacidad, el destino con un contorno de 3px en `--ink`). Las flechas son la vía accesible y la táctil.
   - Hover del campo: sube 6px y el artwork crece a `scale(1.06)`, con rebote. Sin brillo de tipo: los campos están pegados a la matriz y el brillo ensuciaría la alineación.
   - Nombre accesible del campo: «Ninetales, Forma de Alola».
@@ -501,7 +503,7 @@ Es una `<ol>` (el orden importa; sin números visibles) con 64px de margen super
 #### Selector «Añadir al equipo»
 
 Es el modal del comparador (§4.6) con otro final: el mismo buscador, las mismas mini tarjetas y, sin texto escrito, los tres Pokémon del día como sugerencias.
-- Tocar una tarjeta la marca (aro de 3px en su `field-ink` por dentro) y abre debajo una **franja de formas** en `--raised-step`: «Forma» y una pastilla por forma de la especie («Forma base», «Mega X», «Forma de Alola»…), con la activa en `--ink`; a la derecha, «Añadir al equipo» (secundario). Una especie sin formas muestra solo «Forma base» marcada.
+- Tocar una tarjeta la marca con el borde de selección (§2.3, regla 8) y abre debajo una **franja de formas** en `--raised-step`: «Forma» y una pastilla por forma de la especie («Forma base», «Mega X», «Forma de Alola»…), con la activa marcada igual; a la derecha, «Añadir al equipo» (secundario). Una especie sin formas muestra solo «Forma base» marcada.
 - Con el equipo lleno, la franja dice «Equipo completo» y el botón está desactivado (en la práctica no se llega: no quedan huecos).
 - Al añadir, el modal se cierra, el miembro ocupa el primer hueco y el foco va a su campo.
 
@@ -527,7 +529,7 @@ Panel `--surface`, radio 28px. Título «Defensa» / «Defense» en `--step-head
   - Tamaño, forma y texto distinguen cada valor; nunca solo el color.
   - Tooltip con puntero, el mismo globo de la tabla de tipos (`attr(data-tip)`): «Roca → Charizard: ×4».
 - **Balance:** tres subcolumnas con el recuento de miembros débiles (×2 y ×4), resistentes (×½ y ×¼) e inmunes. Cifras en 900 tabulares; el 0 se escribe «–» en `--ink-soft`. Los débiles se marcan: **3 o más**, pastilla en `--ink` con texto hueso; **2**, pastilla en `--step`.
-- **Fila de mayor riesgo:** la del aviso se tiñe con su `field` mezclado con `--surface` según `--cross-mix` (35 % en claro, 80 % en oscuro, como la selección de la tabla de tipos), con 4px de desborde (`outline`) y radio 10px. Su etiqueta lleva el aro de selección por dentro en `field-ink`, y sus ×4 cambian el aro al `field-ink` (el `field` no se vería sobre el tinte). Las cifras sueltas de su balance, «–» incluido, van en `--ink` en claro y en `field-ink` en oscuro: en oscuro el tinte llega al 80 % y ni `--ink-soft` ni `--ink` se leen sobre él; en claro el tinte al 35 % es claro para todos los tipos y el `field-ink` blanco de Siniestro, Fantasma o Lucha no se leería.
+- **Fila de mayor riesgo:** la del aviso se tiñe con su `field` mezclado con `--surface` según `--cross-mix` (35 % en claro, 80 % en oscuro, como la selección de la tabla de tipos), con radio 10px. El tinte se aparta 4px de las celdas con un relleno de la fila: por arriba y por abajo cae en el hueco entre filas (margen negativo) y por los lados queda **dentro del borde de la tabla**, alineado con el aviso; la cabecera lleva el mismo relleno lateral. Su etiqueta lleva el borde de selección (§2.3, regla 8), y sus ×4 cambian el aro al `field-ink` (el `field` no se vería sobre el tinte). Las cifras sueltas de su balance, «–» incluido, van en `--ink` en claro y en `field-ink` en oscuro: en oscuro el tinte llega al 80 % y ni `--ink-soft` ni `--ink` se leen sobre él; en claro el tinte al 35 % es claro para todos los tipos y el `field-ink` blanco de Siniestro, Fantasma o Lucha no se leería.
 - Hover de fila (solo con puntero): `--ink` al 5 % sobre `--surface`, salvo la fila de riesgo, que conserva su tinte.
 
 #### Panel «Cobertura ofensiva»
@@ -556,7 +558,7 @@ Dos columnas (1fr / 2.4fr; apiladas por debajo de 1024px):
 
 #### Móvil y tableta (< 1024px)
 
-- La alineación campo-columna se abandona: los campos pasan a una rejilla propia de **3 columnas** (640–1023px) o **2** (< 640px), con 64px entre filas y 12px entre columnas, sin la columna de recuento ni la de botones (el botón de compartir sube a la cabecera de página, a la derecha del título y debajo por debajo de 640px, y «Vaciar equipo» se mueve al final de la página, como enlace de texto; al vaciar, el foco va al primer hueco). Campo de 300px (330px táctil, con su fila de controles).
+- La alineación campo-columna se abandona: los campos pasan a una rejilla propia de **3 columnas** (640–1023px) o **2** (< 640px), con 64px entre filas y 12px entre columnas, sin la columna de recuento ni la de botones (el botón de compartir, desactivado con el equipo vacío, sube a la cabecera de página, a la derecha del título y debajo por debajo de 640px, y «Vaciar equipo» se mueve al final de la página, como enlace de texto; al vaciar, el foco va al primer hueco). Campo de 300px (330px táctil, con su fila de controles).
 - La matriz va en un contenedor con scroll horizontal, como la tabla de tipos (§4.5): columnas `96px repeat(6, 56px) 186px` (la del balance, igual que en escritorio: «Resisten» e «Inmunes» no caben en menos), 8px de separación, etiquetas de fila fijas a la izquierda y la cabecera de avatares no fija (dentro de un contenedor con scroll no puede pegarse a la página). Solo ese contenedor se desplaza; la página nunca.
 - Cobertura y estadísticas se apilan.
 

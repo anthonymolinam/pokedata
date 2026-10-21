@@ -194,7 +194,12 @@ export default function TeamFields({
       </ol>
 
       <div className="hidden lg:flex flex-col gap-2.5 self-end">
-        <button type="button" onClick={onShare} className={`${sideButton} bg-ink text-bone`}>
+        <button
+          type="button"
+          onClick={onShare}
+          disabled={count === 0}
+          className={`${sideButton} bg-ink text-bone disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
+        >
           {team.share}
         </button>
         <button
@@ -334,10 +339,13 @@ function MemberField({
         </div>
 
         {/* Ficha: cuatro filas siempre en la misma posición. La de la forma
-            existe aunque no haya forma, y los tipos se apoyan abajo. Entre
+            existe aunque no haya forma, y los tipos se apoyan abajo. Con
+            puntero, la fila de la forma cede su sitio a los controles al pasar
+            el ratón (por eso mide 24px). En táctil, el margen de abajo es la
+            fila de controles. Entre
             1024 y 1279px la ficha mide menos de 80px: menos relleno lateral y,
             bajo 72px de contenido, etiquetas de 11px («Fantasma» cabe) */}
-        <div className="relative z-2 @container flex-none h-[140px] grid grid-rows-[auto_auto_auto_1fr] p-2.5 lg:max-xl:px-1.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
+        <div className="relative z-2 @container flex-none h-[140px] grid grid-rows-[18px_24px_auto_1fr] can-hover:grid-rows-[18px_24px_24px_1fr] no-hover:mb-[42px] p-2.5 lg:max-xl:px-1.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
           <p className="text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft num leading-[18px]">
             {String(member.id).padStart(4, "0")}
           </p>
@@ -346,11 +354,13 @@ function MemberField({
           </p>
           <p
             title={member.form?.full}
-            className="text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft leading-[18px] truncate"
+            className={`row-start-3 col-start-1 text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft leading-[18px] truncate can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-0 can-hover:group-focus-within:opacity-0 ${
+              menuOpen ? "can-hover:opacity-0" : ""
+            }`}
           >
             {member.form?.short ?? " "}
           </p>
-          <ul aria-label={common.types} className="flex flex-wrap content-end gap-1">
+          <ul aria-label={common.types} className="row-start-4 flex flex-wrap content-end gap-1">
             {member.types.map((type) => (
               <li
                 key={type}
@@ -361,48 +371,48 @@ function MemberField({
               </li>
             ))}
           </ul>
-        </div>
-
-        {/* Controles: con puntero flotan sobre la parte alta del campo y aparecen
-            al pasar el ratón o con el foco dentro; en táctil, fila propia bajo
-            la ficha, siempre visible */}
-        <div
-          className={`z-3 flex justify-between gap-1 can-hover:absolute can-hover:top-2 can-hover:inset-x-1.5 can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100 no-hover:order-3 no-hover:mt-1.5 ${
-            menuOpen ? "" : "can-hover:opacity-0"
-          }`}
-        >
-          <div className="flex gap-1">
-            <ControlButton
-              icon={ArrowLeft}
-              control="left"
-              label={withName(team.moveLeft)}
-              disabled={index === 0}
-              onClick={() => actions.onMove(index, -1)}
-            />
-            <ControlButton
-              icon={ArrowRight}
-              control="right"
-              label={withName(team.moveRight)}
-              disabled={last}
-              onClick={() => actions.onMove(index, 1)}
-            />
-          </div>
-          <div className="flex gap-1">
-            <ControlButton
-              ref={formButtonRef}
-              icon={RefreshCw}
-              control="form"
-              label={hasForms ? team.changeForm : team.noOtherForms}
-              disabled={!hasForms}
-              expanded={menuOpen}
-              onClick={() => setMenuOpen((open) => !open)}
-            />
-            <ControlButton
-              icon={X}
-              control="remove"
-              label={withName(team.remove)}
-              onClick={() => actions.onRemove(index)}
-            />
+          {/* Controles: con puntero van dentro de la ficha, bajo el nombre, en
+              el sitio de la forma (que se aparta), y aparecen al pasar el ratón
+              o con el foco dentro, sin tapar el artwork; en táctil, fila propia
+              bajo la ficha, siempre visible */}
+          <div
+            className={`z-3 flex justify-between gap-0.5 can-hover:col-start-1 can-hover:row-start-3 can-hover:self-start can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100 no-hover:absolute no-hover:inset-x-0 no-hover:top-full no-hover:mt-1.5 ${
+              menuOpen ? "" : "can-hover:opacity-0"
+            }`}
+          >
+            <div className="flex gap-1 can-hover:gap-0.5">
+              <ControlButton
+                icon={ArrowLeft}
+                control="left"
+                label={withName(team.moveLeft)}
+                disabled={index === 0}
+                onClick={() => actions.onMove(index, -1)}
+              />
+              <ControlButton
+                icon={ArrowRight}
+                control="right"
+                label={withName(team.moveRight)}
+                disabled={last}
+                onClick={() => actions.onMove(index, 1)}
+              />
+            </div>
+            <div className="flex gap-1 can-hover:gap-0.5">
+              <ControlButton
+                ref={formButtonRef}
+                icon={RefreshCw}
+                control="form"
+                label={hasForms ? team.changeForm : team.noOtherForms}
+                disabled={!hasForms}
+                expanded={menuOpen}
+                onClick={() => setMenuOpen((open) => !open)}
+              />
+              <ControlButton
+                icon={X}
+                control="remove"
+                label={withName(team.remove)}
+                onClick={() => actions.onRemove(index)}
+              />
+            </div>
           </div>
         </div>
 
@@ -438,8 +448,9 @@ interface ControlButtonProps {
   ref?: React.Ref<HTMLButtonElement>;
 }
 
-// Botón redondo sobre el campo: 28px con puntero (con el área ampliada por un
-// pseudoelemento) y 36px en táctil (44px de área). Desactivado, al 35 %
+// Botón redondo: con puntero, dentro de la ficha, de 24px (menos si los cuatro
+// no caben a lo ancho, con el área ampliada por un pseudoelemento); en
+// táctil, sobre el campo, de 36px (44px de área). Desactivado, al 35 %
 function ControlButton({ icon: Icon, control, label, disabled, expanded, onClick, ref }: ControlButtonProps) {
   return (
     <button
@@ -452,9 +463,9 @@ function ControlButton({ icon: Icon, control, label, disabled, expanded, onClick
       aria-expanded={expanded}
       disabled={disabled}
       onClick={onClick}
-      className={`relative grid place-items-center rounded-pill type-tag text-ink cursor-pointer after:absolute after:content-[''] size-9 after:-inset-1 can-hover:size-7 can-hover:after:-inset-1.5 motion-safe:transition-transform ${spring} motion-safe:hover:scale-[1.08] active:scale-[0.96] disabled:opacity-35 disabled:cursor-default disabled:scale-100`}
+      className={`member-control relative grid place-items-center rounded-pill text-ink cursor-pointer after:absolute after:content-[''] size-9 after:-inset-1 can-hover:size-[min(24px,calc((100cqi-4px)/4))] can-hover:after:-inset-1 motion-safe:transition-transform ${spring} motion-safe:hover:scale-[1.08] active:scale-[0.96] disabled:opacity-35 disabled:cursor-default disabled:scale-100`}
     >
-      <Icon aria-hidden="true" strokeWidth={2.5} className="size-4" />
+      <Icon aria-hidden="true" strokeWidth={2.5} className="size-4 can-hover:size-[min(14px,calc((100cqi-4px)/7))]" />
     </button>
   );
 }
@@ -470,8 +481,8 @@ interface FormMenuProps {
   onChoose: (slug: string) => void;
 }
 
-// Menú «Cambiar forma»: capa flotante dentro del campo, bajo los controles
-// (encima de la fila táctil en móvil), con una opción por forma. La actual va
+// Menú «Cambiar forma»: capa flotante dentro del campo, encima de los
+// controles (sobre la ficha con puntero, sobre la fila táctil en móvil), con una opción por forma. La actual va
 // rellena en tinta. Las flechas recorren las opciones
 function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: FormMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -524,7 +535,7 @@ function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: Form
       aria-label={label}
       data-field="raised"
       onKeyDown={onKeyDown}
-      className="menu-in absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:top-11 no-hover:bottom-[52px]"
+      className="menu-in absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:bottom-[98px] no-hover:bottom-[52px]"
     >
       {member.forms.map((form) => {
         const checked = form.slug === member.slug;
@@ -537,7 +548,7 @@ function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: Form
             tabIndex={checked ? 0 : -1}
             title={form.name?.full}
             onClick={() => onChoose(form.slug)}
-            className="flex min-h-10 cursor-pointer items-center rounded-[12px] px-2.5 text-left text-small font-extrabold hover:bg-step aria-checked:bg-ink aria-checked:text-bone"
+            className="flex min-h-10 cursor-pointer items-center rounded-[12px] px-2.5 text-left text-small font-extrabold hover:bg-step aria-checked:ring-selected"
           >
             {form.name?.short ?? baseLabel}
           </button>

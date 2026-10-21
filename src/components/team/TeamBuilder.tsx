@@ -219,7 +219,8 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
         <button
           type="button"
           onClick={share}
-          className={`h-11 shrink-0 px-4.5 rounded-pill bg-ink text-small font-extrabold text-bone lg:hidden ${pressable}`}
+          disabled={count === 0}
+          className={`h-11 shrink-0 px-4.5 rounded-pill bg-ink text-small font-extrabold text-bone lg:hidden ${pressable} disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
         >
           {team.share}
         </button>

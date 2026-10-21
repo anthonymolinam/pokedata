@@ -57,7 +57,7 @@ export default function PokemonCard({
 
   // En el selector, el foco cae en el botón que cubre la tarjeta: la subida
   // del foco sale de has-focus-visible
-  const className = `group type-glow relative flex h-full flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:outline-3 aria-[current=page]:outline-offset-3 aria-[current=page]:outline-ink motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:has-focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`;
+  const className = `group type-glow relative flex h-full flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:ring-selected motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:has-focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`;
 
   return (
     <CardRoot
@@ -165,7 +165,7 @@ interface CardRootProps {
 
 // Un enlace a la ficha o, con onSelect, la tarjeta con un botón encima que la
 // cubre entera (un botón no puede contener el título ni las listas) y que se
-// marca con un aro de 3px en la tinta del campo, por dentro (§4.9)
+// marca con el borde único de selección, por dentro (§2.3, regla 8)
 function CardRoot({ href, onSelect, selected, type, current, className, label, children }: CardRootProps) {
   if (onSelect) {
     return (
@@ -176,7 +176,7 @@ function CardRoot({ href, onSelect, selected, type, current, className, label, c
           onClick={onSelect}
           aria-pressed={selected}
           aria-label={label}
-          className="absolute inset-0 z-20 rounded-surface cursor-pointer focus-visible:outline-ink aria-pressed:outline-3 aria-pressed:-outline-offset-3 aria-pressed:outline-field-ink"
+          className="absolute inset-0 z-20 rounded-surface cursor-pointer focus-visible:outline-ink aria-pressed:ring-selected"
         />
       </div>
     );

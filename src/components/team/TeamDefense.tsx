@@ -108,7 +108,7 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
         >
           <div
             role="row"
-            className="col-span-full grid grid-cols-subgrid items-center py-2 mb-1 bg-surface text-small font-extrabold text-ink-soft lg:sticky lg:top-18 lg:z-5"
+            className="col-span-full grid grid-cols-subgrid items-center px-1 py-2 mb-1 bg-surface text-small font-extrabold text-ink-soft lg:sticky lg:top-18 lg:z-5"
           >
             {/* En el scroll de móvil, «Ataca» y las etiquetas se quedan fijas a la izquierda */}
             <span
@@ -164,7 +164,7 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
                 <span role="rowheader" className="defense-label max-lg:sticky max-lg:left-0 max-lg:z-2 max-lg:-mr-2 max-lg:pr-2">
                   <span
                     className={`flex items-center h-8 px-3 rounded-pill bg-field text-field-ink text-small font-extrabold whitespace-nowrap ${
-                      isRisk ? "outline-3 -outline-offset-3 outline-field-ink" : ""
+                      isRisk ? "ring-selected" : ""
                     }`}
                   >
                     {typeNames[attacker]}

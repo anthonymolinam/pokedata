@@ -513,6 +513,25 @@ body {
     outline: 3px solid var(--field-ink);
     outline-offset: 3px;
   }
+
+  /* Mano en todo lo que se pulsa (§4.0); lo desactivado se queda con la
+     flecha. Tailwind deja los botones con el cursor por defecto */
+  :where(button, [role="button"], [role="radio"], [role="tab"], [role="option"], summary, select, label[for]):not(:disabled, [aria-disabled="true"]),
+  a[href] {
+    cursor: pointer;
+  }
+
+  :where(button, select, input):disabled,
+  [aria-disabled="true"] {
+    cursor: default;
+  }
+}
+
+/* Selección (§2.3, regla 8): el único estilo de toda la web. Un trazo de 3px
+   en --ink (oscuro en claro, claro en oscuro), dibujado por dentro para no
+   invadir a los vecinos ni cambiar el tamaño de nada */
+@utility ring-selected {
+  @apply inset-ring-3 inset-ring-ink;
 }
 
 /* Rol display (§3): Nunito 900, sentence case, tracking −0.04em, interlineado 0.95 */
@@ -652,6 +671,23 @@ body {
   background-color: color-mix(in srgb, var(--tag-base) 80%, var(--field));
 }
 
+/* Controles de cada miembro del equipo (§4.9). En táctil van sobre el campo,
+   como una etiqueta; con puntero, dentro de la ficha, un escalón de tinta
+   por encima de ella (opaco, sin línea ni sombra) */
+.member-control {
+  background-color: color-mix(in srgb, var(--tag-base) 80%, var(--field));
+}
+
+@media (hover: hover) {
+  .member-control {
+    background-color: color-mix(in srgb, var(--ink) 9%, color-mix(in srgb, var(--tag-base) 80%, var(--field)));
+  }
+
+  .member-control:not(:disabled):hover {
+    background-color: color-mix(in srgb, var(--ink) 16%, color-mix(in srgb, var(--tag-base) 80%, var(--field)));
+  }
+}
+
 /* ×1 en la fila o la columna elegida: su field mezclado con la superficie */
 .type-cross {
   background-color: color-mix(in srgb, var(--field) var(--cross-mix), var(--surface));
@@ -762,18 +798,21 @@ body {
 
 /* Matriz de Defensa del equipo (§4.9). La fila de mayor riesgo se tiñe con el
    field del atacante mezclado con la superficie, como la selección de la tabla
-   de tipos; el hover de fila (solo con puntero) es un gris muy suave. El
-   contorno del mismo color desborda 4px para que el tinte no quede pegado a
-   las celdas. */
+   de tipos; el hover de fila (solo con puntero) es un gris muy suave. La
+   fila lleva 4px de relleno para que el tinte no quede pegado a las celdas:
+   por arriba y por abajo lo compensa un margen negativo (cae en el hueco
+   entre filas) y por los lados queda dentro de la tabla, nunca fuera de su
+   borde. La cabecera lleva el mismo relleno lateral para alinearse. */
 .defense-row {
   --row-tint: color-mix(in srgb, var(--ink) 5%, var(--surface));
   border-radius: 10px;
+  padding: 4px;
+  margin-block: -4px;
 }
 
 .defense-row[data-risk] {
   --row-tint: color-mix(in srgb, var(--field) var(--cross-mix), var(--surface));
   background-color: var(--row-tint);
-  outline: 4px solid var(--row-tint);
 }
 
 /* La etiqueta fija del scroll de móvil lleva el fondo de su fila (solo
@@ -791,7 +830,6 @@ body {
 @media (hover: hover) {
   .defense-row:hover {
     background-color: var(--row-tint);
-    outline: 4px solid var(--row-tint);
   }
 }
 
