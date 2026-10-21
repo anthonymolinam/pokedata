@@ -8,8 +8,9 @@ export interface ToastMessage {
   text: string;
   // Cambia con cada aviso, para repetir uno igual y que se vuelva a anunciar
   id: number;
-  // Enlace tras el texto: «Añadido a tu equipo · Ver equipo»
-  action?: { href: string; label: string };
+  // Enlace o botón tras el texto: «Añadido a tu equipo · Ver equipo»,
+  // «Equipo aleatorio · Deshacer»
+  action?: { label: string } & ({ href: string } | { onClick: () => void });
 }
 
 interface ToastProps {
@@ -22,7 +23,7 @@ interface ToastProps {
 // centrado. La región role="status" existe siempre, para que el lector de
 // pantalla anuncie el texto en cuanto aparece. Al irse se funde con el último
 // texto, que solo se cambia con el siguiente aviso. Es una capa flotante, así
-// que lleva sombra. Solo recibe el puntero si trae enlace y está a la vista.
+// que lleva sombra. Solo recibe el puntero si trae acción y está a la vista.
 // Se pinta en <body>: dentro del escenario de la ficha (isolate) las tarjetas
 // y el pie le pasaban por encima. z-55 lo deja sobre la página y la cabecera
 // (z-50) y bajo el menú móvil y los filtros (z-60); los diálogos van en la
@@ -53,13 +54,20 @@ export default function Toast({ message, onDone, duration = 1600 }: ToastProps) 
           {last.action && (
             <>
               {" · "}
-              <Link
-                href={last.action.href}
-                tabIndex={message ? undefined : -1}
-                className="underline decoration-2 underline-offset-4 focus-visible:outline-bone"
-              >
-                {last.action.label}
-              </Link>
+              {"href" in last.action ? (
+                <Link href={last.action.href} tabIndex={message ? undefined : -1} className={actionClass}>
+                  {last.action.label}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={last.action.onClick}
+                  tabIndex={message ? undefined : -1}
+                  className={`cursor-pointer ${actionClass}`}
+                >
+                  {last.action.label}
+                </button>
+              )}
             </>
           )}
         </span>
@@ -68,6 +76,8 @@ export default function Toast({ message, onDone, duration = 1600 }: ToastProps) 
     document.body,
   );
 }
+
+const actionClass = "underline decoration-2 underline-offset-4 focus-visible:outline-bone";
 
 function subscribeNoop() {
   return () => {};

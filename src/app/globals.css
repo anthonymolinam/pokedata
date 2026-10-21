@@ -807,16 +807,19 @@ body {
 
 /* Matriz de Defensa del equipo (§4.9). La fila de mayor riesgo se tiñe con el
    field del atacante mezclado con la superficie, como la selección de la tabla
-   de tipos; el hover de fila (solo con puntero) es un gris muy suave. La
-   fila lleva 4px de relleno para que el tinte no quede pegado a las celdas:
-   por arriba y por abajo lo compensa un margen negativo (cae en el hueco
-   entre filas) y por los lados queda dentro de la tabla, nunca fuera de su
-   borde. La cabecera lleva el mismo relleno lateral para alinearse. */
+   de tipos; el hover de fila (solo con puntero) es un gris muy suave. El
+   tinte se aparta de las celdas con un relleno de la fila: 4px por los lados,
+   dentro de la tabla y nunca fuera de su borde (la cabecera lleva el mismo
+   relleno lateral para alinearse), y 2px por arriba y por abajo, que un margen
+   negativo compensa. Así ocupa 2px de los 8px del hueco entre filas por cada
+   lado y entre dos franjas vecinas (la de riesgo y la del hover) siempre
+   quedan 4px: cada una se lee sola. Con 2px el ×4, que sobresale 2px, cabe
+   justo dentro de la franja. */
 .defense-row {
   --row-tint: color-mix(in srgb, var(--ink) 5%, var(--surface));
   border-radius: 10px;
-  padding: 4px;
-  margin-block: -4px;
+  padding: 2px 4px;
+  margin-block: -2px;
 }
 
 .defense-row[data-risk] {

@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type Ref } from "react";
 import { AnimatePresence, motion, useIsPresent, useReducedMotion, type HTMLMotionProps } from "framer-motion";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, RefreshCw, X, type LucideIcon } from "lucide-react";
 import Artwork from "@/components/common/Artwork";
+import RandomTeamButton from "@/components/team/RandomTeamButton";
 import { artworkUrl } from "@/lib/artwork";
 import { TEAM_SIZE, type TeamMember } from "@/lib/team";
+import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 
@@ -31,6 +34,8 @@ interface TeamFieldsProps extends MemberActions {
   count: number;
   onAdd?: () => void;
   onShare?: () => void;
+  onRandom?: () => void;
+  randomDisabled?: boolean;
   onClear: () => void;
 }
 
@@ -41,8 +46,16 @@ const spring = "ease-[cubic-bezier(.34,1.56,.64,1)] duration-[350ms]";
 // crece a 330px para la fila de controles, así la ficha no se mueve
 const SLOT_HEIGHT = "h-[300px] lg:h-[290px] no-hover:h-[330px] lg:no-hover:h-[330px]";
 
+// Ficha del miembro en la forma que tiene en el equipo: la especie y, si es
+// otra forma, ?variant= (lo mismo a lo que redirige la ficha de una forma)
+function memberHref(member: TeamMember, locale: Locale): string {
+  const base = member.forms.find((f) => f.name === null)?.slug ?? member.slug;
+  const path = `/${locale}/pokemon/${(locale === "es" && CANONICAL_TO_SPANISH[base]) || base}`;
+  return member.slug === base ? path : `${path}?variant=${member.slug}`;
+}
+
 // Botones de la columna de balance: secundario en tinta y terciario en superficie
-const sideButton = `h-11 w-full px-4.5 rounded-pill font-extrabold text-small motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-0.5 active:scale-[0.96]`;
+const sideButton = `h-11 rounded-pill font-extrabold text-small motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-0.5 active:scale-[0.96]`;
 
 // Movimiento de los campos (§6): entrada «pop» como las tarjetas (600ms con
 // rebote y 45ms de escalonado la primera vez); al añadir, el nuevo entra con
@@ -103,6 +116,8 @@ export default function TeamFields({
   count,
   onAdd,
   onShare,
+  onRandom,
+  randomDisabled = true,
   onClear,
   ...actions
 }: TeamFieldsProps) {
@@ -194,19 +209,24 @@ export default function TeamFields({
       </ol>
 
       <div className="hidden lg:flex flex-col gap-2.5 self-end">
-        <button
-          type="button"
-          onClick={onShare}
-          disabled={count === 0}
-          className={`${sideButton} bg-ink text-bone disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
-        >
-          {team.share}
-        </button>
+        {/* El dado junto a «Compartir enlace»: en 186px caben los dos con 6px
+            de separación y 10px de relleno («Compartir enlace» mide 114px) */}
+        <div className="flex items-center gap-1.5">
+          <RandomTeamButton label={team.random} disabled={randomDisabled} onClick={() => onRandom?.()} />
+          <button
+            type="button"
+            onClick={onShare}
+            disabled={count === 0}
+            className={`${sideButton} flex-1 min-w-0 px-2.5 whitespace-nowrap bg-ink text-bone disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
+          >
+            {team.share}
+          </button>
+        </div>
         <button
           type="button"
           onClick={onClear}
           disabled={count === 0}
-          className={`${sideButton} bg-surface text-ink disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
+          className={`${sideButton} w-full px-4.5 bg-surface text-ink disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
         >
           {team.clear}
         </button>
@@ -256,6 +276,7 @@ function MemberField({
   const formButtonRef = useRef<HTMLButtonElement>(null);
   const hasForms = member.forms.length > 1;
   const withName = (text: string) => text.replace("{name}", member.name);
+  const href = memberHref(member, locale);
   // Mientras sale, el campo deja de ser su hueco: el foco va al que lo ocupa
   const present = useIsPresent();
 
@@ -321,10 +342,16 @@ function MemberField({
         }`}
       >
         {/* Su alto manda; el ancho puede llegar al 140 % de la columna porque el
-            lienzo tiene márgenes transparentes. Los lados se recortan con clip */}
-        <div
+            lienzo tiene márgenes transparentes. Los lados se recortan con clip.
+            Lleva a la ficha, como el nombre, que es el enlace accesible: este
+            queda fuera del orden de tabulación. No se arrastra como enlace: el
+            arrastre es el del campo */}
+        <Link
+          href={href}
           aria-hidden="true"
-          className="pointer-events-none relative z-1 flex flex-1 min-h-0 items-end justify-center -mt-12 lg:-mt-16 mb-1.5"
+          tabIndex={-1}
+          draggable={false}
+          className="relative z-1 flex flex-1 min-h-0 items-end justify-center -mt-12 lg:-mt-16 mb-1.5"
         >
           <Artwork
             src={artworkUrl(member.artworkId)}
@@ -336,21 +363,30 @@ function MemberField({
             draggable={false}
             className={`h-full w-auto max-w-[140%] max-h-[475px] aspect-square flex-none object-contain motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.06]`}
           />
-        </div>
+        </Link>
 
         {/* Ficha: cuatro filas siempre en la misma posición. La de la forma
             existe aunque no haya forma, y los tipos se apoyan abajo. Con
             puntero, la fila de la forma cede su sitio a los controles al pasar
-            el ratón (por eso mide 24px). En táctil, el margen de abajo es la
-            fila de controles. Entre
+            el ratón (por eso mide 24px), y la ficha mide 144px: con dos filas
+            de tipos, entre los controles y la primera queda el mismo aire que
+            entre pastillas (4px). En táctil, el margen de abajo es la fila de
+            controles. Entre
             1024 y 1279px la ficha mide menos de 80px: menos relleno lateral y,
             bajo 72px de contenido, etiquetas de 11px («Fantasma» cabe) */}
-        <div className="relative z-2 @container flex-none h-[140px] grid grid-rows-[18px_24px_auto_1fr] can-hover:grid-rows-[18px_24px_24px_1fr] no-hover:mb-[42px] p-2.5 lg:max-xl:px-1.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
+        <div className="relative z-2 @container flex-none h-[140px] can-hover:h-[144px] grid grid-rows-[18px_24px_auto_1fr] can-hover:grid-rows-[18px_24px_24px_1fr] no-hover:mb-[42px] p-2.5 lg:max-xl:px-1.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
           <p className="text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft num leading-[18px]">
             {String(member.id).padStart(4, "0")}
           </p>
           <p className="text-[clamp(14px,calc(100cqi/(var(--chars)*0.5+1)),20px)] lg:max-xl:text-[clamp(10px,calc(100cqi/(var(--chars)*0.5+1)),20px)] font-black tracking-[-0.03em] leading-6 whitespace-nowrap">
-            {member.name}
+            <Link
+              href={href}
+              draggable={false}
+              title={withName(team.viewCard)}
+              className="rounded-[6px] underline-offset-[3px] decoration-2 hover:underline focus-visible:outline-ink"
+            >
+              {member.name}
+            </Link>
           </p>
           <p
             title={member.form?.full}
@@ -535,7 +571,7 @@ function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: Form
       aria-label={label}
       data-field="raised"
       onKeyDown={onKeyDown}
-      className="menu-in absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:bottom-[98px] no-hover:bottom-[52px]"
+      className="menu-in absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:bottom-[102px] no-hover:bottom-[52px]"
     >
       {member.forms.map((form) => {
         const checked = form.slug === member.slug;
@@ -613,7 +649,7 @@ function GhostField({ ref, motionProps }: { ref?: Ref<HTMLLIElement>; motionProp
       aria-hidden="true"
       className={`${SLOT_HEIGHT} flex flex-col justify-end p-1.5 rounded-surface bg-step skeleton-in`}
     >
-      <div className="h-[140px] grid content-start gap-2 p-2.5 rounded-[16px] lg:rounded-[20px] bg-ground">
+      <div className="h-[140px] can-hover:h-[144px] grid content-start gap-2 p-2.5 rounded-[16px] lg:rounded-[20px] bg-ground">
         <div className="h-3.5 w-10 rounded-pill bg-step" />
         <div className="h-5 w-3/4 rounded-pill bg-step" />
       </div>

@@ -5,6 +5,7 @@ import TeamCoverage from "@/components/team/TeamCoverage";
 import TeamDefense from "@/components/team/TeamDefense";
 import TeamFields, { type TeamSlot } from "@/components/team/TeamFields";
 import TeamPicker from "@/components/team/TeamPicker";
+import RandomTeamButton from "@/components/team/RandomTeamButton";
 import TeamStats from "@/components/team/TeamStats";
 import Toast, { type ToastMessage } from "@/components/common/Toast";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/lib/team";
 import { getDictionary } from "@/constants/translations";
 import { getCachedMember, loadTeamMembers } from "@/lib/team-members";
+import { pickRandomMembers } from "@/lib/team-random";
 import { Locale } from "@/proxy";
 
 // Pide los miembros que faltan y, cuando llegan, limpia el equipo que se ve:
@@ -113,6 +115,9 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   });
 
   const count = slugs?.length ?? 0;
+  // El dado espera a que el equipo esté cargado: sin los tipos de cada
+  // miembro no sabe qué especies ni qué tipos evitar
+  const randomDisabled = !slots || slots.some((s) => s.kind === "loading");
   const slot = (i: number) => `[data-slot="${i}"]`;
 
   function add(slug: string) {
@@ -163,8 +168,31 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
     setTeam(current.filter((_, i) => i !== index));
   }
 
-  function notify(text: string) {
-    setToast((prev) => ({ text, id: (prev?.id ?? 0) + 1 }));
+  function notify(text: string, action?: ToastMessage["action"]) {
+    setToast((prev) => ({ text, action, id: (prev?.id ?? 0) + 1 }));
+  }
+
+  // Rellena los huecos con especies nuevas, en su forma base y de tipos
+  // variados. Con el equipo completo lo cambia entero y ofrece deshacer
+  async function randomize() {
+    // El índice id → tipos solo se descarga la primera vez, como el del día
+    const { default: index } = await import("@/data/pokemon-index.json");
+    const current = getTeamSnapshot();
+    const full = current.length >= TEAM_SIZE;
+    const kept = full ? [] : (loaded ?? []).map((m) => ({ id: m.id, types: m.types }));
+    const picked = pickRandomMembers(index, kept, TEAM_SIZE - kept.length, Math.random);
+    if (!full) {
+      setTeam([...current, ...picked].slice(0, TEAM_SIZE));
+      return;
+    }
+    setTeam(picked);
+    notify(team.random, {
+      label: team.undo,
+      onClick: () => {
+        setTeam(current);
+        setToast(null);
+      },
+    });
   }
 
   // Escribe ?t= en la URL y la comparte: en táctil con la hoja nativa; si
@@ -209,21 +237,24 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
 
   return (
     <div ref={fieldsRef} className="flex flex-col gap-5 md:gap-8">
-      {/* Por debajo de 1024px la columna de botones desaparece y «Compartir
-          enlace» sube aquí, junto al título (§4.9 «Móvil y tableta») */}
+      {/* Por debajo de 1024px la columna de botones desaparece y el dado y
+          «Compartir enlace» suben aquí, junto al título (§4.9 «Móvil y tableta») */}
       <div className="flex items-end justify-between gap-x-6 gap-y-4 max-sm:flex-col max-sm:items-start">
         <div>
           <h1 className="text-hero font-black">{team.title}</h1>
           <p className="mt-3 text-body text-ink-soft max-sm:hidden">{team.lead}</p>
         </div>
-        <button
-          type="button"
-          onClick={share}
-          disabled={count === 0}
-          className={`h-11 shrink-0 px-4.5 rounded-pill bg-ink text-small font-extrabold text-bone lg:hidden ${pressable} disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
-        >
-          {team.share}
-        </button>
+        <div className="flex shrink-0 items-center gap-2.5 lg:hidden">
+          <RandomTeamButton label={team.random} disabled={randomDisabled} onClick={randomize} />
+          <button
+            type="button"
+            onClick={share}
+            disabled={count === 0}
+            className={`h-11 px-4.5 rounded-pill bg-ink text-small font-extrabold text-bone ${pressable} disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
+          >
+            {team.share}
+          </button>
+        </div>
       </div>
       {shared && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 px-[18px] py-3.5 rounded-[20px] bg-step">
@@ -253,6 +284,8 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
           count={count}
           onAdd={() => setPickerOpen(true)}
           onShare={share}
+          onRandom={randomize}
+          randomDisabled={randomDisabled}
           onClear={clear}
           onMove={move}
           onReorder={reorder}
@@ -279,7 +312,8 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
           {team.clear}
         </button>
       </div>
-      <Toast message={toast} onDone={hideToast} />
+      {/* Con «Deshacer» el aviso dura más, para dar tiempo a pulsarlo */}
+      <Toast message={toast} onDone={hideToast} duration={toast?.action ? 5000 : 1600} />
     </div>
   );
 }

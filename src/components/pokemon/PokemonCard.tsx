@@ -164,19 +164,21 @@ interface CardRootProps {
 }
 
 // Un enlace a la ficha o, con onSelect, la tarjeta con un botón encima que la
-// cubre entera (un botón no puede contener el título ni las listas) y que se
-// marca con el borde único de selección, por dentro (§2.3, regla 8)
+// cubre entera (un botón no puede contener el título ni las listas). El borde
+// único de selección (§2.3, regla 8) lo lleva la tarjeta, no el botón: es una
+// sombra por dentro y el artwork, que es hijo suyo, se pinta encima; en el
+// botón, que va por encima de todo, cruzaba el artwork que sobresale
 function CardRoot({ href, onSelect, selected, type, current, className, label, children }: CardRootProps) {
   if (onSelect) {
     return (
-      <div data-type={type} className={className}>
+      <div data-type={type} className={`${className} ${selected ? "ring-selected" : ""}`}>
         {children}
         <button
           type="button"
           onClick={onSelect}
           aria-pressed={selected}
           aria-label={label}
-          className="absolute inset-0 z-20 rounded-surface cursor-pointer focus-visible:outline-ink aria-pressed:ring-selected"
+          className="absolute inset-0 z-20 rounded-surface cursor-pointer focus-visible:outline-ink"
         />
       </div>
     );

@@ -56,9 +56,9 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
 
   const links = [
     { key: "pokedex", href: `/${locale}`, label: labels.pokedex },
-    { key: "types", href: getLocalizedPath(locale, "types"), label: labels.types },
-    { key: "compare", href: getLocalizedPath(locale, "compare"), label: labels.compare },
     { key: "team", href: getLocalizedPath(locale, "team"), label: labels.team },
+    { key: "compare", href: getLocalizedPath(locale, "compare"), label: labels.compare },
+    { key: "types", href: getLocalizedPath(locale, "types"), label: labels.types },
   ];
 
   // La Pokédex abarca la portada y las fichas; el resto, su propia ruta

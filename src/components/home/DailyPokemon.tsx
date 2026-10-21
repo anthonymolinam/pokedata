@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Artwork from "@/components/common/Artwork";
+import Die from "@/components/common/Die";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { formatPokemonDisplayName } from "@/lib/pokeapi";
 import { ARTWORK_SIZE, artworkUrl, figureStyle } from "@/lib/artwork";
@@ -12,24 +13,6 @@ import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 
 const BOUNCE = [0.34, 1.56, 0.64, 1] as const;
-
-// Dado dibujado: cara del cinco con esquinas redondeadas
-function Die() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className="size-6">
-      <rect x="3" y="3" width="18" height="18" rx="5" fill="var(--ink)" />
-      {[
-        [8, 8],
-        [16, 8],
-        [12, 12],
-        [8, 16],
-        [16, 16],
-      ].map(([cx, cy]) => (
-        <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.7" fill="var(--surface)" />
-      ))}
-    </svg>
-  );
-}
 
 interface DailyPokemonProps {
   locale: Locale;

@@ -104,7 +104,7 @@ export default function TeamDefense({ locale, slots }: { locale: Locale; slots: 
         <div
           role="table"
           aria-label={team.matrixLabel}
-          className="grid gap-y-1 max-lg:w-max max-lg:min-w-full max-lg:px-6 max-lg:gap-x-2 max-lg:grid-cols-[96px_repeat(6,56px)_186px] lg:team-grid"
+          className="grid gap-y-2 max-lg:w-max max-lg:min-w-full max-lg:px-6 max-lg:gap-x-2 max-lg:grid-cols-[96px_repeat(6,56px)_186px] lg:team-grid"
         >
           <div
             role="row"
