@@ -195,13 +195,15 @@ export default function PokemonStage({
 
       <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6 px-5 pb-6 md:px-10 md:pb-10">
         <div className="min-w-0">
-          <p className="text-body font-extrabold num">
+          {/* La forma va en la línea del número, así el escenario mide lo
+              mismo con cualquier forma */}
+          <p title={formLabel ?? undefined} className="truncate text-body font-extrabold num">
             {detail.number} {String(pokemon.id).padStart(4, "0")}
+            {formLabel && <span className="font-black"> · {formLabel}</span>}
           </p>
           <h1 id="pokemon-name" className="mt-1 text-hero font-black">
             {name}
           </h1>
-          {formLabel && <p className="mt-2 text-lead font-black">{formLabel}</p>}
 
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
             <ul className="flex flex-wrap gap-1.5">

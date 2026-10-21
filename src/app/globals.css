@@ -755,7 +755,11 @@ body {
 /* Tooltip de las celdas (§4.5): «Fuego → Planta: ×2» encima de la celda, solo
    con puntero. Es una capa flotante, así que lleva sombra. En las dos primeras
    y las dos últimas columnas se abre hacia dentro para no salirse de la tabla
-   (y no provocar scroll). */
+   (y no provocar scroll). La celda en hover sube por encima de lo fijo de su
+   tabla (la fila de avatares de la Defensa, z-5, y las etiquetas fijas del
+   scroll, z-10): cada celda es su propio contexto de apilado (la animación de
+   entrada o la opacidad del atenuado) y sin esto el globo de la primera fila
+   quedaba debajo. */
 @keyframes tip-in {
   from {
     opacity: 0;
@@ -763,6 +767,11 @@ body {
 }
 
 @media (hover: hover) {
+  .type-matrix td[data-tip]:hover,
+  .defense-row [data-tip]:hover {
+    z-index: 11;
+  }
+
   .type-matrix td[data-tip]:hover::after,
   .defense-row [data-tip]:hover::after {
     content: attr(data-tip);

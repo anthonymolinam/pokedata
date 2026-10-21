@@ -102,15 +102,22 @@ export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamP
       selected={picked?.name ?? null}
       onSelect={pick}
       footer={
-        picked && formSlug ? (
-          <div
-            data-field="raised"
-            className="flex flex-wrap items-center gap-2 bg-step px-7 py-4 md:px-8 md:pb-6"
-          >
-            <span id={`${id}-forms`} className="mr-1.5 text-small font-extrabold">
-              {team.form}
-            </span>
-            <div role="group" aria-labelledby={`${id}-forms`} className="flex flex-wrap gap-2">
+        // La franja está desde que se abre, para que el diálogo no crezca al
+        // elegir: sin Pokémon dice «Elige un Pokémon» y el botón espera. Las
+        // formas van en una sola línea que se desplaza si no caben (Pikachu)
+        <div
+          data-field="raised"
+          className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3.5 gap-y-3 bg-step px-7 py-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] md:px-8 md:pb-6"
+        >
+          <span id={`${id}-forms`} className="text-small font-extrabold">
+            {team.form}
+          </span>
+          {picked && formSlug ? (
+            <div
+              role="group"
+              aria-labelledby={`${id}-forms`}
+              className="flex h-11 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
               {shownForms.map((form) => (
                 <button
                   key={form.slug}
@@ -118,22 +125,26 @@ export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamP
                   aria-pressed={form.slug === formSlug}
                   title={form.name?.full}
                   onClick={() => chooseForm(form.slug)}
-                  className="h-10 cursor-pointer rounded-pill bg-raised px-4 text-small font-extrabold aria-pressed:ring-selected motion-safe:transition-transform duration-150 active:scale-[0.96]"
+                  className="h-10 shrink-0 cursor-pointer rounded-pill bg-raised px-4 text-small font-extrabold aria-pressed:ring-selected motion-safe:transition-transform duration-150 active:scale-[0.96]"
                 >
                   {form.name?.short ?? team.baseForm}
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              disabled={full}
-              onClick={() => onAdd(formSlug)}
-              className="ml-auto h-11 cursor-pointer rounded-pill bg-ink px-4.5 text-small font-extrabold text-bone motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96] disabled:cursor-not-allowed disabled:bg-raised disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100"
-            >
-              {full ? team.full : team.addToTeam}
-            </button>
-          </div>
-        ) : null
+          ) : (
+            <p className="flex h-11 items-center text-small font-extrabold text-ink-soft">
+              {team.pickPrompt}
+            </p>
+          )}
+          <button
+            type="button"
+            disabled={full || !picked || !formSlug}
+            onClick={() => formSlug && onAdd(formSlug)}
+            className="col-span-full h-11 cursor-pointer rounded-pill bg-ink px-4.5 text-small font-extrabold text-bone motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96] disabled:cursor-not-allowed disabled:bg-raised disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 sm:col-span-1"
+          >
+            {full ? team.full : team.addToTeam}
+          </button>
+        </div>
       }
     />
   );

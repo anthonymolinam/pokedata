@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 
 export interface ToastMessage {
   text: string;
@@ -22,8 +23,13 @@ interface ToastProps {
 // pantalla anuncie el texto en cuanto aparece. Al irse se funde con el último
 // texto, que solo se cambia con el siguiente aviso. Es una capa flotante, así
 // que lleva sombra. Solo recibe el puntero si trae enlace y está a la vista.
+// Se pinta en <body>: dentro del escenario de la ficha (isolate) las tarjetas
+// y el pie le pasaban por encima. z-55 lo deja sobre la página y la cabecera
+// (z-50) y bajo el menú móvil y los filtros (z-60); los diálogos van en la
+// capa superior del navegador.
 export default function Toast({ message, onDone, duration = 1600 }: ToastProps) {
   const [last, setLast] = useState<ToastMessage | null>(null);
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
   if (message && message !== last) setLast(message);
 
   useEffect(() => {
@@ -32,10 +38,12 @@ export default function Toast({ message, onDone, duration = 1600 }: ToastProps) 
     return () => clearTimeout(timer);
   }, [message, onDone, duration]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       role="status"
-      className={`fixed bottom-7 left-1/2 z-50 -translate-x-1/2 max-w-[calc(100vw-2*var(--gutter))] rounded-pill bg-ink px-5 py-3 text-small font-extrabold text-bone shadow-(--shadow-overlay) motion-safe:transition-[opacity,translate] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] ${
+      className={`fixed bottom-7 left-1/2 z-55 -translate-x-1/2 max-w-[calc(100vw-2*var(--gutter))] rounded-pill bg-ink px-5 py-3 text-small font-extrabold text-bone shadow-(--shadow-overlay) motion-safe:transition-[opacity,translate] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] ${
         message ? "opacity-100" : "pointer-events-none opacity-0 motion-safe:translate-y-5"
       } ${last ? "" : "invisible"} ${message?.action ? "" : "pointer-events-none"}`}
     >
@@ -56,6 +64,11 @@ export default function Toast({ message, onDone, duration = 1600 }: ToastProps) 
           )}
         </span>
       )}
-    </div>
+    </div>,
+    document.body,
   );
+}
+
+function subscribeNoop() {
+  return () => {};
 }

@@ -13,6 +13,9 @@ import PokemonSelectModal from "./PokemonSelectModal";
 
 type Slot = 1 | 2;
 
+// Rebote de los huecos vacíos, el mismo que en el equipo
+const spring = "ease-[cubic-bezier(.34,1.56,.64,1)] duration-[350ms]";
+
 // Más formas que estas y el selector se pliega
 const MAX_OPEN_FORMS = 4;
 
@@ -37,8 +40,13 @@ function artworkId(url: string): number {
   return match ? Number(match[1]) : 0;
 }
 
+// Un lado vacío no va en el enlace
 export function compareHref(basePath: string, p1: string, p2: string): string {
-  return `${basePath}?p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}`;
+  const params = [
+    p1 && `p1=${encodeURIComponent(p1)}`,
+    p2 && `p2=${encodeURIComponent(p2)}`,
+  ].filter(Boolean);
+  return params.length ? `${basePath}?${params.join("&")}` : basePath;
 }
 
 function detailHref(name: string, locale: Locale): string {
@@ -71,21 +79,23 @@ export default function CompareHeader({
         locale={locale}
       />
 
-      {/* En móvil va entre los dos escenarios, montada sobre la junta; en
-          escritorio, en la junta y a media altura de los artworks. El
-          centrado vive en el envoltorio, para que el rebote del hover (que
-          también usa translate) no lo pise */}
-      <div className="relative z-10 -my-8 justify-self-center md:absolute md:left-1/2 md:top-[calc(min(40svh,360px)/2)] md:my-0 md:-translate-x-1/2 md:-translate-y-1/2">
-        <Link
-          href={compareHref(basePath, p2Slug, p1Slug)}
-          scroll={false}
-          aria-label={compare.swapLabel}
-          className={`${control} bg-ink px-5 text-bone focus-visible:outline-ink`}
-        >
-          <ArrowLeftRight aria-hidden="true" strokeWidth={2.5} className="size-4 rotate-90 md:rotate-0" />
-          {compare.swap}
-        </Link>
-      </div>
+      {/* Solo con los dos Pokémon. En móvil va entre los dos escenarios,
+          montada sobre la junta; en escritorio, en la junta y a media altura
+          de los artworks. El centrado vive en el envoltorio, para que el
+          rebote del hover (que también usa translate) no lo pise */}
+      {pokemon1 && pokemon2 && (
+        <div className="relative z-10 -my-8 justify-self-center md:absolute md:left-1/2 md:top-[calc(min(40svh,360px)/2)] md:my-0 md:-translate-x-1/2 md:-translate-y-1/2">
+          <Link
+            href={compareHref(basePath, p2Slug, p1Slug)}
+            scroll={false}
+            aria-label={compare.swapLabel}
+            className={`${control} bg-ink px-5 text-bone focus-visible:outline-ink`}
+          >
+            <ArrowLeftRight aria-hidden="true" strokeWidth={2.5} className="size-4 rotate-90 md:rotate-0" />
+            {compare.swap}
+          </Link>
+        </div>
+      )}
 
       <CompareStage
         slot={2}
@@ -124,24 +134,45 @@ function CompareStage({
   const hrefFor = (next: string) =>
     slot === 1 ? compareHref(basePath, next, otherSlug) : compareHref(basePath, otherSlug, next);
   // El selector completa el enlace con el Pokémon elegido para este lado
-  const hrefPrefix = `${basePath}?${slot === 1 ? "p2" : "p1"}=${encodeURIComponent(otherSlug)}&p${slot}=`;
+  const otherParam = otherSlug ? `${slot === 1 ? "p2" : "p1"}=${encodeURIComponent(otherSlug)}&` : "";
+  const hrefPrefix = `${basePath}?${otherParam}p${slot}=`;
 
+  // Hueco vacío, como el del equipo (§4.9): todo el campo es el botón que abre
+  // el selector, con los Pokémon del día como sugerencia. Mide lo mismo que un
+  // escenario lleno, para que la página no salte al elegir
   if (!pokemon) {
     return (
-      <section
-        aria-label={compare.choose}
-        className="flex min-h-80 flex-col items-start justify-end gap-4 rounded-surface bg-step p-5 md:p-8"
-      >
-        <p className="text-lead font-black">{compare.emptySlot}</p>
-        <PokemonSelectModal
-          triggerLabel={compare.choose}
-          triggerClassName={`${control} bg-ink text-bone`}
-          hrefPrefix={hrefPrefix}
-          currentSlug={slug}
-          suggestions={suggestions}
-          locale={locale}
-        />
-      </section>
+      <PokemonSelectModal
+        triggerLabel={
+          <>
+            <svg
+              aria-hidden="true"
+              width="64"
+              height="64"
+              viewBox="0 0 64 64"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="5"
+              className={`text-ink-soft group-hover:text-ink group-focus-visible:text-ink motion-safe:transition-transform ${spring} motion-safe:group-hover:rotate-25 motion-safe:group-hover:scale-[1.08] motion-safe:group-focus-visible:rotate-25 motion-safe:group-focus-visible:scale-[1.08]`}
+            >
+              <circle cx="32" cy="32" r="28" />
+              <path d="M4 32h18M42 32h18" />
+              <circle cx="32" cy="32" r="9" />
+            </svg>
+            <span
+              className={`inline-flex items-center h-10 px-4 rounded-pill bg-ink text-bone text-small font-extrabold motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.06]`}
+            >
+              {compare.choose}
+            </span>
+          </>
+        }
+        triggerAriaLabel={compare.chooseSlot[slot - 1]}
+        triggerClassName={`group flex min-h-[calc(min(66vw,300px)+14rem)] md:min-h-[calc(min(40svh,360px)+13.25rem)] w-full flex-col items-center justify-center gap-4 rounded-surface bg-step text-ink cursor-pointer focus-visible:outline-ink hover:bg-[color-mix(in_srgb,var(--ink)_9%,var(--step))] focus-visible:bg-[color-mix(in_srgb,var(--ink)_9%,var(--step))] motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`}
+        hrefPrefix={hrefPrefix}
+        currentSlug={slug}
+        suggestions={suggestions}
+        locale={locale}
+      />
     );
   }
 
@@ -227,8 +258,9 @@ function CompareStage({
 
       <div className="flex flex-1 flex-col gap-4 px-5 pb-6 md:px-8 md:pb-8">
         <div>
-          <p className="text-body font-extrabold num">
+          <p title={formLabel ?? undefined} className="truncate text-body font-extrabold num">
             {detail.number} {String(pokemon.id).padStart(4, "0")}
+            {formLabel && <span className="font-black"> · {formLabel}</span>}
           </p>
           <h2 id={headingId} className="mt-1 text-head font-black">
             <Link
@@ -239,7 +271,6 @@ function CompareStage({
               {name}
             </Link>
           </h2>
-          {formLabel && <p className="mt-1 text-body font-black">{formLabel}</p>}
         </div>
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">

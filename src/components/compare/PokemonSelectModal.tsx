@@ -13,7 +13,8 @@ import PokemonCard from "@/components/pokemon/PokemonCard";
 const LAYER_SHADOW = "shadow-(--shadow-modal)";
 
 interface PokemonSelectModalProps {
-  triggerLabel: string;
+  // Texto del botón, o su contenido entero (el hueco vacío del comparador)
+  triggerLabel: ReactNode;
   triggerAriaLabel?: string;
   triggerClassName: string;
   // Enlace al comparador con el otro lado fijo; falta el Pokémon elegido

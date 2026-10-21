@@ -193,7 +193,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 - Números y totales en Nunito con `font-variant-numeric: tabular-nums`. No hay letra monoespaciada en ningún sitio.
 - **Ningún título pasa de dos líneas.** El nombre de la tarjeta y su número ocupan una sola línea: si no caben, el tamaño baja con `min(var(--step-lead), calc(100cqi / ((chars + 4) * 0.6 + 0.5)))` hasta un mínimo de 16px.
-- Las formas («Urshifu Estilo Fluido») se escriben como nombre más una línea secundaria, no concatenadas.
+- Las formas («Urshifu Estilo Fluido») se escriben como nombre más la forma aparte, no concatenadas. En la ficha y el comparador la forma va **en la línea del número** («N.º 0212 · Mega»), en una línea y recortada con «…» si no cabe (el nombre completo va en `title`), para que el escenario mida lo mismo con cualquier forma.
 - Todo va alineado a la izquierda. Solo se centra el estado vacío.
 
 ---
@@ -215,6 +215,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Pulsación con `scale(0.96)` y hover con un pequeño rebote.
 - **Área táctil mínima** de 44px en todo.
 - **Cursor de mano** en todo lo que se pulsa: botones, enlaces, opciones y pastillas (regla base de `globals.css`, porque Tailwind deja los botones con la flecha). Lo desactivado no la lleva.
+- **Aviso flotante** (`Toast`): pastilla en `--ink` con texto hueso, fija abajo y centrada (28px del borde), con sombra de capa flotante, `role="status"`. Se pinta con un portal en `<body>`, fuera de cualquier contexto de apilado de la página (el escenario de la ficha es `isolate` y las tarjetas y el pie le pasaban por encima). Su `z-index` es 55: por encima del contenido y de la cabecera (50) y por debajo del menú móvil y la hoja de filtros (60); los diálogos van en la capa superior del navegador. Desaparece solo con un fundido tras su duración (1,6s; 2,5s el de la ficha).
 - **Sin scroll horizontal de página:** solo lo tienen contenedores concretos (la tabla de tipos, la cadena evolutiva). El `<main>` lleva `overflow-x: clip` como red de seguridad; `clip` no crea contenedor de scroll, así que no rompe los elementos fijos ni `sticky`. Un elemento absoluto dentro de un contenedor con scroll necesita un antepasado posicionado dentro de ese contenedor.
 
 ### 4.1 Cabecera (todas las páginas)
@@ -370,13 +371,14 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Se pide a Next.js con `sizes` de 475px en escritorio y `quality={90}` (en `images.qualities` de `next.config.ts`, que en Next 16 solo admite 75 por defecto). El optimizador no amplía, así que en pantallas de alta densidad sirve el original a 475px.
 - **Variocolor:** un interruptor redondo de 48px con el icono de destellos (`Sparkles`), arriba a la derecha del escenario. Es independiente del selector de formas y se combina con cualquiera: al cambiar de forma se mantiene encendido si la forma tiene versión variocolor. Blanco apagado, en `--ink` encendido (`aria-pressed`).
 - **Debajo, sobre el campo:**
+  - El número y, si la forma no es la base, la forma en la misma línea: «N.º 0212 · Mega» (la forma en 900). Antes iba en una línea propia bajo el nombre y el escenario crecía al cambiar de forma.
   - El nombre real (`<h1>`, `--step-hero`, en `field-ink`).
-  - El número, las etiquetas de tipo, la altura y el peso.
+  - Las etiquetas de tipo, la altura y el peso.
   - El selector de formas: pastillas blancas, con la activa marcada por el borde de selección (§2.3, regla 8). Solo formas; el variocolor va aparte (arriba).
   - Los nombres de forma con siglas se escriben como tales: «PhD», no «Phd».
   - **«Añadir al equipo»** (§4.9): pastilla terciaria (`--surface`, texto en tinta, icono `Plus` de `lucide-react`) en la misma fila que el selector de formas, al final. Añade **la forma que se está viendo** (Mega, regional…); el variocolor no cuenta, el equipo usa siempre el artwork normal.
-    - Al pulsarla aparece un aviso flotante («Añadido a tu equipo · Ver equipo», `--ink` con texto hueso, 2,5s) y el botón pasa a **«En tu equipo»** con una marca ✓, relleno `--ink` y texto hueso; en ese estado es un enlace a la página del equipo.
-    - Si esta forma ya está en el equipo, se muestra directamente «En tu equipo». Si el equipo está lleno: «Equipo completo», en `--step` con texto en tinta, y enlaza al equipo para hacer sitio.
+    - Al pulsarla aparece un aviso flotante («Añadido a tu equipo · Ver equipo», `--ink` con texto hueso, 2,5s; ver «Aviso flotante» en §4.0) y el botón pasa a **«En tu equipo»** con una marca ✓, relleno `--ink` y texto hueso; en ese estado es un enlace a la página del equipo.
+    - Si esta forma ya está en el equipo, se muestra directamente «En tu equipo». El botón está en la ficha de todos los Pokémon; si no se ve «Añadir al equipo», es porque está en uno de estos dos estados (comprobado con Scizor a 390, 768, 1024 y 1440px). Si el equipo está lleno: «Equipo completo», en `--step` con texto en tinta, y enlaza al equipo para hacer sitio.
     - El estado sale de `localStorage` (§4.9), así que en el primer pintado del servidor el botón se pinta en su estado normal y se corrige tras la hidratación sin cambiar de tamaño (ancho mínimo fijado para el texto más largo de los tres).
 - **Cambio de forma:** el campo nuevo entra como capa con fundido de opacidad (400ms) y el artwork se cruza. La URL se actualiza para que sea compartible.
 
@@ -396,7 +398,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 **Toda la página es un panel blanco** con la tabla, y **cabe entera en 1440×900 sin scroll.**
 
 - **Franja superior:** un título pequeño («Tabla de tipos», `<h1>` en `--step-lead`) y una línea de explicación («Las filas atacan y las columnas reciben. Toca un tipo para resaltarlo.»). Sin tarjeta grande de título, sin subtítulo y **sin leyenda**: el significado de cada celda lo da el tooltip.
-- **Tooltip de celda** (solo con puntero): al pasar el ratón por una celda aparece encima un globo breve con el enfrentamiento, «Fuego → Planta: ×2» / «Fire → Grass: ×2» (×2, ×½, ×0 o ×1), con los nombres de tipo en el idioma de la página. Va en `--ink` con texto hueso, `--step-small` en 800, radio de 8px y sombra (es una capa flotante), y aparece con un fundido de 120ms. En las dos primeras y las dos últimas columnas se abre hacia dentro para no salirse de la tabla. Es CSS (`attr(data-tip)` en `globals.css`).
+- **Tooltip de celda** (solo con puntero): al pasar el ratón por una celda aparece encima un globo breve con el enfrentamiento, «Fuego → Planta: ×2» / «Fire → Grass: ×2» (×2, ×½, ×0 o ×1), con los nombres de tipo en el idioma de la página. Va en `--ink` con texto hueso, `--step-small` en 800, radio de 8px y sombra (es una capa flotante), y aparece con un fundido de 120ms. En las dos primeras y las dos últimas columnas se abre hacia dentro para no salirse de la tabla. Es CSS (`attr(data-tip)` en `globals.css`). La celda en hover sube a `z-index: 11`, por encima de lo fijo de su tabla (las etiquetas fijas del scroll aquí, la fila de avatares de la Defensa en §4.9): cada celda es su propio contexto de apilado (atenuado o animación de entrada) y sin eso el globo de la primera fila quedaba debajo de lo fijo.
 - **Sin selector aparte ni panel de información:** la propia matriz es el selector. Pulsar el tipo de una fila elige ese tipo **como atacante** (`?atk=`); pulsar el de una columna, **como defensor** (`?def=`). Pulsarlo otra vez quita la selección y pulsar otro la cambia. No hay resumen de debilidades ni botón «Quitar la selección». Los enlaces antiguos con `?type=` abren la fila.
 - **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con `--surface` según `--cross-mix`) y su cabecera lleva el borde de selección (§2.3, regla 8); el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
 - **Guía de hover** (solo con puntero): al pasar por una celda se marcan su fila y su columna, y lo atenuado vuelve a leerse. Es CSS puro (`:has()` en `globals.css`).
@@ -411,9 +413,10 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 ### 4.6 Comparador
 
-- **Dos escenarios lado a lado** (apilados en móvil), cada uno en el `field` de su Pokémon y con la anatomía de la ficha en pequeño.
-- **Estadísticas enfrentadas** en un panel blanco: las barras crecen desde el eje central, cada una en el `deep` de su Pokémon. El ganador de cada estadística se marca con peso 900 y un tamaño más, no con color.
-- **«Intercambiar»:** pastilla en `--ink` en el eje central, centrada sobre la junta de las dos tarjetas. El centrado vive en un envoltorio y el rebote del hover en la pastilla, porque los dos usan `translate` y el del hover pisaba al del centrado (el botón se iba hacia abajo).
+- **Dos escenarios lado a lado** (apilados en móvil), cada uno en el `field` de su Pokémon y con la anatomía de la ficha en pequeño. La forma va en la línea del número, como en la ficha (§4.4).
+- **Vacío por defecto.** Sin enlace (`?p1=` / `?p2=`), los dos lados empiezan vacíos; con enlace se cargan los Pokémon del enlace, y con uno solo, el otro lado queda vacío. Un lado vacío es **un único botón** del alto de un escenario lleno, como el hueco del equipo (§4.9): `--step`, una Pokébola de líneas de 64px y la pastilla «Elegir Pokémon» / «Choose Pokémon» en `--ink`, con su mismo hover (sube 6px, la Pokébola gira 25°). Su nombre accesible es «Elegir el primer Pokémon» / «…segundo…». Abre el modal de selección con los Pokémon del día como sugerencia. El enlace solo lleva los lados elegidos. Sin los dos, el título de la página es el genérico («Comparador de Pokémon») y la canónica no lleva parámetros.
+- **Estadísticas enfrentadas** en un panel blanco, solo con los dos Pokémon elegidos: las barras crecen desde el eje central, cada una en el `deep` de su Pokémon. El ganador de cada estadística se marca con peso 900 y un tamaño más, no con color.
+- **«Intercambiar»:** solo con los dos Pokémon elegidos. Pastilla en `--ink` en el eje central, centrada sobre la junta de las dos tarjetas. El centrado vive en un envoltorio y el rebote del hover en la pastilla, porque los dos usan `translate` y el del hover pisaba al del centrado (el botón se iba hacia abajo).
 - **Modal de selección:** capa flotante blanca con sombra, que usa el mismo buscador y las mismas mini tarjetas. Su zona con scroll lleva 28px de relleno lateral (32px desde 768px) y 48px abajo, para que el brillo de hover de las tarjetas no quede cortado; la cabecera del modal usa el mismo relleno lateral para alinearse con la rejilla.
 
 ### 4.7 Pie
@@ -503,7 +506,10 @@ Es una `<ol>` (el orden importa; sin números visibles) con 64px de margen super
 #### Selector «Añadir al equipo»
 
 Es el modal del comparador (§4.6) con otro final: el mismo buscador, las mismas mini tarjetas y, sin texto escrito, los tres Pokémon del día como sugerencias.
-- Tocar una tarjeta la marca con el borde de selección (§2.3, regla 8) y abre debajo una **franja de formas** en `--raised-step`: «Forma» y una pastilla por forma de la especie («Forma base», «Mega X», «Forma de Alola»…), con la activa marcada igual; a la derecha, «Añadir al equipo» (secundario). Una especie sin formas muestra solo «Forma base» marcada.
+- Debajo de las tarjetas, la **franja de formas** en `--raised-step`, **visible desde que se abre el modal**, para que la ventana no cambie de tamaño al elegir: «Forma», el hueco de las formas y, a la derecha, «Añadir al equipo» (secundario; debajo, a todo el ancho, por debajo de 640px).
+  - Sin Pokémon elegido, el hueco dice «Elige un Pokémon» / «Choose a Pokémon» en `--ink-soft` y el botón está desactivado.
+  - Tocar una tarjeta la marca con el borde de selección (§2.3, regla 8) y el hueco pasa a una pastilla por forma de la especie («Forma base», «Mega X», «Forma de Alola»…), con la activa marcada igual; el botón se activa. Una especie sin formas muestra solo «Forma base» marcada.
+  - Las formas van en una sola línea de 44px que se desplaza en horizontal si no caben (Pikachu), así que la franja mide siempre lo mismo.
 - Con el equipo lleno, la franja dice «Equipo completo» y el botón está desactivado (en la práctica no se llega: no quedan huecos).
 - Al añadir, el modal se cierra, el miembro ocupa el primer hueco y el foco va a su campo.
 
