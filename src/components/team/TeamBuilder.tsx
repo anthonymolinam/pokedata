@@ -123,6 +123,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   function add(slug: string) {
     const current = getTeamSnapshot();
     if (current.length >= TEAM_SIZE) return;
+    dropUndo();
     pendingFocus.current = [slot(current.length)];
     setTeam([...current, slug]);
     setPickerOpen(false);
@@ -135,6 +136,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
     if (to < 0 || to >= current.length) return;
     const arrow = step < 0 ? "left" : "right";
     const other = step < 0 ? "right" : "left";
+    dropUndo();
     pendingFocus.current = [
       `${slot(to)} [data-control="${arrow}"]`,
       `${slot(to)} [data-control="${other}"]`,
@@ -145,6 +147,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   // Arrastre: el miembro cae en el sitio del campo de destino
   function reorder(from: number, to: number) {
     pendingFocus.current = [slot(to)];
+    dropUndo();
     setTeam(moveItem(getTeamSnapshot(), from, to));
   }
 
@@ -152,6 +155,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   // cambiarla, para que el campo no pase por fantasma
   function changeForm(index: number, slug: string) {
     pendingFocus.current = [`${slot(index)} [data-control="form"]`, slot(index)];
+    dropUndo();
     const replace = () => {
       const current = getTeamSnapshot();
       if (index >= current.length) return;
@@ -161,15 +165,37 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   }
 
   // Los siguientes se desplazan a la izquierda: el foco va al campo que ocupa
-  // ahora ese sitio, o al hueco vacío si era el último
+  // ahora ese sitio, o al hueco vacío si era el último. «Deshacer» lo
+  // devuelve a su hueco con su forma, y el foco vuelve a él
   function remove(index: number) {
     const current = getTeamSnapshot();
+    const name = members?.[index]?.name ?? current[index];
     pendingFocus.current = [slot(index), slot(Math.max(0, index - 1))];
     setTeam(current.filter((_, i) => i !== index));
+    offerUndo(team.removed.replace("{name}", name), current, [slot(index)]);
   }
 
   function notify(text: string, action?: ToastMessage["action"]) {
     setToast((prev) => ({ text, action, id: (prev?.id ?? 0) + 1 }));
+  }
+
+  // Aviso con «Deshacer», que vuelve al equipo de antes. Cada aviso sustituye
+  // al anterior, así que solo se deshace el último cambio
+  function offerUndo(text: string, previous: string[], focus: string[]) {
+    notify(text, {
+      label: team.undo,
+      onClick: () => {
+        pendingFocus.current = focus;
+        setTeam(previous);
+        setToast(null);
+      },
+    });
+  }
+
+  // Cualquier otro cambio retira el «Deshacer» pendiente: volver al equipo de
+  // antes se llevaría también ese cambio
+  function dropUndo() {
+    setToast((prev) => (prev?.action ? null : prev));
   }
 
   // Rellena los huecos con especies nuevas, en su forma base y de tipos
@@ -182,17 +208,12 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
     const kept = full ? [] : (loaded ?? []).map((m) => ({ id: m.id, types: m.types }));
     const picked = pickRandomMembers(index, kept, TEAM_SIZE - kept.length, Math.random);
     if (!full) {
+      dropUndo();
       setTeam([...current, ...picked].slice(0, TEAM_SIZE));
       return;
     }
     setTeam(picked);
-    notify(team.random, {
-      label: team.undo,
-      onClick: () => {
-        setTeam(current);
-        setToast(null);
-      },
-    });
+    offerUndo(team.random, current, [slot(0)]);
   }
 
   // Escribe ?t= en la URL y la comparte: en táctil con la hoja nativa; si
@@ -219,18 +240,23 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   // La banda desaparece: el foco va al primer campo del equipo que queda
   function saveShared() {
     pendingFocus.current = [slot(0)];
+    dropUndo();
     setTeam(getTeamSnapshot());
   }
 
   function backToMine() {
     pendingFocus.current = [slot(0)];
+    dropUndo();
     leaveSharedTeam();
   }
 
-  // El botón se desactiva al vaciar: el foco va al primer hueco
+  // El botón se desactiva al vaciar: el foco va al primer hueco.
+  // «Deshacer» devuelve a todos en su orden y con su forma
   function clear() {
+    const current = getTeamSnapshot();
     pendingFocus.current = [slot(0)];
     setTeam([]);
+    offerUndo(team.cleared, current, [slot(0)]);
   }
 
   const pressable = "cursor-pointer motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96]";

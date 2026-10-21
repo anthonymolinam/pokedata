@@ -44,15 +44,16 @@ export default function Toast({ message, onDone, duration = 1600 }: ToastProps) 
   return createPortal(
     <div
       role="status"
-      className={`fixed bottom-7 left-1/2 z-55 -translate-x-1/2 max-w-[calc(100vw-2*var(--gutter))] rounded-pill bg-ink px-5 py-3 text-small font-extrabold text-bone shadow-(--shadow-overlay) motion-safe:transition-[opacity,translate] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] ${
+      className={`fixed bottom-7 left-1/2 z-55 -translate-x-1/2 w-max max-w-[calc(100vw-2*var(--gutter))] rounded-pill bg-ink px-5 py-3 text-small font-extrabold text-bone shadow-(--shadow-overlay) motion-safe:transition-[opacity,translate] duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] ${
         message ? "opacity-100" : "pointer-events-none opacity-0 motion-safe:translate-y-5"
       } ${last ? "" : "invisible"} ${message?.action ? "" : "pointer-events-none"}`}
     >
       {last && (
         <span key={last.id}>
           {last.text}
+          {/* El separador va pegado a la acción: si no cabe, bajan juntos */}
           {last.action && (
-            <>
+            <span className="whitespace-nowrap">
               {" · "}
               {"href" in last.action ? (
                 <Link href={last.action.href} tabIndex={message ? undefined : -1} className={actionClass}>
@@ -68,7 +69,7 @@ export default function Toast({ message, onDone, duration = 1600 }: ToastProps) 
                   {last.action.label}
                 </button>
               )}
-            </>
+            </span>
           )}
         </span>
       )}
