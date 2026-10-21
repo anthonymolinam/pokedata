@@ -12,6 +12,8 @@ import {
 } from "@/constants/pokemonAliases";
 import PokemonDetailView from "@/components/pokemon-detail/PokemonDetailView";
 import { artworkUrl, spriteUrl } from "@/lib/artwork";
+import { pageMetadata } from "@/lib/metadata";
+import { Locale } from "@/proxy";
 
 interface PageProps {
   params: Promise<{ locale: string; name: string }>;
@@ -22,15 +24,20 @@ export async function generateMetadata({
   params,
   searchParams,
 }: PageProps): Promise<Metadata> {
-  const { locale, name } = await params;
-  const resolvedSearchParams = searchParams ? await searchParams : {};
-  const activePokemonName = resolveCanonicalPokemonName(
-    resolvedSearchParams?.variant || name,
-  );
-
+  const { locale: rawLocale, name } = await params;
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
+  const { variant } = await searchParams;
+  const activePokemonName = resolveCanonicalPokemonName(variant || name);
   const isEs = locale === "es";
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata-pied.vercel.app";
+
+  // La ficha es la de la especie de la ruta, en el slug de cada idioma
+  // (colmilargo / great-tusk); la forma elegida va en ?variant=
+  const speciesSlug = resolveCanonicalPokemonName(name);
+  const variantQuery = variant ? `?variant=${encodeURIComponent(variant.toLowerCase())}` : "";
+  const paths = {
+    es: `/es/pokemon/${encodeURIComponent(CANONICAL_TO_SPANISH[speciesSlug] || speciesSlug)}${variantQuery}`,
+    en: `/en/pokemon/${encodeURIComponent(speciesSlug)}${variantQuery}`,
+  };
 
   try {
     const pokemon = await getPokemonDetail(activePokemonName);
@@ -73,35 +80,17 @@ export async function generateMetadata({
       )
       .join(" / ");
 
-    // 3. Título limpio con absolute
-    const title = isEs
-      ? `${localizedName} | PokéData`
-      : `${localizedName} | PokéData`;
-
     const description = isEs
       ? `Datos completos de ${localizedName} (#${String(pokemon.id).padStart(4, "0")}) en PokéData: estadísticas base, tabla de debilidades de tipo ${typesFormatted}, habilidades y evoluciones.`
-      : `Complete data for ${localizedName} (#${String(pokemon.id).padStart(4, "0")}) on PokéData: base stats, weakness chart for type ${typesFormatted}, abilities, and evoluciones.`;
+      : `Complete data for ${localizedName} (#${String(pokemon.id).padStart(4, "0")}) on PokéData: base stats, weakness chart for type ${typesFormatted}, abilities, and evolutions.`;
 
     const imageUrl = pokemon.image ? spriteUrl(pokemon.image) : artworkUrl(pokemon.id);
 
-    // 4. Slugs limpios sin depender de pokemon.species
-    const baseCanonicalSlug = resolveCanonicalPokemonName(pokemon.name);
-    const esSlug =
-      CANONICAL_TO_SPANISH[baseCanonicalSlug.toLowerCase()] ||
-      baseCanonicalSlug.toLowerCase();
-    const enSlug = baseCanonicalSlug.toLowerCase();
-
-    const currentPath = `${baseUrl}/${locale}/pokemon/${name}${
-      resolvedSearchParams?.variant
-        ? `?variant=${resolvedSearchParams.variant}`
-        : ""
-    }`;
-
-    return {
-      title: {
-        absolute: title,
-      },
+    return pageMetadata({
+      locale,
+      title: localizedName,
       description,
+      paths,
       keywords: isEs
         ? [
             localizedName.toLowerCase(),
@@ -119,45 +108,21 @@ export async function generateMetadata({
             "pokedex",
             "pokedata",
           ],
-      alternates: {
-        canonical: currentPath,
-        languages: {
-          es: `${baseUrl}/es/pokemon/${encodeURIComponent(esSlug)}`,
-          en: `${baseUrl}/en/pokemon/${encodeURIComponent(enSlug)}`,
-        },
-      },
-      openGraph: {
-        title,
-        description,
-        url: currentPath,
-        siteName: "PokéData",
-        type: "website",
-        images: [
-          {
-            url: imageUrl,
-            width: 475,
-            height: 475,
-            alt: localizedName,
-          },
-        ],
-      },
-      twitter: {
-        card: "summary",
-        title,
-        description,
-        images: [imageUrl],
-      },
-    };
+      image: { url: imageUrl, width: 475, height: 475, alt: localizedName },
+    });
   } catch {
+    // Sin datos (un slug que no existe responde con la 404 ya en streaming,
+    // con estado 200): fuera de los buscadores
     const fallbackFormatted = formatPokemonDisplayName(activePokemonName);
-    return {
-      title: {
-        absolute: `PokéData | ${fallbackFormatted}`,
-      },
+    return pageMetadata({
+      locale,
+      title: fallbackFormatted,
       description: isEs
         ? `Detalles, estadísticas y evoluciones de ${fallbackFormatted} en PokéData.`
         : `Pokémon details, stats, and evolution for ${fallbackFormatted} on PokéData.`,
-    };
+      paths,
+      index: false,
+    });
   }
 }
 

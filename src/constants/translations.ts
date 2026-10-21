@@ -170,6 +170,17 @@ export const translations = {
       caption: "Rows attack, columns take the hit. Tap a type to highlight it.",
       corner: "Attack ↓ Defence →",
     },
+    // Pestaña y buscadores: la portada (también por defecto, para la 404), la
+    // tabla de tipos y el título de la 404
+    meta: {
+      homeTitle: "PokéData · Pokémon Database, Type Chart & Stats Comparator",
+      homeDescription:
+        "Modern Pokémon database featuring combat statistics, interactive type chart matchups, head-to-head Pokémon comparator, and evolution lines powered by PokéAPI.",
+      types: "Type chart",
+      typesDescription:
+        "Complete matrix of elemental matchups, weaknesses, and resistances in Pokémon.",
+      notFound: "Page not found",
+    },
     notFound: {
       title: "This page has vanished",
       body: "The address doesn't lead to any Pokémon or section of PokéData. It may be misspelled, or the link may no longer exist.",
@@ -422,6 +433,17 @@ export const translations = {
       title: "Tabla de tipos",
       caption: "Las filas atacan y las columnas reciben. Toca un tipo para resaltarlo.",
       corner: "Ataca ↓ Recibe →",
+    },
+    // Pestaña y buscadores: la portada (también por defecto, para la 404), la
+    // tabla de tipos y el título de la 404
+    meta: {
+      homeTitle: "PokéData · Base de datos, tabla de tipos y comparador Pokémon",
+      homeDescription:
+        "Enciclopedia Pokémon moderna con datos de combate en tiempo real: calculadora y tabla de efectividad de tipos, estadísticas base, comparador Pokémon y evoluciones con PokéAPI.",
+      types: "Tabla de tipos",
+      typesDescription:
+        "Matriz completa de enfrentamientos elementales, debilidades y resistencias en Pokémon.",
+      notFound: "Página no encontrada",
     },
     notFound: {
       title: "Esta página se ha esfumado",

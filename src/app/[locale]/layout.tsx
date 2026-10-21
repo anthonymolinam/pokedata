@@ -8,6 +8,7 @@ import InlineScript from "@/components/common/InlineScript";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 import { THEME_COLORS, themeScript } from "@/lib/theme";
+import { SITE_NAME, SITE_URL, TITLE_TEMPLATE } from "@/lib/metadata";
 
 // Única familia (DESIGN.md §3): display 900, controles 800, texto 600.
 // Va en el proyecto (src/app/fonts, OFL) y no desde Google Fonts, que falla
@@ -37,6 +38,9 @@ interface LayoutProps {
   params: Promise<{ locale: string }>;
 }
 
+// Lo común a todo el sitio. Cada página pone su título, descripción,
+// canónica, OpenGraph, Twitter y robots con pageMetadata (src/lib/metadata.ts);
+// la 404 se queda con estos, sin canónica y con el noindex que añade Next
 export async function generateMetadata({
   params,
 }: {
@@ -44,33 +48,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale: rawLocale } = await params;
   const locale: Locale = rawLocale === "en" ? "en" : "es";
-  const isEs = locale === "es";
-
-  // Corregido el doble https://
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata-pied.vercel.app";
-
-  const titleDefault = isEs
-    ? "PokéData | Base de Datos, Tabla de Tipos y Comparador Pokémon"
-    : "PokéData | Pokémon Database, Type Chart & Stats Comparator";
-
-  const description = isEs
-    ? "Enciclopedia Pokémon moderna con datos de combate en tiempo real: calculadora y tabla de efectividad de tipos, estadísticas base, comparador Pokémon y evoluciones con PokéAPI."
-    : "Modern Pokémon database featuring combat statistics, interactive type chart matchups, head-to-head Pokémon comparator, and evolution lines powered by PokéAPI.";
+  const { meta } = getDictionary(locale);
 
   return {
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL(SITE_URL),
     title: {
-      default: titleDefault,
-      template: "%s | PokéData",
+      default: meta.homeTitle,
+      template: TITLE_TEMPLATE,
     },
-    description,
-    applicationName: "PokéData",
+    description: meta.homeDescription,
+    applicationName: SITE_NAME,
     authors: [
       { name: "Anthony Molina", url: "https://github.com/anthonymolinam" },
     ],
     creator: "Anthony Molina",
-    keywords: isEs
+    keywords: locale === "es"
       ? [
           "PokéData",
           "pokemon database español",
@@ -88,36 +80,17 @@ export async function generateMetadata({
           "base stats comparison",
           "pokeapi",
         ],
-    alternates: {
-      canonical: `/${locale}`,
-      languages: {
-        es: "/es",
-        en: "/en",
-      },
-    },
     openGraph: {
       type: "website",
-      locale: isEs ? "es_ES" : "en_US",
-      url: `/${locale}`,
-      siteName: "PokéData",
-      title: titleDefault,
-      description,
+      siteName: SITE_NAME,
+      locale: locale === "es" ? "es_ES" : "en_US",
+      title: meta.homeTitle,
+      description: meta.homeDescription,
     },
     twitter: {
-      card: "summary_large_image",
-      title: titleDefault,
-      description,
-    },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        "max-video-preview": -1,
-        "max-image-preview": "large",
-        "max-snippet": -1,
-      },
+      card: "summary",
+      title: meta.homeTitle,
+      description: meta.homeDescription,
     },
   };
 }
@@ -128,14 +101,12 @@ export default async function RootLayout({ children, params }: LayoutProps) {
   const dict = getDictionary(locale);
 
   // Schema.org estructurado para forzar el nombre "PokéData" en Google
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata-pied.vercel.app";
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "PokéData",
+    name: SITE_NAME,
     alternateName: ["PokeData", "PokéData App"],
-    url: siteUrl,
+    url: SITE_URL,
   };
 
   return (

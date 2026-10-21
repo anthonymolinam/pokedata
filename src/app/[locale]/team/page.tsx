@@ -3,6 +3,7 @@ import { getDictionary } from "@/constants/translations";
 import { getLocalizedPath } from "@/constants/routes";
 import TeamBuilder from "@/components/team/TeamBuilder";
 import { Locale } from "@/proxy";
+import { pageMetadata } from "@/lib/metadata";
 
 interface TeamPageProps {
   params: Promise<{ locale: string }>;
@@ -15,29 +16,17 @@ export async function generateMetadata({
   const locale: Locale = rawLocale === "en" ? "en" : "es";
   const { team } = getDictionary(locale);
 
-  // Título exacto del §4.9, sin la plantilla «%s | PokéData» del layout
-  const title = `${team.nav} · PokéData`;
-  // La canónica nunca lleva ?t=: un equipo compartido no es otra página
-  const esPath = getLocalizedPath("es", "team");
-  const enPath = getLocalizedPath("en", "team");
-  const currentPath = locale === "es" ? esPath : enPath;
-
-  return {
-    title: { absolute: title },
+  // «Equipo · PokéData» (§4.9). La canónica nunca lleva ?t=: un equipo
+  // compartido no es otra página
+  return pageMetadata({
+    locale,
+    title: team.nav,
     description: team.description,
-    alternates: {
-      canonical: currentPath,
-      languages: { es: esPath, en: enPath },
+    paths: {
+      es: getLocalizedPath("es", "team"),
+      en: getLocalizedPath("en", "team"),
     },
-    openGraph: {
-      title,
-      description: team.description,
-      url: currentPath,
-      siteName: "PokéData",
-      locale: locale === "es" ? "es_ES" : "en_US",
-      type: "website",
-    },
-  };
+  });
 }
 
 // Equipo (DESIGN.md §4.9). La página es estática: el equipo vive en el

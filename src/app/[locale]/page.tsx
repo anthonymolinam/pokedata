@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import {
   getPaginatedPokemonList,
   getFilteredPokemonList,
@@ -9,6 +10,7 @@ import { countResults, getSearchMatches, hasFilters, type Query } from "@/lib/ho
 import { GENERATIONS } from "@/constants/generations";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
+import { pageMetadata } from "@/lib/metadata";
 import HomeHero from "@/components/home/HomeHero";
 import PokemonGrid from "@/components/home/PokemonGrid";
 import PokemonFiltersBar from "@/components/home/PokemonFiltersBar";
@@ -25,6 +27,22 @@ interface PageProps {
 }
 
 const PAGE_SIZE = 24;
+
+// La canónica es la portada sin filtros ni página: son vistas de la misma
+export async function generateMetadata({
+  params,
+}: Pick<PageProps, "params">): Promise<Metadata> {
+  const { locale: rawLocale } = await params;
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
+  const { meta } = getDictionary(locale);
+
+  return pageMetadata({
+    locale,
+    title: { absolute: meta.homeTitle },
+    description: meta.homeDescription,
+    paths: { es: "/es", en: "/en" },
+  });
+}
 
 export default async function HomePage({ params, searchParams }: PageProps) {
   const { locale: rawLocale } = await params;

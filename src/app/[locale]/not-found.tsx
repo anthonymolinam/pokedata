@@ -5,6 +5,7 @@ import Artwork from "@/components/common/Artwork";
 import { usePathname } from "next/navigation";
 import { artworkUrl, figureStyle } from "@/lib/artwork";
 import { getDictionary } from "@/constants/translations";
+import { withSiteName } from "@/lib/metadata";
 
 // Gengar: el Fantasma que se queda en el escenario cuando la página se esfuma
 const GENGAR = 94;
@@ -13,7 +14,7 @@ const GENGAR = 94;
 export default function NotFound() {
   const pathname = usePathname();
   const locale = pathname.startsWith("/en") ? "en" : "es";
-  const { notFound } = getDictionary(locale);
+  const { notFound, meta } = getDictionary(locale);
 
   // 404 (DESIGN.md §4.8): escenario en el campo de Fantasma, tinta hueso, con
   // un «404» gigante detrás del artwork, que flota como en la ficha, y el
@@ -24,6 +25,8 @@ export default function NotFound() {
       data-type="ghost"
       className="card-pop relative isolate grid overflow-hidden rounded-[22px] md:rounded-[32px] bg-field text-field-ink lg:min-h-[min(64svh,620px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"
     >
+      {/* not-found no exporta metadata: React sube este título a <head> */}
+      <title>{withSiteName(meta.notFound)}</title>
       <div
         aria-hidden="true"
         className="relative h-[min(80vw,44svh)] md:h-[min(52vw,44svh)] lg:order-2 lg:h-auto [container-type:size]"

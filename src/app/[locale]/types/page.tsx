@@ -3,24 +3,31 @@ import TypeChart, { type TypeSelection } from "@/components/types/TypeChart";
 import { getLocalizedPath } from "@/constants/routes";
 import { isPokemonType } from "@/constants/typeColors";
 import { Locale } from "@/proxy";
+import { getDictionary } from "@/constants/translations";
+import { pageMetadata } from "@/lib/metadata";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ atk?: string; def?: string; type?: string }>;
 }
 
+// La canónica no lleva ?atk= ni ?def=: la selección es una vista de la tabla
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const { locale } = await params;
-  const isEs = locale === "es";
+  const { locale: rawLocale } = await params;
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
+  const { meta } = getDictionary(locale);
 
-  return {
-    title: isEs ? "Tabla de tipos | PokéData" : "Type chart | PokéData",
-    description: isEs
-      ? "Matriz completa de enfrentamientos elementales, debilidades y resistencias en Pokémon."
-      : "Complete matrix of elemental matchups, weaknesses, and resistances in Pokémon.",
-  };
+  return pageMetadata({
+    locale,
+    title: meta.types,
+    description: meta.typesDescription,
+    paths: {
+      es: getLocalizedPath("es", "types"),
+      en: getLocalizedPath("en", "types"),
+    },
+  });
 }
 
 // Tabla de tipos (DESIGN.md §4.5). La fila elegida llega en ?atk=fire y la

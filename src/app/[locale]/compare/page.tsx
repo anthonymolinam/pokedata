@@ -10,6 +10,7 @@ import CompareHeader from "@/components/compare/CompareHeader";
 import CompareStatBars from "@/components/compare/CompareStatBars";
 import { getDailyPokemon } from "@/lib/daily-server";
 import { Locale } from "@/proxy";
+import { pageMetadata } from "@/lib/metadata";
 
 interface ComparePageProps {
   params: Promise<{ locale: string }>;
@@ -34,10 +35,10 @@ export async function generateMetadata({
   params,
   searchParams,
 }: ComparePageProps): Promise<Metadata> {
-  const { locale } = await params;
+  const { locale: rawLocale } = await params;
+  const locale: Locale = rawLocale === "en" ? "en" : "es";
   const { p1, p2 } = await searchParams;
   const isEs = locale === "es";
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata.app";
 
   // Sin los dos Pokémon (la página vacía por defecto), título genérico y
   // enlace sin parámetros
@@ -45,18 +46,19 @@ export async function generateMetadata({
     p1 && p2
       ? { p1: formatMetaName(p1, isEs), p2: formatMetaName(p2, isEs) }
       : null;
-  const query = pair ? `?p1=${p1}&p2=${p2}` : "";
+  const query = p1 && p2
+    ? `?p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}`
+    : "";
 
-  // 1. Marca primero en el título
   const title = pair
     ? isEs
-      ? `PokéData | Comparar ${pair.p1} vs ${pair.p2}`
-      : `PokéData | Compare ${pair.p1} vs ${pair.p2}`
+      ? `Comparar ${pair.p1} vs ${pair.p2}`
+      : `Compare ${pair.p1} vs ${pair.p2}`
     : isEs
-      ? "PokéData | Comparador de Pokémon"
-      : "PokéData | Pokémon comparator";
+      ? "Comparador de Pokémon"
+      : "Pokémon comparator";
 
-  // 2. Descripción orientada a la intención de búsqueda
+  // Descripción orientada a la intención de búsqueda
   const versus = pair
     ? isEs
       ? `entre ${pair.p1} y ${pair.p2}`
@@ -68,16 +70,18 @@ export async function generateMetadata({
     ? `Comparador Pokémon en PokéData: compara estadísticas base (PS, Ataque, Defensa, Velocidad), tipos elementales y ventajas de combate ${versus} cara a cara.`
     : `PokéData Pokémon Comparator: compare base stats (HP, Attack, Defense, Speed), elemental types, and battle matchups ${versus} head-to-head.`;
 
-  const esPath = `${baseUrl}${getLocalizedPath("es", "compare")}${query}`;
-  const enPath = `${baseUrl}${getLocalizedPath("en", "compare")}${query}`;
-  const currentPath = isEs ? esPath : enPath;
   const pairKeyword = pair
     ? [`${pair.p1.toLowerCase()} vs ${pair.p2.toLowerCase()}`]
     : [];
 
-  return {
+  return pageMetadata({
+    locale,
     title,
     description,
+    paths: {
+      es: `${getLocalizedPath("es", "compare")}${query}`,
+      en: `${getLocalizedPath("en", "compare")}${query}`,
+    },
     keywords: isEs
       ? [
           "comparador pokemon",
@@ -95,27 +99,7 @@ export async function generateMetadata({
           "base stats battle",
           "pokedata",
         ],
-    alternates: {
-      canonical: currentPath,
-      languages: {
-        es: esPath,
-        en: enPath,
-      },
-    },
-    openGraph: {
-      title,
-      description,
-      url: currentPath,
-      siteName: "PokéData",
-      locale: isEs ? "es_ES" : "en_US",
-      type: "website",
-    },
-    twitter: {
-      card: "summary",
-      title,
-      description,
-    },
-  };
+  });
 }
 
 // Comparador (DESIGN.md §4.6): dos escenarios en el campo de cada Pokémon y,
