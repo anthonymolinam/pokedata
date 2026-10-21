@@ -1,4 +1,5 @@
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
+import type { FormName } from "@/lib/team";
 
 // Nombres de la ficha: el nombre de la especie traducido (Colmilargo en
 // español) y la etiqueta de cada forma, que va en una línea aparte (§3).
@@ -159,4 +160,21 @@ export function formatVariantLabel(label: string, isEs: boolean): string {
   }
 
   return label;
+}
+
+// Nombre de una forma para el equipo (DESIGN.md §4.9), a partir de la etiqueta
+// en inglés de PokéAPI: el corto va en la ficha del campo («Alola», «Mega X»);
+// el completo, en title y en el nombre accesible («Forma de Alola»). Solo las
+// regionales tienen un nombre completo distinto.
+const REGIONAL_FORMS: Record<string, { en: string; es: string }> = {
+  alola: { en: "Alolan Form", es: "Forma de Alola" },
+  galar: { en: "Galarian Form", es: "Forma de Galar" },
+  hisui: { en: "Hisuian Form", es: "Forma de Hisui" },
+  paldea: { en: "Paldean Form", es: "Forma de Paldea" },
+};
+
+export function formatFormName(label: string, isEs: boolean): FormName {
+  const short = formatVariantLabel(label, isEs);
+  const regional = REGIONAL_FORMS[label.trim().toLowerCase()];
+  return { short, full: regional ? regional[isEs ? "es" : "en"] : short };
 }

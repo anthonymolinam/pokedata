@@ -13,6 +13,11 @@
   }
 }
 
+/* Con puntero o táctil (§4.9): los controles de cada miembro flotan y
+   aparecen al pasar el ratón, o van en su propia fila siempre visibles */
+@custom-variant can-hover (@media (hover: hover));
+@custom-variant no-hover (@media (hover: none));
+
 /* =========================================================================
    Tokens de la dirección «Pop» (DESIGN.md §2, §3 y §4.0). Ningún otro archivo
    escribe a mano un color de tipo: todo sale de aquí o de src/constants/typeColors.ts.
@@ -488,6 +493,17 @@ body {
   padding-inline: var(--gutter);
 }
 
+/* Equipo (§4.9): la fila de campos y la matriz de Defensa usan la misma
+   plantilla y el mismo relleno, así que cada columna de la matriz cae bajo su
+   miembro. Etiquetas · seis miembros · balance. Solo desde 1024px (lg:) */
+@utility team-grid {
+  --team-cols: 104px repeat(6, minmax(0, 1fr)) 186px;
+  display: grid;
+  grid-template-columns: var(--team-cols);
+  column-gap: 12px;
+  padding-inline: 24px;
+}
+
 /* Foco visible (§2.3, regla 7): 3px en la tinta del campo, separado 3px.
    Sobre un campo de tinta hueso, el contorno sale en hueso. Va en la capa
    base para que un componente pueda cambiarlo con utilidades (la tarjeta lo
@@ -497,6 +513,25 @@ body {
     outline: 3px solid var(--field-ink);
     outline-offset: 3px;
   }
+
+  /* Mano en todo lo que se pulsa (§4.0); lo desactivado se queda con la
+     flecha. Tailwind deja los botones con el cursor por defecto */
+  :where(button, [role="button"], [role="radio"], [role="tab"], [role="option"], summary, select, label[for]):not(:disabled, [aria-disabled="true"]),
+  a[href] {
+    cursor: pointer;
+  }
+
+  :where(button, select, input):disabled,
+  [aria-disabled="true"] {
+    cursor: default;
+  }
+}
+
+/* Selección (§2.3, regla 8): el único estilo de toda la web. Un trazo de 3px
+   en --ink (oscuro en claro, claro en oscuro), dibujado por dentro para no
+   invadir a los vecinos ni cambiar el tamaño de nada */
+@utility ring-selected {
+  @apply inset-ring-3 inset-ring-ink;
 }
 
 /* Rol display (§3): Nunito 900, sentence case, tracking −0.04em, interlineado 0.95 */
@@ -520,7 +555,8 @@ body {
 }
 
 .type-glow:hover::before,
-.type-glow:focus-visible::before {
+.type-glow:focus-visible::before,
+.type-glow:has(:focus-visible)::before {
   opacity: 1;
 }
 
@@ -635,6 +671,23 @@ body {
   background-color: color-mix(in srgb, var(--tag-base) 80%, var(--field));
 }
 
+/* Controles de cada miembro del equipo (§4.9). En táctil van sobre el campo,
+   como una etiqueta; con puntero, dentro de la ficha, un escalón de tinta
+   por encima de ella (opaco, sin línea ni sombra) */
+.member-control {
+  background-color: color-mix(in srgb, var(--tag-base) 80%, var(--field));
+}
+
+@media (hover: hover) {
+  .member-control {
+    background-color: color-mix(in srgb, var(--ink) 9%, color-mix(in srgb, var(--tag-base) 80%, var(--field)));
+  }
+
+  .member-control:not(:disabled):hover {
+    background-color: color-mix(in srgb, var(--ink) 16%, color-mix(in srgb, var(--tag-base) 80%, var(--field)));
+  }
+}
+
 /* ×1 en la fila o la columna elegida: su field mezclado con la superficie */
 .type-cross {
   background-color: color-mix(in srgb, var(--field) var(--cross-mix), var(--surface));
@@ -702,7 +755,11 @@ body {
 /* Tooltip de las celdas (§4.5): «Fuego → Planta: ×2» encima de la celda, solo
    con puntero. Es una capa flotante, así que lleva sombra. En las dos primeras
    y las dos últimas columnas se abre hacia dentro para no salirse de la tabla
-   (y no provocar scroll). */
+   (y no provocar scroll). La celda en hover sube por encima de lo fijo de su
+   tabla (la fila de avatares de la Defensa, z-5, y las etiquetas fijas del
+   scroll, z-10): cada celda es su propio contexto de apilado (la animación de
+   entrada o la opacidad del atenuado) y sin esto el globo de la primera fila
+   quedaba debajo. */
 @keyframes tip-in {
   from {
     opacity: 0;
@@ -710,7 +767,13 @@ body {
 }
 
 @media (hover: hover) {
-  .type-matrix td[data-tip]:hover::after {
+  .type-matrix td[data-tip]:hover,
+  .defense-row [data-tip]:hover {
+    z-index: 11;
+  }
+
+  .type-matrix td[data-tip]:hover::after,
+  .defense-row [data-tip]:hover::after {
     content: attr(data-tip);
     position: absolute;
     z-index: 30;
@@ -739,6 +802,46 @@ body {
     left: auto;
     right: 0;
     translate: none;
+  }
+}
+
+/* Matriz de Defensa del equipo (§4.9). La fila de mayor riesgo se tiñe con el
+   field del atacante mezclado con la superficie, como la selección de la tabla
+   de tipos; el hover de fila (solo con puntero) es un gris muy suave. El
+   tinte se aparta de las celdas con un relleno de la fila: 4px por los lados,
+   dentro de la tabla y nunca fuera de su borde (la cabecera lleva el mismo
+   relleno lateral para alinearse), y 2px por arriba y por abajo, que un margen
+   negativo compensa. Así ocupa 2px de los 8px del hueco entre filas por cada
+   lado y entre dos franjas vecinas (la de riesgo y la del hover) siempre
+   quedan 4px: cada una se lee sola. Con 2px el ×4, que sobresale 2px, cabe
+   justo dentro de la franja. */
+.defense-row {
+  --row-tint: color-mix(in srgb, var(--ink) 5%, var(--surface));
+  border-radius: 10px;
+  padding: 2px 4px;
+  margin-block: -2px;
+}
+
+.defense-row[data-risk] {
+  --row-tint: color-mix(in srgb, var(--field) var(--cross-mix), var(--surface));
+  background-color: var(--row-tint);
+}
+
+/* La etiqueta fija del scroll de móvil lleva el fondo de su fila (solo
+   por debajo de 1024px: en escritorio taparía el hover de fila) */
+@media (width < 1024px) {
+  .defense-label {
+    background-color: var(--surface);
+  }
+
+  .defense-row[data-risk] .defense-label {
+    background-color: var(--row-tint);
+  }
+}
+
+@media (hover: hover) {
+  .defense-row:hover {
+    background-color: var(--row-tint);
   }
 }
 
@@ -827,6 +930,44 @@ body {
 
 .layer-in[open] {
   animation: layer-in 250ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+/* Equipo (§6): el menú de formas aparece con fundido y 4px de subida; las
+   celdas de la columna que cambia, con escala de 0.9 y fundido, 20ms por
+   fila; el aviso de riesgo nuevo, con fundido. Con movimiento reducido,
+   solo el fundido. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.menu-in {
+  animation: menu-in 200ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+@keyframes cell-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.cell-in {
+  animation: cell-in 200ms ease-out both;
+  animation-delay: calc(var(--row, 0) * 20ms);
+}
+
+.notice-in {
+  animation: fade-in 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-in,
+  .cell-in {
+    animation-name: fade-in;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

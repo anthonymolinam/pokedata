@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Artwork from "@/components/common/Artwork";
+import AddToTeamButton from "@/components/pokemon-detail/AddToTeamButton";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { PokemonDetail, PokemonVariety } from "@/lib/pokeapi";
@@ -23,7 +24,7 @@ const CROSSFADE = { duration: 0.4, ease: "easeOut" } as const;
 
 // Pulsación y hover con rebote de los controles (§4.0)
 const control =
-  "min-h-11 rounded-pill px-4 text-small font-extrabold cursor-pointer bg-surface text-ink aria-pressed:bg-ink aria-pressed:text-bone motion-safe:transition-transform duration-150 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:-translate-y-0.5 active:scale-[0.96]";
+  "min-h-11 rounded-pill px-4 text-small font-extrabold cursor-pointer bg-surface text-ink aria-pressed:ring-selected motion-safe:transition-transform duration-150 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:-translate-y-0.5 active:scale-[0.96]";
 
 // El id sale de la URL del artwork (…/official-artwork/6.png, también la
 // variocolor) para normalizar la figura; las formas sin medidas caen a
@@ -194,13 +195,15 @@ export default function PokemonStage({
 
       <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6 px-5 pb-6 md:px-10 md:pb-10">
         <div className="min-w-0">
-          <p className="text-body font-extrabold num">
+          {/* La forma va en la línea del número, así el escenario mide lo
+              mismo con cualquier forma */}
+          <p title={formLabel ?? undefined} className="truncate text-body font-extrabold num">
             {detail.number} {String(pokemon.id).padStart(4, "0")}
+            {formLabel && <span className="font-black"> · {formLabel}</span>}
           </p>
           <h1 id="pokemon-name" className="mt-1 text-hero font-black">
             {name}
           </h1>
-          {formLabel && <p className="mt-2 text-lead font-black">{formLabel}</p>}
 
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
             <ul className="flex flex-wrap gap-1.5">
@@ -226,25 +229,29 @@ export default function PokemonStage({
           </div>
         </div>
 
-        {varieties.length > 1 && (
-          <div
-            role="group"
-            aria-label={detail.forms}
-            className="flex max-w-xl flex-wrap gap-2 md:justify-end"
-          >
-            {varieties.map((variant) => (
-              <button
-                key={variant.name}
-                type="button"
-                aria-pressed={(selectedVariant?.name ?? pokemon.name) === variant.name}
-                onClick={() => onVariantChange(variant)}
-                className={control}
-              >
-                {formatVariantLabel(variant.label, isEs)}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Las formas y, al final de la misma fila, «Añadir al equipo» con la
+            forma que se ve (sin variocolor: el equipo usa el artwork normal) */}
+        <div className="flex max-w-xl flex-wrap gap-2 md:justify-end">
+          {varieties.length > 1 && (
+            <div role="group" aria-label={detail.forms} className="contents">
+              {varieties.map((variant) => (
+                <button
+                  key={variant.name}
+                  type="button"
+                  aria-pressed={(selectedVariant?.name ?? pokemon.name) === variant.name}
+                  onClick={() => onVariantChange(variant)}
+                  className={control}
+                >
+                  {formatVariantLabel(variant.label, isEs)}
+                </button>
+              ))}
+            </div>
+          )}
+          <AddToTeamButton
+            slug={selectedVariant && !selectedVariant.isDefault ? selectedVariant.name : pokemon.name}
+            locale={locale}
+          />
+        </div>
       </div>
     </section>
   );

@@ -109,7 +109,7 @@ Los tokens viven en un único sitio: `typeColors.ts` y las variables `--type-*` 
 5. **Barras de estadísticas:** sobre `--surface`, relleno en `--type-*-text` y pista en `--step`. Sobre un campo de tipo, relleno en `field-ink` y pista en `step`.
 6. **Jerarquía con tamaño y peso, no con opacidad.** Las únicas excepciones son decorativas, marcadas con `aria-hidden`: la marca de agua del número (§4.3) y el nombre gigante de la ficha (§4.4).
 7. **Foco visible:** contorno de 3px en `--ink` separado 3px. Sobre un campo de tipo, el contorno va en su `field-ink`, en los dos temas.
-8. **Anillos de selección sobre campos de tipo:** la tabla de tipos ya los pone en `field-ink` (§4.5). Las pastillas de tipo del panel de filtros los llevan en `--ink`: en claro se queda así; en oscuro pasan a `field-ink`, porque un anillo en `--ink` (que ahí es clara) desaparece sobre Eléctrico o Hielo.
+8. **Un único estilo de selección en toda la web:** un borde de 3px en `--ink` (oscuro en claro, claro en oscuro), de un solo trazo y **dibujado por dentro** del elemento (`inset-ring`), así que no cambia su tamaño ni invade a los vecinos. Es la utilidad `ring-selected` de `globals.css` y nada más marca una selección: ni rellenos en tinta, ni anillos en `field-ink`, ni dobles trazos. Lo llevan los filtros (tipos y regiones), las cabeceras elegidas de la tabla de tipos, la etiqueta de la fila de riesgo de la Defensa, los buscadores enfocados (el del hero, el global y el del modal) y el resultado marcado con las flechas, la tarjeta de la cadena evolutiva en la que estás, la tarjeta marcada del selector y las formas activas (ficha, selector del equipo y menú «Cambiar forma»). **En una tarjeta, el artwork queda siempre por encima del borde:** el borde lo lleva la propia tarjeta (una sombra por dentro, que se pinta bajo sus hijos), nunca una capa que la cubra. En el selector, el botón transparente que tapa la tarjeta para recibir el clic no lleva el borde: iba por encima de todo y cruzaba el artwork que sobresale (la cabeza de Mudkip). Sobre los campos de tipo va igualmente en `--ink`; donde el contraste baja (oscuro sobre Eléctrico o Hielo) la selección no depende solo de él: los filtros llevan ✓ y la tabla tiñe la fila o columna. Fuera quedan la navegación y el selector de tema, que marcan dónde estás, no lo que eliges.
 
 Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon (Hielo), Snorlax (Normal), Sylveon (Hada) y Gengar (tinta hueso), **en los dos temas**. En oscuro se añade Umbreon (Siniestro, el único campo que cambia).
 
@@ -193,7 +193,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 - Números y totales en Nunito con `font-variant-numeric: tabular-nums`. No hay letra monoespaciada en ningún sitio.
 - **Ningún título pasa de dos líneas.** El nombre de la tarjeta y su número ocupan una sola línea: si no caben, el tamaño baja con `min(var(--step-lead), calc(100cqi / ((chars + 4) * 0.6 + 0.5)))` hasta un mínimo de 16px.
-- Las formas («Urshifu Estilo Fluido») se escriben como nombre más una línea secundaria, no concatenadas.
+- Las formas («Urshifu Estilo Fluido») se escriben como nombre más la forma aparte, no concatenadas. En la ficha y el comparador la forma va **en la línea del número** («N.º 0212 · Mega»), en una línea y recortada con «…» si no cabe (el nombre completo va en `title`), para que el escenario mida lo mismo con cualquier forma.
 - Todo va alineado a la izquierda. Solo se centra el estado vacío.
 
 ---
@@ -214,11 +214,16 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Terciario: relleno `--surface` con texto en tinta.
   - Pulsación con `scale(0.96)` y hover con un pequeño rebote.
 - **Área táctil mínima** de 44px en todo.
+- **Cursor de mano** en todo lo que se pulsa: botones, enlaces, opciones y pastillas (regla base de `globals.css`, porque Tailwind deja los botones con la flecha). Lo desactivado no la lleva.
+- **Aviso flotante** (`Toast`): puede llevar tras el texto una acción subrayada, un enlace («Ver equipo») o un botón («Deshacer»). Pastilla en `--ink` con texto hueso, fija abajo y centrada (28px del borde), con sombra de capa flotante, `role="status"`. Se pinta con un portal en `<body>`, fuera de cualquier contexto de apilado de la página (el escenario de la ficha es `isolate` y las tarjetas y el pie le pasaban por encima). Su `z-index` es 55: por encima del contenido y de la cabecera (50) y por debajo del menú móvil y la hoja de filtros (60); los diálogos van en la capa superior del navegador. Desaparece solo con un fundido tras su duración (1,6s; 2,5s el de la ficha; 5s si ofrece «Deshacer», para dar tiempo a pulsarlo). Mide lo que su texto (`w-max`) hasta el ancho de la pantalla menos los márgenes: centrado con `left: 50%`, sin ese ancho se partía en dos líneas a media pantalla. Si no cabe en una línea, « · Deshacer» baja entero, sin separar el punto de la acción. Cada aviso sustituye al anterior.
 - **Sin scroll horizontal de página:** solo lo tienen contenedores concretos (la tabla de tipos, la cadena evolutiva). El `<main>` lleva `overflow-x: clip` como red de seguridad; `clip` no crea contenedor de scroll, así que no rompe los elementos fijos ni `sticky`. Un elemento absoluto dentro de un contenedor con scroll necesita un antepasado posicionado dentro de ese contenedor.
 
 ### 4.1 Cabecera (todas las páginas)
 
-**Composición:** el logo (Pokébola + «PokéData», Nunito 900, 24px), la navegación («Pokédex», «Tipos», «Comparador»), el buscador compacto, el selector de idioma y el selector de tema.
+**Composición:** el logo (Pokébola + «PokéData», Nunito 900, 24px), la navegación («Pokédex», «Equipo», «Comparador», «Tipos» / «Pokédex», «Team», «Compare», «Types», en este orden también en la hoja móvil y en el pie), el buscador compacto, el selector de idioma y el selector de tema. Con cuatro enlaces, la cabecera se volvió a medir (20 de octubre de 2026): en español invadía 58px del margen a 768px y 45px a 1024px, y bajar las pastillas a 10px no bastaba. Para no quitar nada:
+  - **768–1023px:** logo a su tamaño de móvil (20px, Pokébola de 28px), pastillas de navegación a 8px de relleno lateral y sin hueco entre ellas, 8px entre bloques y 6px dentro del grupo de la derecha. Quedan 12px libres en español.
+  - **1024–1279px:** pastillas a 12px, 16px entre bloques y buscador compacto de 208px. Quedan 19px libres.
+  - **Desde 1280px:** todo como antes (pastillas de 16px, 24px entre bloques, buscador de 240px).
 
 - **Fija al hacer scroll** (`position: sticky; top: 0`) y con fondo `--ground` sólido, sin desenfoque ni transparencia.
 - **Sombra solo con la página desplazada:** a partir de 4px de scroll aparece `0 6px 20px rgba(21,22,28,.08)` con un fundido de 200ms. En reposo arriba del todo no hay sombra.
@@ -233,10 +238,11 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Buscador global (Ctrl K / ⌘K):**
   - En reposo es una pastilla compacta de 40px de alto y unos 240px de ancho, con el texto «Buscar» y la pista del atajo a la derecha.
   - El atajo muestra «Ctrl K», o «⌘K» en Mac, y va como texto en `--ink-soft`, no en una caja con borde.
+  - Enfocada, lleva el borde de selección por dentro (§2.3, regla 8), como el buscador del hero y el del modal. El resultado marcado con las flechas va en `--step` con ese mismo borde.
   - Al enfocarla, despliega los resultados en una capa flotante (blanca, radio 22px, con sombra).
   - **En la portada,** el buscador compacto está oculto mientras el buscador grande del hero está en pantalla. Cuando el del hero sale por arriba, el compacto aparece (opacidad y 8px de subida, 200ms).
   - Ctrl K funciona siempre: enfoca el buscador del hero si se ve; si no, el de la cabecera.
-  - **Tableta (768–1023px):** el buscador compacto no cabe junto a los selectores de idioma y tema, así que la cabecera muestra solo la lupa de 44px, que abre el buscador a pantalla completa como en móvil, y Ctrl K abre ese mismo buscador. La separación entre bloques baja a 12px y las pastillas de navegación a 12px de relleno lateral.
+  - **Tableta (768–1023px):** el buscador compacto no cabe junto a los selectores de idioma y tema, así que la cabecera muestra solo la lupa de 44px, que abre el buscador a pantalla completa como en móvil, y Ctrl K abre ese mismo buscador. La separación entre bloques y el relleno de las pastillas son los de la composición, arriba.
 - **Logo:** al pasar el ratón (o al enfocarlo), la Pokébola da una vuelta completa en 600ms con un ligero rebote. Con movimiento reducido no gira.
 - **Móvil (< 768px):**
   - La cabecera mide 60px y muestra el logo, un botón de lupa que abre el buscador a pantalla completa, ES/EN y un botón «Menú».
@@ -294,7 +300,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - **Fila de cabecera:** «Región» a la izquierda y el botón «×» de cerrar a la derecha.
   - **Regiones:** las 9 (Kanto … Paldea) en una sola fila de pastillas compactas de 40px y ancho igual, con selección única (`?gen=`), en `--step` con texto en tinta.
   - **Tipos:** «Tipos» con la nota «Hasta dos» y los 18 tipos en dos filas de 9 pastillas compactas de 40px, cada una en su `field` con el nombre en `field-ink`. Se pueden elegir hasta dos (`?types=`), porque ningún Pokémon tiene más y el filtro es la intersección; al elegir un tercero sustituye al segundo.
-  - **Selección, igual en tipos y regiones (también en la hoja móvil):** una marca ✓ delante del nombre y un borde de 3px en `--ink` por dentro de la pastilla (`inset-ring`); en oscuro, sobre las pastillas de tipo, el borde va en su `field-ink` (§2.3, regla 8). No cambia el tamaño, no se sale de la pastilla ni toca a las vecinas, y no depende solo del color.
+  - **Selección, igual en tipos y regiones (también en la hoja móvil):** una marca ✓ delante del nombre y el borde único de selección (§2.3, regla 8), en `--ink` por dentro de la pastilla, también sobre las de tipo. No cambia el tamaño, no se sale de la pastilla ni toca a las vecinas, y no depende solo del color.
   - **Pie:** «Limpiar» y «Aplicar», alineados a la derecha bajo los tipos.
   - **Tableta (768–1023px):** las regiones pasan a dos filas (5 + 4) y los tipos a tres filas de 6.
   - Es una sección desplegable, no un diálogo: al abrir, el foco se queda en el botón «Filtros». Se cierra con el mismo botón, con «×» o con Esc, y lo no aplicado se descarta.
@@ -365,10 +371,15 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Se pide a Next.js con `sizes` de 475px en escritorio y `quality={90}` (en `images.qualities` de `next.config.ts`, que en Next 16 solo admite 75 por defecto). El optimizador no amplía, así que en pantallas de alta densidad sirve el original a 475px.
 - **Variocolor:** un interruptor redondo de 48px con el icono de destellos (`Sparkles`), arriba a la derecha del escenario. Es independiente del selector de formas y se combina con cualquiera: al cambiar de forma se mantiene encendido si la forma tiene versión variocolor. Blanco apagado, en `--ink` encendido (`aria-pressed`).
 - **Debajo, sobre el campo:**
+  - El número y, si la forma no es la base, la forma en la misma línea: «N.º 0212 · Mega» (la forma en 900). Antes iba en una línea propia bajo el nombre y el escenario crecía al cambiar de forma.
   - El nombre real (`<h1>`, `--step-hero`, en `field-ink`).
-  - El número, las etiquetas de tipo, la altura y el peso.
-  - El selector de formas: pastillas blancas, con la activa en `--ink`. Solo formas; el variocolor va aparte (arriba).
+  - Las etiquetas de tipo, la altura y el peso.
+  - El selector de formas: pastillas blancas, con la activa marcada por el borde de selección (§2.3, regla 8). Solo formas; el variocolor va aparte (arriba).
   - Los nombres de forma con siglas se escriben como tales: «PhD», no «Phd».
+  - **«Añadir al equipo»** (§4.9): pastilla terciaria (`--surface`, texto en tinta, icono `Plus` de `lucide-react`) en la misma fila que el selector de formas, al final. Añade **la forma que se está viendo** (Mega, regional…); el variocolor no cuenta, el equipo usa siempre el artwork normal.
+    - Al pulsarla aparece un aviso flotante («Añadido a tu equipo · Ver equipo», `--ink` con texto hueso, 2,5s; ver «Aviso flotante» en §4.0) y el botón pasa a **«En tu equipo»** con una marca ✓, relleno `--ink` y texto hueso; en ese estado es un enlace a la página del equipo.
+    - Si esta forma ya está en el equipo, se muestra directamente «En tu equipo». El botón está en la ficha de todos los Pokémon; si no se ve «Añadir al equipo», es porque está en uno de estos dos estados (comprobado con Scizor a 390, 768, 1024 y 1440px). Si el equipo está lleno: «Equipo completo», en `--step` con texto en tinta, y enlaza al equipo para hacer sitio.
+    - El estado sale de `localStorage` (§4.9), así que en el primer pintado del servidor el botón se pinta en su estado normal y se corrige tras la hidratación sin cambiar de tamaño (ancho mínimo fijado para el texto más largo de los tres).
 - **Cambio de forma:** el campo nuevo entra como capa con fundido de opacidad (400ms) y el artwork se cruza. La URL se actualiza para que sea compartible.
 
 **Bloques siguientes:** paneles blancos sobre el fondo, cada uno con una composición distinta.
@@ -387,24 +398,25 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 **Toda la página es un panel blanco** con la tabla, y **cabe entera en 1440×900 sin scroll.**
 
 - **Franja superior:** un título pequeño («Tabla de tipos», `<h1>` en `--step-lead`) y una línea de explicación («Las filas atacan y las columnas reciben. Toca un tipo para resaltarlo.»). Sin tarjeta grande de título, sin subtítulo y **sin leyenda**: el significado de cada celda lo da el tooltip.
-- **Tooltip de celda** (solo con puntero): al pasar el ratón por una celda aparece encima un globo breve con el enfrentamiento, «Fuego → Planta: ×2» / «Fire → Grass: ×2» (×2, ×½, ×0 o ×1), con los nombres de tipo en el idioma de la página. Va en `--ink` con texto hueso, `--step-small` en 800, radio de 8px y sombra (es una capa flotante), y aparece con un fundido de 120ms. En las dos primeras y las dos últimas columnas se abre hacia dentro para no salirse de la tabla. Es CSS (`attr(data-tip)` en `globals.css`).
+- **Tooltip de celda** (solo con puntero): al pasar el ratón por una celda aparece encima un globo breve con el enfrentamiento, «Fuego → Planta: ×2» / «Fire → Grass: ×2» (×2, ×½, ×0 o ×1), con los nombres de tipo en el idioma de la página. Va en `--ink` con texto hueso, `--step-small` en 800, radio de 8px y sombra (es una capa flotante), y aparece con un fundido de 120ms. En las dos primeras y las dos últimas columnas se abre hacia dentro para no salirse de la tabla. Es CSS (`attr(data-tip)` en `globals.css`). La celda en hover sube a `z-index: 11`, por encima de lo fijo de su tabla (las etiquetas fijas del scroll aquí, la fila de avatares de la Defensa en §4.9): cada celda es su propio contexto de apilado (atenuado o animación de entrada) y sin eso el globo de la primera fila quedaba debajo de lo fijo.
 - **Sin selector aparte ni panel de información:** la propia matriz es el selector. Pulsar el tipo de una fila elige ese tipo **como atacante** (`?atk=`); pulsar el de una columna, **como defensor** (`?def=`). Pulsarlo otra vez quita la selección y pulsar otro la cambia. No hay resumen de debilidades ni botón «Quitar la selección». Los enlaces antiguos con `?type=` abren la fila.
-- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con `--surface` según `--cross-mix`) y su cabecera lleva el aro en tinta; el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
+- **Con selección:** la fila o columna elegida se tiñe (×1 en su `field` mezclado con `--surface` según `--cross-mix`) y su cabecera lleva el borde de selección (§2.3, regla 8); el resto de celdas baja al 50 % de opacidad y las otras cabeceras de ese eje al 65 %, para que lo atenuado se siga leyendo.
 - **Guía de hover** (solo con puntero): al pasar por una celda se marcan su fila y su columna, y lo atenuado vuelve a leerse. Es CSS puro (`:has()` en `globals.css`).
-  - **El aro en tinta es solo de la selección.** En hover, las cabeceras se oscurecen un poco (`brightness(0.92)`), sin borde, para que nunca parezca que hay dos tipos seleccionados.
+  - **El borde es solo de la selección.** En hover, las cabeceras se oscurecen un poco (`brightness(0.92)`), sin borde, para que nunca parezca que hay dos tipos seleccionados.
   - **Un solo criterio de color:** la fila o columna seleccionada se tiñe con un tono claro de su tipo; la fila y columna bajo el ratón, con un gris neutro muy suave (`--ink` al 5 % sobre `--ground`), solo en las celdas ×1 que no están teñidas.
-- **Aro de selección por dentro:** 3px **por dentro de la pastilla** (`inset-ring`), en la tinta de su campo: tinta sobre los tipos claros y hueso sobre los oscuros. Así nunca invade las pastillas vecinas, ni en filas ni en columnas, ni toca el borde de la tarjeta.
+- **Borde de selección por dentro:** el único de la web (§2.3, regla 8), 3px en `--ink` **por dentro de la pastilla**. Así nunca invade las pastillas vecinas, ni en filas ni en columnas, ni toca el borde de la tarjeta.
 - **Matriz 18×18:** es una tabla real, así que se permiten líneas finas.
   - **La tabla ocupa todo el ancho del panel** (`table-fixed`): la columna de atacantes tiene ancho fijo y las 18 columnas se reparten el resto a partes iguales (unos 57px a 1440px). Celdas de 32px de alto con 3px de separación y radio de 6px; las cifras en `--step-small` y 900. En móvil la tabla tiene un ancho mínimo de 800px y se desplaza.
   - **Cabeceras de fila y columna con la misma pastilla:** 32px de alto, `--step-small` en 800 y 8px de relleno. Las de columna llenan su columna y llevan la **abreviatura de tres letras en horizontal** (Nor, Fue, Agu… / Nor, Fir, Wat…), sacada del nombre del tipo en cada idioma; el nombre completo va en `title` y para lectores de pantalla. Las de fila miden 104px y llevan el nombre completo.
   - Celdas: ×2 en `--ink` con «2» en hueso; ×½ en `--step` con «½» en tinta; ×0 en `--ink` con «0» y rayas a 45°; ×1 vacía. El multiplicador nunca depende solo del color.
-- **Móvil:** la matriz va en un contenedor con scroll horizontal y la columna de tipos atacantes fija a la izquierda. **Solo ese contenedor se desplaza; la página nunca.** El contenedor es `relative` para que las etiquetas ocultas para lectores de pantalla (absolutas) queden dentro de él: si se escapaban, ensanchaban la página y el menú del header se abría desplazado.
+- **Móvil:** la matriz va en un contenedor con scroll horizontal y la columna de tipos atacantes fija a la izquierda. **Solo ese contenedor se desplaza; la página nunca. Cada etiqueta fija (y «Ataca») lleva detrás el fondo de su fila, que cubre también los 8px hasta la primera columna, para que las celdas que pasan por debajo no asomen por sus bordes redondos.** El contenedor es `relative` para que las etiquetas ocultas para lectores de pantalla (absolutas) queden dentro de él: si se escapaban, ensanchaban la página y el menú del header se abría desplazado.
 
 ### 4.6 Comparador
 
-- **Dos escenarios lado a lado** (apilados en móvil), cada uno en el `field` de su Pokémon y con la anatomía de la ficha en pequeño.
-- **Estadísticas enfrentadas** en un panel blanco: las barras crecen desde el eje central, cada una en el `deep` de su Pokémon. El ganador de cada estadística se marca con peso 900 y un tamaño más, no con color.
-- **«Intercambiar»:** pastilla en `--ink` en el eje central, centrada sobre la junta de las dos tarjetas. El centrado vive en un envoltorio y el rebote del hover en la pastilla, porque los dos usan `translate` y el del hover pisaba al del centrado (el botón se iba hacia abajo).
+- **Dos escenarios lado a lado** (apilados en móvil), cada uno en el `field` de su Pokémon y con la anatomía de la ficha en pequeño. La forma va en la línea del número, como en la ficha (§4.4).
+- **Vacío por defecto.** Sin enlace (`?p1=` / `?p2=`), los dos lados empiezan vacíos; con enlace se cargan los Pokémon del enlace, y con uno solo, el otro lado queda vacío. Un lado vacío es **un único botón** del alto de un escenario lleno, como el hueco del equipo (§4.9): `--step`, una Pokébola de líneas de 64px y la pastilla «Elegir Pokémon» / «Choose Pokémon» en `--ink`, con su mismo hover (sube 6px, la Pokébola gira 25°). Su nombre accesible es «Elegir el primer Pokémon» / «…segundo…». Abre el modal de selección con los Pokémon del día como sugerencia. El enlace solo lleva los lados elegidos. Sin los dos, el título de la página es el genérico («Comparador de Pokémon») y la canónica no lleva parámetros.
+- **Estadísticas enfrentadas** en un panel blanco, solo con los dos Pokémon elegidos: las barras crecen desde el eje central, cada una en el `deep` de su Pokémon. El ganador de cada estadística se marca con peso 900 y un tamaño más, no con color.
+- **«Intercambiar»:** solo con los dos Pokémon elegidos. Pastilla en `--ink` en el eje central, centrada sobre la junta de las dos tarjetas. El centrado vive en un envoltorio y el rebote del hover en la pastilla, porque los dos usan `translate` y el del hover pisaba al del centrado (el botón se iba hacia abajo).
 - **Modal de selección:** capa flotante blanca con sombra, que usa el mismo buscador y las mismas mini tarjetas. Su zona con scroll lleva 28px de relleno lateral (32px desde 768px) y 48px abajo, para que el brillo de hover de las tarjetas no quede cortado; la cabecera del modal usa el mismo relleno lateral para alinearse con la rejilla.
 
 ### 4.7 Pie
@@ -414,7 +426,7 @@ Un pie **compacto** sobre el campo `--footer` a sangre, sin la palabra gigante. 
 **Fila principal:** dos extremos.
 - **Izquierda:** el logo (Pokébola + «PokéData», Nunito 900, 22px, en hueso) y debajo una frase corta en `--step-small`, en `--bone-soft`: «Los 1025 Pokémon, con su artwork oficial.»
 - **Derecha:** enlaces de texto en hueso, Nunito 800, `--step-small`, alineados al borde derecho.
-  - Son «Pokédex», «Tipos», «Comparador» y «GitHub».
+  - Son «Pokédex», «Equipo», «Comparador», «Tipos» y «GitHub», en el orden de la cabecera.
   - «GitHub» va al repositorio en una pestaña nueva, con una flecha ↗ y un aviso accesible «(se abre en una pestaña nueva)».
   - Hover: el texto sube 2px. El subrayado aparece solo en el foco.
 **Línea divisoria:** entre las dos filas, una línea sutil de 1px en hueso al 15 %, con 24px por encima y 16px por debajo. Es la única línea fina fuera de las tablas, puesta a propósito para separar el aviso legal.
@@ -431,7 +443,7 @@ Un pie **compacto** sobre el campo `--footer` a sangre, sin la palabra gigante. 
 
 **Móvil (< 768px):** las zonas se apilan.
 - Primero va el logo con su frase.
-- Debajo, los cuatro enlaces en una fila que puede pasar a dos líneas, sin scroll lateral.
+- Debajo, los cinco enlaces en una fila que puede pasar a dos líneas, sin scroll lateral.
 - La línea divisoria.
 - Después, el aviso legal y, por último, el SHA.
 
@@ -439,6 +451,133 @@ Un pie **compacto** sobre el campo `--footer` a sangre, sin la palabra gigante. 
 
 - **404:** escenario en el campo de Fantasma (`#735797`, tinta hueso) con el mensaje en `--step-hero` y un botón para volver a la Pokédex.
 - **Carga:** tarjetas fantasma en `--step` con la misma forma que las reales y la zona inferior reservada. No hay `animate-pulse`: aparecen con una opacidad que entra a los 300ms.
+
+### 4.9 Equipo
+
+**Origen:** la maqueta `mockups/team.html` (referencia local, no se versiona), aprobada el 20 de octubre de 2026. Es la mezcla de dos exploraciones: arriba, los seis campos altos («Seis campos»); debajo, la matriz con el equipo en las columnas («Matriz del equipo»).
+
+**Idea:** el equipo es **una fila de seis campos de tipo, y cada campo es la cabecera de su propia columna** en el análisis. Lo que le pasa a Charizard se lee bajando en vertical desde Charizard; lo que le pasa al equipo, en horizontal por cada fila.
+
+**Ruta:** `/es/equipo` y `/en/team` (en `ROUTE_MAP` / `REVERSE_ROUTE_MAP`, interno `team`). Título de página «Equipo · PokéData» / «Team · PokéData». Entra en el sitemap sin parámetros; la URL canónica no lleva `?t=`.
+
+**Orden de la página:** cabecera de página → fila de los seis campos → panel «Defensa» (aviso de mayor riesgo y matriz) → panel «Cobertura ofensiva» → panel «Estadísticas base». Cada panel tiene una composición distinta (§4.0).
+
+#### Cabecera de página
+
+- `<h1>` «Tu equipo» / «Your team» en `--step-hero`, y debajo «Hasta seis Pokémon. Toca un hueco para añadir.» / «Up to six Pokémon. Tap an empty slot to add one.» en `--step-body`, `--ink-soft`. Por debajo de 640px se omite la frase.
+- Por debajo de 1024px, el dado del equipo aleatorio y el botón «Compartir enlace» van aquí, en ese orden y separados 10px, a la derecha del título (debajo en móvil), porque las columnas laterales de la rejilla desaparecen.
+
+#### La rejilla compartida
+
+Los campos y la matriz usan **la misma plantilla de columnas y el mismo relleno lateral**, así que cada columna de la matriz cae exactamente bajo su miembro:
+
+```
+--team-cols: 104px repeat(6, minmax(0, 1fr)) 186px;   /* etiquetas · 6 miembros · balance */
+column-gap: 12px;   padding-inline: 24px;               /* el relleno del panel de Defensa */
+```
+
+La fila de campos no está dentro de un panel, pero lleva el mismo `padding-inline: 24px` para alinearse con el interior del panel. A 1440px cada columna de miembro mide unos 143px (132px en la maqueta, que tiene un contenedor más estrecho). Esta alineación solo existe desde 1024px; por debajo, ver «Móvil».
+
+#### Fila de los seis campos
+
+Es una `<ol>` (el orden importa; sin números visibles) con 64px de margen superior para el artwork que sobresale.
+
+- **Columna de etiquetas:** el recuento «4/6» en `--step-head` 900 con cifras tabulares y debajo «miembros» / «members» en `--step-small`, `--ink-soft`, apoyados abajo. Es decorativo (`aria-hidden`): el recuento accesible lo da la lista.
+- **Columna de balance:** arriba, el **dado del equipo aleatorio** y a su derecha «Compartir enlace» (secundario, `--ink`); debajo, «Vaciar equipo» (terciario, `--surface`) a todo el ancho de la columna; todo apoyado abajo. En los 186px de la columna, el dado (44px) y «Compartir enlace» caben en una línea con 6px entre ellos y 10px de relleno lateral en el botón (el texto mide 114px en español). Con el equipo vacío, compartir y vaciar están desactivados (fondo `--step`, texto `--ink-soft`); el dado no.
+- **Equipo aleatorio:** el dado del Pokémon del día (§4.2, componente `Die`) en un botón redondo de 44px en `--surface`, con `aria-label` y `title` «Equipo aleatorio» / «Random team». Al pulsarlo gira con rebote (500ms; sin giro con movimiento reducido).
+  - **Con huecos,** los rellena y deja a los miembros que hay. **Con el equipo completo,** lo cambia entero y aparece el aviso flotante «Equipo aleatorio · Deshacer» / «Random team · Undo» (5s); «Deshacer» devuelve el equipo anterior.
+  - **Quitar y vaciar también se deshacen.** Al quitar a un miembro aparece «Pangoro quitado del equipo · Deshacer» / «Pangoro removed from team · Undo», con el nombre del Pokémon (el mismo del botón «Quitar a…»); «Deshacer» lo devuelve al mismo hueco y con la misma forma, y el foco vuelve a su campo. «Vaciar equipo» muestra «Equipo vaciado · Deshacer» / «Team cleared · Undo», que restaura a los seis en su orden y con su forma. Mismo aviso y misma duración que el del dado (5s).
+  - **Solo se deshace lo último.** Cada aviso sustituye al anterior: si se quitan varios seguidos, «Deshacer» devuelve solo al último. Cualquier otro cambio del equipo (añadir, mover, reordenar, cambiar forma, rellenar con el dado, guardar el equipo compartido o volver al propio) retira el «Deshacer» pendiente, porque volver al equipo de antes se llevaría también ese cambio.
+  - Las especies nuevas no repiten ninguna especie del equipo, van **solo en su forma base** (salen del índice `pokemon-index.json`, que solo tiene especies y se descarga la primera vez) y tienen **tipos variados**: cada una entra solo si no comparte ningún tipo con el resto del equipo. Si tras 400 intentos no aparece ninguna así (el equipo ya usa casi todos los tipos), entra la que menos tipos repite de 40 candidatas (`src/lib/team-random.ts`).
+  - Está desactivado mientras se cargan los miembros: sin sus tipos no sabe qué evitar. El foco se queda en el dado.
+- **Campo de un miembro:** 290px de alto, radio 28px, 6px de relleno, en el `field` de su tipo principal.
+  - **Artwork:** ocupa todo el alto libre por encima de la ficha y se sale **64px por arriba** (48px en móvil). Su alto manda y su ancho puede llegar al 140 % de la columna: el lienzo tiene márgenes transparentes y así la figura llena el campo. Los lados se recortan con `overflow-x: clip` (no crea contenedor de scroll), así que nunca invade la columna vecina; por arriba no se recorta. Nunca pasa de 475px. Mismo `artworkUrl` que el resto de la app; `sizes` de unos 200px.
+  - **Enlace a la ficha:** el nombre y el artwork llevan a la ficha del Pokémon **en la forma que tiene en el equipo** (`/es/pokemon/ninetales?variant=ninetales-alola`, lo mismo a lo que redirige la ficha de una forma; la forma base va sin `?variant=`). El nombre es el enlace accesible (subrayado en hover, `title` «Ver ficha de Pangoro» / «View Pangoro»); el del artwork queda fuera del orden de tabulación y de los lectores de pantalla. Los dos llevan `draggable="false"`, así que arrastrarlos arrastra el campo y no el enlace, y los controles quedan fuera de los dos.
+  - **Ficha de información:** bloque de **140px de alto fijo** (144px con puntero, ver la fila 4), radio 20px, 10px de relleno, en `--tag-base` al 80 % mezclado con el campo (opaca, como `.type-tag`, regla 4 del §2.3), con texto en `--ink`. Cuatro filas en este orden, siempre en la misma posición:
+    1. El número (`0006`) en `--step-small` 800, `--ink-soft`, cifras tabulares.
+    2. El nombre en 900 y **un único tamaño para todo el equipo**: `clamp(14px, 100cqi / (chars × 0.5 + 1), 20px)`, donde `chars` es la longitud del nombre más largo del equipo (mínimo 7). El factor sale de medir los nombres en 900 con −0.03em: los de 7 letras llegan a 4,6em (Kommo-o) y los largos se quedan por debajo de 0,5em por letra más 1em (Crabominable, 6,4em). Una línea, sin «…». Entre 1024 y 1279px los seis campos miden 78–100px: el mínimo baja a 10px (con 14px «Crabominable» o «Kangaskhan» se saldrían de la ficha), el número y la forma bajan a 12px para que el nombre no quede por debajo de ellos, la ficha estrecha su relleno lateral a 6px y, si su contenido mide menos de 72px, las etiquetas de tipo pasan a 11px para que quepa «Fantasma».
+    3. La forma en `--step-small` 800, `--ink-soft`, en una línea. **La línea existe aunque no haya forma**, para que todas las fichas tengan la misma estructura. Se usa el nombre corto de la forma («Alola», «Mega X»); el completo («Forma de Alola») va en `title` y en el nombre accesible del campo.
+    4. Las etiquetas de tipo **apoyadas abajo** (`align-content: end`): pastillas de 24px en su `field` con `field-ink`, 12px 800, con 4px entre ellas. Si no caben en una fila, pasan a dos; un Pokémon de un solo tipo deja su etiqueta en la fila de abajo. **Entre los controles y la primera pastilla queda al menos el mismo aire que entre pastillas.** Con puntero, los controles ocupan la fila de la forma (24px), y con dos filas de tipos (Pangoro, «Lucha» y «Siniestro»; Rotom, «Eléctrico» y «Fantasma») solo quedaban 2px; por eso con puntero la ficha mide 144px y quedan 6px en todos los anchos. En táctil los controles van debajo de la ficha y esta sigue en 140px.
+  - **Controles por miembro:** mover a la izquierda (←), mover a la derecha (→), cambiar forma (icono `RefreshCw`) y quitar (×). Los dos de mover a la izquierda del campo y los otros dos a la derecha. Botones redondos en `--tag-base` al 80 % sobre el campo, icono en tinta, con su `aria-label` y `title`.
+    - **Con puntero** (`@media (hover: hover)`): van **dentro de la ficha**, en una fila bajo el nombre, en el sitio de la forma, para no tapar nunca el artwork. Botones de 24px (menos entre 1024 y 1279px, donde los cuatro no caben: `(100cqi − 4px) / 4`; área ampliada con un pseudoelemento) en `--ink` al 9 % sobre la ficha (16 % en hover), opacos. Aparecen con un fundido de 150ms al pasar el ratón **o al recibir el foco** cualquier elemento del campo (`:focus-within`), y la forma se funde a la vez para dejarles su sitio (sigue en `title` y en el nombre accesible). La fila de la forma mide 24px con puntero, así que la ficha no cambia de tamaño y las etiquetas de tipo caben en dos filas.
+    - **Táctil** (`@media (hover: none)`): una fila propia bajo la ficha, siempre visible, de 36px (44px de área). El campo crece a 330px para que la ficha no se mueva.
+    - Los extremos se desactivan (← en el primero, → en el último) y «Cambiar forma» se desactiva con «Sin otras formas» si la especie solo tiene una. Desactivado = opacidad 35 %, es un gráfico y no lleva texto.
+    - **Cambiar forma** abre un menú flotante (`--raised`, radio 18px, sombra de capa flotante) dentro del campo, encima de los controles (sobre la ficha con puntero, sobre la fila táctil en móvil), con una opción por forma (`role="radio"`); la actual lleva el borde de selección (§2.3, regla 8). Elegir una sustituye al miembro en su sitio. Se cierra con Esc, al tocar fuera o al elegir, y el foco vuelve al botón.
+    - **Arrastrar** también reordena con puntero (el campo arrastrado al 50 % de opacidad, el destino con un contorno de 3px en `--ink`). Las flechas son la vía accesible y la táctil.
+  - Hover del campo: sube 6px y el artwork crece a `scale(1.06)`, con rebote. Sin brillo de tipo: los campos están pegados a la matriz y el brillo ensuciaría la alineación.
+  - Nombre accesible del campo: «Ninetales, Forma de Alola».
+- **Hueco vacío:** **todo el campo es un único `<button>`** («Añadir Pokémon» / «Add Pokémon»), en `--step` y con la misma altura y radio que un miembro. Dentro, centrados, una Pokébola de líneas de 64px en `--ink-soft` (SVG, `aria-hidden`) y una pastilla «Añadir» en `--ink` con texto hueso.
+  - Hover y foco: el hueco sube 6px, su fondo pasa a `--ink` al 9 % sobre `--step`, la Pokébola gira 25° y crece a 1.08 y toma la tinta, y la pastilla crece a 1.06. Pulsación: `scale(0.98)`.
+  - Abre el selector (ver abajo). Los huecos van siempre después de los miembros: quitar a uno desplaza a los siguientes a la izquierda.
+
+#### Selector «Añadir al equipo»
+
+Es el modal del comparador (§4.6) con otro final: el mismo buscador, las mismas mini tarjetas y, sin texto escrito, los tres Pokémon del día como sugerencias.
+- Debajo de las tarjetas, la **franja de formas** en `--raised-step`, **visible desde que se abre el modal**, para que la ventana no cambie de tamaño al elegir: «Forma», el hueco de las formas y, a la derecha, «Añadir al equipo» (secundario; debajo, a todo el ancho, por debajo de 640px).
+  - Sin Pokémon elegido, el hueco dice «Elige un Pokémon» / «Choose a Pokémon» en `--ink-soft` y el botón está desactivado.
+  - Tocar una tarjeta la marca con el borde de selección (§2.3, regla 8) y el hueco pasa a una pastilla por forma de la especie («Forma base», «Mega X», «Forma de Alola»…), con la activa marcada igual; el botón se activa. Una especie sin formas muestra solo «Forma base» marcada.
+  - Las formas van en una sola línea de 44px que se desplaza en horizontal si no caben (Pikachu), así que la franja mide siempre lo mismo.
+- Con el equipo lleno, la franja dice «Equipo completo» y el botón está desactivado (en la práctica no se llega: no quedan huecos).
+- Al añadir, el modal se cierra, el miembro ocupa el primer hueco y el foco va a su campo.
+
+#### Panel «Defensa»
+
+Panel `--surface`, radio 28px. Título «Defensa» / «Defense» en `--step-head` y la nota «Cada fila es un tipo atacante; cada número, lo que recibe ese miembro.».
+
+**Aviso de mayor riesgo:** una banda en `--step`, radio 20px, texto en 800, siempre presente:
+- «**Mayor riesgo:** [Roca] — 3 débiles (1 a ×4), 0 resistentes» / «**Biggest risk:** [Rock] — 3 weak (1 at ×4), 0 resist». El tipo va como etiqueta en su `field`. «Resistentes» cuenta resistencias e inmunidades juntas; si hay inmunes se añade «(1 inmune)». Singular y plural correctos.
+- **Cuál es el mayor riesgo:** el tipo atacante con más miembros débiles (×2 o más); a igualdad, el que tiene más ×4; a igualdad, el que tiene menos resistentes más inmunes; a igualdad, el primero en el orden de la tabla de tipos.
+- Si ningún tipo pega súper eficaz: «Ningún tipo pega súper eficaz a tu equipo.». Con el equipo vacío: «Añade Pokémon para ver el análisis.». Es una región `aria-live="polite"`.
+
+**La matriz:** 18 filas (tipos atacantes, en el orden de `POKEMON_TYPES`) por 6 columnas de miembro, más el balance. Cada fila es una rejilla con `grid-template-columns: subgrid` sobre `--team-cols`, con 8px entre filas (ver «Fila de mayor riesgo»). Semántica de tabla con roles ARIA (`table`, `row`, `columnheader`, `rowheader`, `cell`), porque una `<table>` no puede compartir columnas con la fila de campos.
+- **Cabecera:** «Ataca» / «Attacks»; en cada columna, un círculo de 40px en el `field` del miembro con su artwork recortado (y `alt` con el nombre), o un círculo `--step` vacío para los huecos; y en el balance, «Débiles», «Resisten», «Inmunes» / «Weak», «Resist», «Immune». Todo en `--step-small` 800, `--ink-soft`. **Es fija** bajo la cabecera del sitio (`sticky; top: 72px`, fondo `--surface`) mientras se recorre la matriz en escritorio.
+- **Etiquetas de fila:** pastillas de 32px en el `field` del atacante con su `field-ink`, nombre completo, como las de la tabla de tipos.
+- **Celdas** (el multiplicador del atacante contra los dos tipos del miembro; mismos datos que la tabla de tipos, `TYPE_CHART`):
+  - **×4: la señal más fuerte.** Llena la celda, 36px de alto (sobresale 2px arriba y abajo), radio 10px, relleno `--ink`, «×4» en hueso a 17px 900 y **un aro de 3px por dentro en el `field` del atacante**. Es la única celda con la marca «×» delante.
+  - **×2:** pastilla compacta de 26px de alto y 64px de ancho, centrada, en `--ink` con «2» en hueso.
+  - **×½ y ×¼:** la misma pastilla compacta en `--step` con «½» o «¼» en tinta.
+  - **×0:** llena la celda, 32px, rayas a 45° de `--ink` (como en la tabla de tipos) con «0» sobre una pequeña pastilla en `--ink`.
+  - **×1:** vacía, con «×1» solo para lectores de pantalla.
+  - Columnas de hueco: celdas vacías.
+  - Tamaño, forma y texto distinguen cada valor; nunca solo el color.
+  - Tooltip con puntero, el mismo globo de la tabla de tipos (`attr(data-tip)`): «Roca → Charizard: ×4».
+- **Balance:** tres subcolumnas con el recuento de miembros débiles (×2 y ×4), resistentes (×½ y ×¼) e inmunes. Cifras en 900 tabulares; el 0 se escribe «–» en `--ink-soft`. Los débiles se marcan: **3 o más**, pastilla en `--ink` con texto hueso; **2**, pastilla en `--step`.
+- **Fila de mayor riesgo:** la del aviso se tiñe con su `field` mezclado con `--surface` según `--cross-mix` (35 % en claro, 80 % en oscuro, como la selección de la tabla de tipos), con radio 10px. El tinte se aparta de las celdas con un relleno de la fila: 4px por los lados, **dentro del borde de la tabla** y alineado con el aviso (la cabecera lleva el mismo relleno lateral), y 2px por arriba y por abajo, que caen en el hueco entre filas (margen negativo). Las filas van separadas 8px, así que **entre dos franjas vecinas (la de riesgo y la del hover) siempre quedan 4px** y cada una se lee sola; antes ocupaban todo el hueco y se fundían (Volador en riesgo con Psíquico bajo el ratón). Con 2px, el ×4, que sobresale 2px, cabe justo dentro de la franja. Su etiqueta lleva el borde de selección (§2.3, regla 8), y sus ×4 cambian el aro al `field-ink` (el `field` no se vería sobre el tinte). Las cifras sueltas de su balance, «–» incluido, van en `--ink` en claro y en `field-ink` en oscuro: en oscuro el tinte llega al 80 % y ni `--ink-soft` ni `--ink` se leen sobre él; en claro el tinte al 35 % es claro para todos los tipos y el `field-ink` blanco de Siniestro, Fantasma o Lucha no se leería.
+- Hover de fila (solo con puntero): `--ink` al 5 % sobre `--surface`, salvo la fila de riesgo, que conserva su tinte. Ocupa lo mismo que el tinte de riesgo. En la tabla de tipos (§4.5) no hace falta: cada celda se tiñe por separado y los 3px entre celdas ya separan la fila elegida de la del hover.
+
+#### Panel «Cobertura ofensiva»
+
+Título «Cobertura ofensiva» / «Offensive coverage» y nota «Según los tipos de tus miembros, no sus movimientos.» / «Based on your members' types, not their moves.». Dos grupos lado a lado (3fr / 2fr; apilados por debajo de 1024px):
+- **«Súper eficaz contra 13»:** bajo el subtítulo (`--step-lead` 900), una **clave** en `--step-small` 800, `--ink-soft`: una pastilla neutra «Tipo rival» / «Opposing type», una flecha ← y «tipos de tu equipo que lo golpean ×2» / «your team's types that hit it ×2» (`aria-hidden`; la información accesible va en cada pastilla).
+  - Cada tipo cubierto es una **pastilla compuesta** de 44px en `--step`: primero el tipo rival como pastilla de 36px en su `field` con `field-ink`; luego una flecha ← en tinta (con «lo golpean» / «hit by» para lectores de pantalla); luego una etiqueta de 24px por cada tipo del equipo que lo cubre, en su propio `field`. Si no cabe en una línea (en un móvil, un rival con cuatro tipos), la pastilla parte en dos y se queda con radio 22px. La flecha apunta al rival: se lee «Fuego ← Agua», nunca «Fuego · Agua», que parecía decir que Fuego pega a Agua.
+- **«Sin súper eficaz contra 5»:** pastillas `--step` de 44px con el nombre en tinta, sin campo de color (no hay nada que celebrar).
+- Ambos grupos en el orden de la tabla de tipos. Con el equipo vacío, solo «Añade Pokémon para ver el análisis.».
+
+#### Panel «Estadísticas base»
+
+Dos columnas (1fr / 2.4fr; apiladas por debajo de 1024px):
+- **Izquierda:** el título «Estadísticas base» / «Base stats» en `--step-head` y debajo el **total medio** del equipo en `--step-hero` 900 tabular, con «Total medio, media de los miembros» / «Average total, across members» en 800, `--ink-soft`. Con el equipo vacío, el total es «–» en `--ink-soft`.
+- **Derecha:** seis filas (PS, Ataque, Defensa, At. esp., Def. esp., Velocidad / HP, Attack, Defense, Sp. Atk, Sp. Def, Speed): nombre en `--step-small` 800, media del equipo en 900 tabular alineada a la derecha, barra de 12px (relleno `--ink`, pista `--step`, escala sobre 255, como §2.3 regla 5 para paneles sin tipo) y, a la derecha, «Mejor: Scizor 130» en `--step-small` 700, `--ink-soft`. La columna «Mejor» se oculta por debajo de 1024px.
+- Las barras crecen con `scaleX` como en la ficha (§6) cada vez que cambia el equipo.
+
+#### Guardado y enlace
+
+- **Guardado en el navegador:** `localStorage`, clave `pokedata-team`, valor JSON `{ "v": 1, "members": ["charizard", "gyarados", "scizor", "ninetales-alola"] }` con los **slugs de PokéAPI** de cada forma (los mismos de `/pokemon/[name]`). Todo acceso va en `try/catch`; si falla, el equipo vive solo en memoria y la página funciona igual. Otras pestañas se sincronizan con el evento `storage`.
+- **Enlace:** `/es/equipo?t=charizard,gyarados,scizor,ninetales-alola`. Los slugs desconocidos se descartan y se toman como mucho seis. Se permiten repetidos.
+- **Abrir un enlace compartido no pisa el equipo guardado.** Si `?t=` existe y difiere del guardado, la página muestra ese equipo y, bajo el título, una banda en `--step`: «Estás viendo un equipo compartido.» con «Guardarlo como mi equipo» (secundario) y «Volver al mío» (enlace de texto). Editar el equipo compartido lo convierte en el propio (se guarda y se quita `?t=`). Editar el propio también quita `?t=`: el que deja «Compartir enlace» quedaría viejo y al recargar mostraría como compartido un equipo que ya no es el tuyo. «Guardarlo como mi equipo» y «Volver al mío» llevan el foco al primer campo.
+- **«Compartir enlace»:** escribe `?t=` con el equipo actual en la URL (`history.replaceState`) y la copia con `navigator.clipboard`; aviso flotante «Enlace copiado» / «Link copied» (`role="status"`, `--ink` con texto hueso, 1,6s). En táctil con `navigator.share`, usa la hoja nativa en su lugar. Si nada funciona, el aviso dice «Copia la dirección de la barra».
+- **Primer pintado:** el servidor no conoce `localStorage`. La página es estática y pinta seis campos fantasma en `--step` (forma de §4.8, sin `animate-pulse`) y los paneles con sus títulos; el equipo aparece tras la hidratación (`useSyncExternalStore` con `getServerSnapshot` nulo). Si la URL trae `?t=`, se usa directamente.
+- **Datos de cada miembro:** número de especie, nombre, nombre de forma (corto y completo) en el idioma de la página, tipos, seis estadísticas base, id del artwork y la lista de formas de la especie. Llegan de una ruta `GET /api/team?slugs=…` con caché larga (son datos de PokéAPI que no cambian) que reutiliza `getPokemonVariantSummary` y las `varieties` de la ficha.
+
+#### Móvil y tableta (< 1024px)
+
+- La alineación campo-columna se abandona: los campos pasan a una rejilla propia de **3 columnas** (640–1023px) o **2** (< 640px), con 64px entre filas y 12px entre columnas, sin la columna de recuento ni la de botones (el botón de compartir, desactivado con el equipo vacío, sube a la cabecera de página, a la derecha del título y debajo por debajo de 640px, y «Vaciar equipo» se mueve al final de la página, como enlace de texto; al vaciar, el foco va al primer hueco). Campo de 300px (330px táctil, con su fila de controles).
+- La matriz va en un contenedor con scroll horizontal, como la tabla de tipos (§4.5): columnas `96px repeat(6, 56px) 186px` (la del balance, igual que en escritorio: «Resisten» e «Inmunes» no caben en menos), 8px de separación, etiquetas de fila fijas a la izquierda y la cabecera de avatares no fija (dentro de un contenedor con scroll no puede pegarse a la página). Solo ese contenedor se desplaza; la página nunca.
+- Cobertura y estadísticas se apilan.
+
+#### Textos
+
+Todos en `translations.ts`, en una sección `team`, en los dos idiomas: navegación, título y frase, recuento, botones (compartir, vaciar, añadir, quitar, mover, cambiar forma, sin otras formas), aviso de riesgo con sus plurales, encabezados del balance, cobertura (subtítulos, clave, texto para lectores), estadísticas, selector (título, buscador, forma, añadir, completo), banda de equipo compartido, avisos flotantes y los tres estados del botón de la ficha.
 
 ---
 
@@ -469,6 +608,12 @@ Solo se animan `transform` y `opacity`. Todo tiene alternativa con `prefers-redu
 | Barras de estadísticas | `scaleX` de 0 a su valor cuando su fila entra en pantalla (cada fila por separado: las visibles al cargar crecen enseguida y las de abajo, al bajar hasta ellas), cada vez que se muestra un Pokémon o una forma nuevos (ficha y comparador). Salen vacías desde el primer pintado; sin JavaScript o con movimiento reducido, ya llenas | 600ms · 70ms de escalonado |
 | Controles | Pulsación `scale(0.96)` y hover con rebote | 150ms |
 | Selector de tema | El relleno del segmento activo se desliza al nuevo (`transform`); el tema cambia sin fundido | 250ms con rebote · tooltip 120ms |
+| Equipo: campos | Entrada «pop» de los seis campos como las tarjetas; al añadir, el nuevo entra con «pop»; al quitar, sale con escala a 0.94 y fundido, y los siguientes se deslizan (`layout` de Framer Motion); al reordenar, los dos campos se cruzan | 600ms entrada · 45ms de escalonado · 350ms con rebote el resto |
+| Equipo: huecos y controles | Hueco: sube 6px, la Pokébola gira 25°; controles de escritorio con fundido al hover o foco; menú de formas con fundido y 4px de subida | 350ms con rebote · 150ms · 200ms |
+| Equipo: dado | Vuelta completa con rebote, como el del Pokémon del día; los miembros nuevos entran con «pop» | 500ms |
+| Equipo: análisis | Al cambiar el equipo, las celdas de la columna afectada entran con escala de 0.9 a 1 y fundido; la banda de riesgo cruza el texto con fundido; las barras de estadísticas, como en la ficha | 200ms · 20ms de escalonado por fila · barras 600ms |
+
+En el equipo, la entrada escalonada se guarda hasta que llegan todos los miembros: los huecos y los miembros entran cada uno con el retraso de su sitio, aunque los datos lleguen en dos tandas. El campo que sale deja su sitio enseguida (`popLayout`), para que la rejilla nunca tenga siete elementos. Los huecos y los fantasmas no tienen salida: el campo que ocupa su sitio entra encima. Con movimiento reducido, los campos solo se funden (sin subida, escala ni deslizamiento) y las celdas y el menú también.
 
 ---
 
@@ -527,3 +672,31 @@ La dirección «Pop» ya está construida (merge 99fcfce); su orden de trabajo q
     - Cambiar el tema del sistema con la página abierta en automático: cambia sola. Con un tema forzado: no cambia.
     - Movimiento reducido: el relleno del selector no se desliza, solo cambia.
     - **Resultado (19 de octubre de 2026).** `lint.mjs`, `check-contrast`, `tsc` y ESLint sin errores. `inspect.mjs` da exactamente los mismos avisos en claro y en oscuro en la portada, la ficha, la tabla, el comparador y la 404. Esos avisos vienen de la dirección Pop y no del tema: letra de 14px en etiquetas, pocas fotos y ningún vídeo, la cabecera fija que pasa sobre «Pokédex Nacional», el «n.º» sobre el título y la línea del pie. El único aviso propio del oscuro, el contraste de las etiquetas de tipo, era una lectura falsa del inspector, que ignora los fondos translúcidos; se corrigió haciendo la pastilla opaca (regla 4 del §2.3). Las capturas de los seis Pokémon, el teclado, el cambio de tema del sistema en vivo y el movimiento reducido pasan.
+
+---
+
+## 9. Orden de trabajo: equipo
+
+Referencia visual: `mockups/team.html` (§4.9). Cada paso se cierra con la app funcionando, `tsc` y ESLint sin errores, y en los dos temas.
+
+1. **Datos y cálculo, sin interfaz.**
+   - `src/lib/team.ts`: tipos (`TeamMember`), lectura y escritura de `pokedata-team` con `try/catch` y versión, lectura y escritura de `?t=` (descartar slugs desconocidos, máximo seis) y un almacén para `useSyncExternalStore` con el evento `storage`.
+   - `src/lib/team-analysis.ts`, funciones puras sobre `TYPE_CHART` y `calculateTypeWeaknesses`: multiplicador por atacante y miembro, balance por fila, mayor riesgo con su orden de desempate, cobertura (rival → tipos que lo golpean) y medias con el mejor de cada estadística.
+   - Pruebas de esas funciones con el equipo de la maqueta: Roca es el mayor riesgo (3 débiles, 1 a ×4, 0 resistentes); 13 tipos cubiertos y 5 sin cubrir (Normal, Agua, Eléctrico, Veneno, Fantasma); total medio 520.
+2. **Ruta de datos.** `GET /api/team?slugs=…` con caché larga, en los dos idiomas, que devuelve lo que pide el §4.9 «Datos de cada miembro», formas de la especie incluidas.
+3. **Ruta y navegación.** `team` en `ROUTE_MAP` (`equipo` / `team`), página `src/app/[locale]/team/page.tsx` con metadatos y canónica, sitemap, enlace «Equipo» en la cabecera, la hoja móvil y el pie (§4.1, §4.7), y la sección `team` de `translations.ts` completa. Volver a medir la cabecera de tableta con cuatro enlaces.
+4. **Fila de campos, estática.** La rejilla compartida (`--team-cols`), el campo de miembro con artwork y ficha de alto fijo, el hueco vacío como botón entero, el recuento y los botones laterales; fantasmas en el primer pintado. Captura a 1440px con 4 miembros y 2 huecos contra la maqueta, en claro y en oscuro.
+5. **Selector.** Generalizar `PokemonSelectModal` para que devuelva el Pokémon elegido en vez de navegar (el comparador sigue igual), y añadir la franja de formas. Añadir ocupa el primer hueco y lleva el foco al campo nuevo.
+6. **Controles por miembro.** Mover, cambiar forma (menú) y quitar, con su presentación por puntero y táctil, la gestión del foco, Esc y el arrastre. Guardado en cada cambio.
+7. **Panel «Defensa».** Aviso de mayor riesgo, cabecera de avatares fija, etiquetas, celdas con la jerarquía ×4 > ×2 > ×½ > ×1, ×0 rayado, balance y fila de riesgo teñida, tooltips y hover. Comprobar que cada columna cae bajo su campo a 1024, 1280 y 1440px.
+8. **Paneles «Cobertura ofensiva» y «Estadísticas base».** Clave, pastillas compuestas con flecha, grupo sin cubrir, total medio y barras con «Mejor».
+9. **Guardado y enlace.** «Compartir enlace» con portapapeles, hoja nativa y respaldo; banda de equipo compartido con «Guardarlo como mi equipo» y «Volver al mío»; sincronización entre pestañas.
+10. **Botón de la ficha.** «Añadir al equipo» en §4.4 con sus tres estados y el aviso flotante, añadiendo la forma que se ve.
+11. **Móvil y tableta.** Rejilla de 3 y 2 columnas, controles táctiles siempre visibles, matriz con scroll propio y etiquetas fijas, compartir en la cabecera de página y «Vaciar equipo» al final. Sin scroll horizontal de página a 390px.
+12. **Movimiento** (§6): entradas, añadir, quitar y reordenar con `layout`, huecos, menú, celdas y barras, todo con alternativa para movimiento reducido.
+13. **Revisión.**
+    - `lint.mjs` sin FAIL e `inspect.mjs` contra `npm run dev` a 1440, 768 y 390px, en claro y en oscuro. Los avisos heredados de Pop (pocas fotos, sin vídeo, letra de 12–14px en etiquetas) se aceptan como en §8.
+    - `check-contrast` sin cambios (no hay tokens nuevos). Revisar a mano el texto de la ficha sobre los campos más claros (Eléctrico, Hielo) y más oscuros (Siniestro en oscuro, Fantasma) y la fila de riesgo con Eléctrico y Siniestro.
+    - Equipos de prueba: el de la maqueta; uno con Umbreon y un nombre largo (Crabominable) para el tamaño único de nombre; uno con Megas y formas regionales; uno sin débiles compartidos; el equipo vacío; un enlace con slugs inválidos.
+    - Teclado completo: añadir, cambiar forma, mover, quitar y compartir sin ratón, con el foco siempre visible y en su sitio.
+    - **Resultado (20 de octubre de 2026).** `lint.mjs`, `check-contrast`, `tsc`, ESLint y las pruebas sin errores. `inspect.mjs` da los mismos avisos en claro y en oscuro, con equipo y vacío: los heredados de Pop (etiquetas de 12–14px, pocas fotos con el equipo vacío, ningún vídeo, la línea y el texto largo del pie) y tres propios que se aceptan: la matriz desplazable en móvil (§4.9, como la tabla de tipos), la etiqueta de tipo de la última ficha leída como «antetítulo» de «Defensa» a 768px y, con un nombre de 12 letras entre 1024 y 1279px, el nombre a 10px. Se corrigieron cuatro fallos: las cifras de la fila de riesgo en claro con tipos oscuros (`field-ink` blanco sobre el tinte claro), «Resisten» e «Inmunes» pisándose en la matriz de móvil (columna de 168 a 186px), nombres largos y etiquetas como «Fantasma» saliéndose de la ficha a 1024px, y el foco al añadir o quitar con el teclado, que acababa en el campo que salía (los campos que salen dejan de marcar su hueco). Los equipos de prueba y el recorrido con teclado pasan.

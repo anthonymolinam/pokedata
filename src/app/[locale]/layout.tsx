@@ -158,6 +158,7 @@ export default async function RootLayout({ children, params }: LayoutProps) {
               pokedex: dict.nav.pokedex,
               types: dict.nav.types,
               compare: dict.nav.compare,
+              team: dict.nav.team,
               search: dict.nav.search,
               searchLabel: dict.nav.searchLabel,
               openSearch: dict.nav.openSearch,

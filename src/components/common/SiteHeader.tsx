@@ -25,6 +25,7 @@ interface SiteHeaderProps {
     pokedex: string;
     types: string;
     compare: string;
+    team: string;
     search: string;
     searchLabel: string;
     openSearch: string;
@@ -55,8 +56,9 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
 
   const links = [
     { key: "pokedex", href: `/${locale}`, label: labels.pokedex },
-    { key: "types", href: getLocalizedPath(locale, "types"), label: labels.types },
+    { key: "team", href: getLocalizedPath(locale, "team"), label: labels.team },
     { key: "compare", href: getLocalizedPath(locale, "compare"), label: labels.compare },
+    { key: "types", href: getLocalizedPath(locale, "types"), label: labels.types },
   ];
 
   // La Pokédex abarca la portada y las fichas; el resto, su propia ruta
@@ -133,18 +135,23 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
         }`}
       />
 
-      <div className="shell relative flex items-center gap-2 md:gap-3 lg:gap-6 h-15 md:h-18">
+      <div className="shell relative flex items-center gap-2 lg:gap-4 xl:gap-6 h-15 md:h-18">
         <Link
           href={`/${locale}`}
           aria-label={labels.home}
-          className="group flex items-center gap-2 shrink-0 rounded-pill display text-[1.25rem] md:text-[1.5rem] leading-none"
+          className="group flex items-center gap-2 shrink-0 rounded-pill display text-[1.25rem] lg:text-[1.5rem] leading-none"
         >
-          <Pokeball className="size-7 md:size-8 motion-safe:transition-transform motion-safe:duration-600 motion-safe:ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:group-hover:rotate-360 motion-safe:group-focus-visible:rotate-360" />
+          <Pokeball className="size-7 lg:size-8 motion-safe:transition-transform motion-safe:duration-600 motion-safe:ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:group-hover:rotate-360 motion-safe:group-focus-visible:rotate-360" />
           <span aria-hidden="true">PokéData</span>
         </Link>
 
         <nav aria-label={labels.mainNav} className="hidden md:block">
-          <ul className="flex items-center gap-1">
+          {/* Con cuatro enlaces (§4.1) la cabecera en español no cabía: a 768px
+              invadía 58px del margen y a 1024px, 45px. Hasta 1023px el logo va a
+              su tamaño de móvil, las pastillas a 8px de relleno y sin hueco entre
+              ellas, y los bloques a 8px y 6px; hasta 1279px, pastillas de 12px,
+              bloques a 16px y buscador compacto de 208px */}
+          <ul className="flex items-center lg:gap-1">
             {links.map(({ key, href, label }) => {
               const active = isActive(key, href);
               return (
@@ -152,7 +159,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
                   <Link
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    className={`grid place-items-center h-11 px-3 lg:px-4 rounded-pill font-extrabold text-small whitespace-nowrap active:scale-[0.96] transition-transform duration-150 ${
+                    className={`grid place-items-center h-11 px-2 lg:px-3 xl:px-4 rounded-pill font-extrabold text-small whitespace-nowrap active:scale-[0.96] transition-transform duration-150 ${
                       active ? "bg-ink text-bone" : "hover:bg-step"
                     }`}
                   >
@@ -164,14 +171,14 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5 md:gap-2 shrink-0">
+        <div className="ml-auto flex items-center gap-1.5 lg:gap-2 shrink-0">
           {/* Va en el mismo grupo que ES/EN y el selector de tema, para que los tres
               queden a la misma distancia. Oculto conserva su hueco: la cabecera no se
               mueve cuando entra. Entre 768 y 1023px no cabe junto al selector de tema
               y queda solo la lupa (§4.1) */}
           <div
             inert={hideCompactSearch}
-            className={`hidden lg:block w-60 transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:translate-y-0 ${
+            className={`hidden lg:block w-52 xl:w-60 transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:translate-y-0 ${
               hideCompactSearch ? "invisible opacity-0 translate-y-2" : "visible opacity-100 translate-y-0"
             }`}
           >
