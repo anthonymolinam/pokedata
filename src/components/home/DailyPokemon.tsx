@@ -65,7 +65,7 @@ export default function DailyPokemon({ locale, today }: DailyPokemonProps) {
           animate={{ rotate: reduceMotion ? 0 : spins * 360 }}
           transition={{ duration: 0.5, ease: BOUNCE }}
           whileTap={{ scale: 0.92 }}
-          className="ml-auto grid place-items-center size-11 md:size-12 shrink-0 rounded-pill bg-surface cursor-pointer"
+          className="ml-auto grid place-items-center size-11 md:size-12 shrink-0 rounded-pill bg-surface dark:bg-control cursor-pointer"
         >
           <Die />
         </motion.button>

@@ -176,11 +176,16 @@ for (const theme of ["light", "dark"]) {
 // §2.1: tokens globales en los dos temas
 const GLOBAL_ROWS = [
   ["`--ink` sobre `--ground` / `--surface` / `--step` / `--raised` / `--raised-step`", "--ink", ["--ground", "--surface", "--step", "--raised", "--raised-step"], TEXT],
+  ["`--ink` sobre `--control` (pastillas y botones neutros)", "--ink", ["--control"], TEXT],
+  ["`--control` sobre `--surface` / `--raised` (borde de la pastilla; en oscuro, 3:1 sobre los paneles)", "--control", ["--surface", "--raised"]],
   ["`--ink-soft` sobre `--ground` / `--surface` / `--step` / `--raised`", "--ink-soft", ["--ground", "--surface", "--step", "--raised"], TEXT],
   ["`--bone` sobre `--ink` (botones, «Total», tooltips)", "--bone", ["--ink"], TEXT],
   ["`--on-dark` / `--on-dark-soft` sobre `--footer`", ["--on-dark", "--on-dark-soft"], "--footer", TEXT],
   ["`--accent` sobre `--ground` (mitad del logo, gráfico)", "--accent", ["--ground"], GRAPHIC],
 ];
+
+// En oscuro la pastilla neutra tiene que verse como botón sobre el panel
+pair("oscuro", "--control", "--surface", GRAPHIC);
 
 const globalTable = GLOBAL_ROWS.map(([label, fg, bg, min]) => {
   const cells = Object.keys(themes).map((theme) => {

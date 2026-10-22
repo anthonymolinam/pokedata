@@ -36,7 +36,7 @@ const compactPill =
   "inline-flex items-center justify-center gap-1.5 w-full h-10 px-3 rounded-pill font-extrabold text-small whitespace-nowrap cursor-pointer active:scale-[0.96] motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5";
 const secondary = `${pill} bg-ink text-bone`;
 const iconButton =
-  "grid place-items-center size-11 rounded-pill bg-step cursor-pointer active:scale-[0.96] motion-safe:transition-transform duration-150";
+  "grid place-items-center size-11 rounded-pill bg-control cursor-pointer active:scale-[0.96] motion-safe:transition-transform duration-150";
 // Selección igual en tipos y regiones: ✓ y el borde único de selección
 // (§2.3, regla 8), por dentro de la pastilla
 const selectedRing = "ring-selected";
@@ -204,7 +204,7 @@ export default function PokemonFiltersBar({
           setDraftTypes([]);
           setDraftGen(null);
         }}
-        className={`${pill} bg-step text-ink`}
+        className={`${pill} bg-control text-ink`}
       >
         {filters.clear}
       </button>
@@ -249,7 +249,7 @@ export default function PokemonFiltersBar({
                   type="button"
                   aria-pressed={selected}
                   onClick={() => toggleGen(gen.id)}
-                  className={`${compactPill} bg-step text-ink ${selected ? selectedRing : ""}`}
+                  className={`${compactPill} bg-control text-ink ${selected ? selectedRing : ""}`}
                 >
                   {selected && (
                     <Check aria-hidden="true" strokeWidth={3.5} className="size-3.5 shrink-0 -ml-0.5" />
@@ -348,7 +348,7 @@ export default function PokemonFiltersBar({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => toggleGen(gen.id)}
-                    className={`${pill} bg-step text-ink ${selected ? selectedRing : ""}`}
+                    className={`${pill} bg-control text-ink ${selected ? selectedRing : ""}`}
                   >
                     {selected && (
                       <Check aria-hidden="true" strokeWidth={3.5} className="size-4 -ml-1" />

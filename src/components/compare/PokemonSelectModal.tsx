@@ -185,7 +185,7 @@ export function PokemonSelectDialog({
             type="button"
             onClick={() => dialogRef.current?.close()}
             aria-label={compare.close}
-            className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill bg-step motion-safe:transition-transform duration-150 active:scale-[0.96]"
+            className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill bg-control motion-safe:transition-transform duration-150 active:scale-[0.96]"
           >
             <X aria-hidden="true" strokeWidth={2.5} className="size-5" />
           </button>

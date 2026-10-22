@@ -123,7 +123,10 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
   }, [layerOpen, menuOpen]);
 
   const pillButton =
-    "grid place-items-center h-11 rounded-pill bg-surface text-ink font-extrabold text-small cursor-pointer hover:bg-step active:scale-[0.96] transition-transform duration-150";
+    "grid place-items-center h-11 rounded-pill text-ink font-extrabold text-small cursor-pointer active:scale-[0.96] transition-transform duration-150";
+  // Sobre el fondo de la página: en oscuro, el gris de los botones neutros
+  // (--control), que --surface casi no se distingue del fondo
+  const groundButton = "bg-surface hover:bg-step dark:bg-control dark:hover:bg-control";
 
   return (
     <header className="sticky top-0 z-50 bg-ground text-ink">
@@ -195,7 +198,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
             aria-label={labels.openSearch}
             aria-haspopup="dialog"
             onClick={() => setSearchOpen(true)}
-            className={`${pillButton} w-11 lg:hidden`}
+            className={`${pillButton} ${groundButton} w-11 lg:hidden`}
           >
             <Search aria-hidden="true" strokeWidth={2.5} className="size-5" />
           </button>
@@ -220,7 +223,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
             aria-haspopup="dialog"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(true)}
-            className={`${pillButton} px-3.5 md:hidden`}
+            className={`${pillButton} ${groundButton} px-3.5 md:hidden`}
           >
             {labels.menu}
           </button>
@@ -256,7 +259,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
                 type="button"
                 aria-label={labels.closeSearch}
                 onClick={() => setSearchOpen(false)}
-                className={`${pillButton} w-12 h-12 self-start bg-step`}
+                className={`${pillButton} w-12 h-12 self-start bg-control`}
               >
                 <X aria-hidden="true" strokeWidth={2.5} className="size-5" />
               </button>
@@ -301,7 +304,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
                   type="button"
                   aria-label={labels.closeMenu}
                   onClick={() => setMenuOpen(false)}
-                  className={`${pillButton} w-11 bg-step`}
+                  className={`${pillButton} w-11 bg-control`}
                 >
                   <X aria-hidden="true" strokeWidth={2.5} className="size-5" />
                 </button>

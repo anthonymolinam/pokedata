@@ -131,7 +131,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
             search("");
             inputRef.current?.focus();
           }}
-          className="grid place-items-center size-11 shrink-0 rounded-pill bg-surface cursor-pointer motion-safe:transition-transform duration-150 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:scale-[1.06] active:scale-[0.96]"
+          className="grid place-items-center size-11 shrink-0 rounded-pill bg-surface dark:bg-control cursor-pointer motion-safe:transition-transform duration-150 ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:hover:scale-[1.06] active:scale-[0.96]"
         >
           <X aria-hidden="true" strokeWidth={3} className="size-5" />
         </button>

@@ -34,6 +34,7 @@ Cada token tiene un valor por tema. El código usa siempre el token, nunca el va
 | `--step` | `#E6E8EF` | `#282C37` | Un tono por debajo del fondo en claro y por encima en oscuro: buscador enfocado, pista de controles segmentados, hover de enlaces |
 | `--raised` | `#FFFFFF` | `#262A35` | Capas flotantes: desplegable del buscador, hoja móvil, modales |
 | `--raised-step` | `#E6E8EF` | `#363B48` | El `--step` dentro de una capa flotante (`data-field="raised"`): en oscuro `--step` casi coincide con `--raised` |
+| `--control` | `#E6E8EF` | `#686C7A` | Relleno de las pastillas y botones neutros: regiones del filtro, formas del selector del equipo, «Limpiar», botones «×» de cerrar. En claro es el mismo que `--step`; en oscuro, un gris claro que se ve como botón (§2.4) |
 | `--ink` | `#15161C` | `#EEF0F5` | Tinta principal, botón secundario, pastilla «Total», tooltips |
 | `--ink-soft` | `#5C6070` | `#A3A8B8` | Solo texto secundario: subtítulos y notas. Nunca en texto principal |
 | `--bone` | `#F7F5F0` | `#14161D` | Texto sobre un relleno en `--ink` (botón secundario, «Total», tooltip, nav activa) |
@@ -59,6 +60,8 @@ El acento rojo no se usa nunca para marcar estados ni selecciones; eso lo hace l
 | Par | Claro | Oscuro |
 | --- | --- | --- |
 | `--ink` sobre `--ground` / `--surface` / `--step` / `--raised` / `--raised-step` | 16.42 / 18.05 / 14.74 / 18.05 / 14.74 | 15.84 / 14.26 / 12.23 / 12.57 / 9.81 |
+| `--ink` sobre `--control` (pastillas y botones neutros) | 14.74 | 4.58 |
+| `--control` sobre `--surface` / `--raised` (borde de la pastilla; en oscuro, 3:1 sobre los paneles) | 1.22 / 1.22 | 3.11 / 2.74 |
 | `--ink-soft` sobre `--ground` / `--surface` / `--step` / `--raised` | 5.68 / 6.24 / 5.10 / 6.24 | 7.61 / 6.85 / 5.87 / 6.04 |
 | `--bone` sobre `--ink` (botones, «Total», tooltips) | 16.56 | 15.84 |
 | `--on-dark` / `--on-dark-soft` sobre `--footer` | 16.56 / 9.53 | 14.93 / 8.59 |
@@ -118,6 +121,11 @@ Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon
 **Idea:** de noche, las tarjetas son lo que da la luz. El fondo es casi negro con un tinte azul apenas perceptible (`#14161D`: el azul va 9 puntos por encima del rojo), para que no se sienta plano ni gris de pantalla apagada; los campos de tipo se quedan exactamente como en claro.
 
 **Tres modos:** claro, oscuro y automático según el sistema (por defecto). El selector está en la cabecera (§4.1).
+
+**Pastillas y botones neutros en oscuro (`--control`).** Con `--step` (`#282C37`) las regiones del filtro casi no se distinguían del panel (1.2:1) y en la hoja móvil, sobre `--raised`, coincidían con él: se leía el texto pero no se veía el botón. En oscuro van en `#686C7A`: 3.1:1 sobre `--surface` (WCAG 1.4.11) y 2.7:1 sobre `--raised`, con la tinta encima a 4.6:1. Más claro no se puede sin que la tinta baje de 4.5:1. La selección sigue destacando: el borde en `--ink` contrasta 4.6:1 con la pastilla y en los filtros va con ✓.
+- Lo usan las regiones (panel y hoja móvil), «Limpiar», los «×» de cerrar (filtros, búsqueda y menú de la cabecera, modales del comparador) y las pastillas de forma del selector del equipo (antes en `--raised` sobre la franja en `--raised-step`: en oscuro, más oscuras que la franja).
+- Los botones redondos que van sobre el fondo de la página en `--surface` (búsqueda y «Menú» de la cabecera móvil, dado del Pokémon del día, dado y papelera del equipo, «×» del buscador) pasan a `--control` solo en oscuro, con la variante `dark:`: en claro el blanco ya se ve sobre `--ground`.
+- No lo usan los botones desactivados (siguen en `--step`, que no deben parecer pulsables), ni las pistas de los controles segmentados, ni las pastillas sobre un campo de tipo (formas de la ficha y del comparador), que ya contrastan con el campo.
 
 **Campos de tipo en oscuro.** Sobre `#14161D`, un campo necesita 3:1 con el fondo para que el borde de la tarjeta se vea (WCAG 1.4.11). Diecisiete tipos lo cumplen sin tocar nada. Solo **Siniestro** (2.70:1) se aclara un 5 %, a `field-dark` `#775F4F` (3.04:1), y su tinta hueso sigue en 5.45:1. Su `step` en oscuro es `#665244`.
 
@@ -266,7 +274,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - El titular en `--step-hero`, en dos líneas como mucho **en los dos idiomas**: «¿A quién buscas hoy?» y «Who are you looking for?». Un titular más largo en inglés pasa a tres líneas y empuja la primera fila de tarjetas fuera de la pantalla.
   - Una frase de apoyo en `--step-body`.
   - El buscador grande: una pastilla de 60px (56px en móvil) **sin botón «Buscar»**, porque la búsqueda es automática.
-  - Cuando hay texto escrito, a la derecha aparece un botón **×** redondo de 44px en `--surface` (etiqueta accesible «Borrar la búsqueda»). Vacía el campo y la búsqueda y devuelve el foco al campo. Sin texto no se muestra.
+  - Cuando hay texto escrito, a la derecha aparece un botón **×** redondo de 44px en `--surface` (`--control` en oscuro; etiqueta accesible «Borrar la búsqueda»). Vacía el campo y la búsqueda y devuelve el foco al campo. Sin texto no se muestra.
   - La búsqueda vive en la URL (`?q=`), junto a los filtros y dentro de ellos: al escribir se actualizan el recuento y la rejilla, e Intro lleva a los resultados. Sin JavaScript, Intro envía el formulario igual.
 - **Derecha:** el bloque **Pokémon del día**:
   - Arriba, una línea con el título «Pokémon del día» (`--step-lead`, 900) y, a su derecha, el botón del dado. **No se muestra la fecha:** la semilla es la fecha UTC, y en Colombia por la noche aparecería ya el día siguiente.
@@ -282,7 +290,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Siempre de tipos distintos:** un candidato solo entra si **ninguno** de sus tipos coincide con los de los ya elegidos. Charizard (Fuego/Volador) excluye a cualquier otro Pokémon de Fuego o de Volador.
 - Se calcula en el servidor y se vuelve a generar a las 00:00 UTC, así que no hay desajuste de hidratación.
 - **El dado:**
-  - Es un botón redondo de 48px en `--surface` con un dado dibujado en SVG y la etiqueta accesible «Barajar otros tres».
+  - Es un botón redondo de 48px en `--surface` (`--control` en oscuro) con un dado dibujado en SVG y la etiqueta accesible «Barajar otros tres».
   - Al pulsarlo, el dado gira con rebote (500ms) y las tres columnas cambian con un fundido y un pequeño salto, escalonado 60ms.
   - Baraja en el cliente con la misma regla de tipos distintos. Necesita un índice ligero id → nombre y tipos (`src/data/pokemon-index.json`, generado con `npm run pokemon-index`), que el cliente descarga la primera vez que se usa el dado.
   - Tras barajar aparece un enlace de texto, «Volver a los de hoy», junto al título. **Solo el dado lo hace aparecer:** buscar o filtrar no cambia los Pokémon del día y no lo muestra.
@@ -299,14 +307,14 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 **Panel de filtros:** oculto por defecto. Al abrirlo parte de los filtros aplicados; tocar tipos y regiones solo cambia esa selección, y nada se aplica hasta pulsar **«Aplicar»** («Apply» en inglés).
 - **En escritorio (≥ 768px)** se despliega dentro de la página, a todo el ancho, justo debajo de la fila del título, y empuja los chips y las tarjetas hacia abajo. Es blanco, con radio 28px y 24px de relleno, sin sombra (está en la página, no flota). Todo se ve sin scroll interno: mide unos 355px de alto.
   - **Fila de cabecera:** «Región» a la izquierda y el botón «×» de cerrar a la derecha.
-  - **Regiones:** las 9 (Kanto … Paldea) en una sola fila de pastillas compactas de 40px y ancho igual, con selección única (`?gen=`), en `--step` con texto en tinta.
+  - **Regiones:** las 9 (Kanto … Paldea) en una sola fila de pastillas compactas de 40px y ancho igual, con selección única (`?gen=`), en `--control` con texto en tinta.
   - **Tipos:** «Tipos» con la nota «Hasta dos» y los 18 tipos en dos filas de 9 pastillas compactas de 40px, cada una en su `field` con el nombre en `field-ink`. Se pueden elegir hasta dos (`?types=`), porque ningún Pokémon tiene más y el filtro es la intersección; al elegir un tercero sustituye al segundo.
   - **Selección, igual en tipos y regiones (también en la hoja móvil):** una marca ✓ delante del nombre y el borde único de selección (§2.3, regla 8), en `--ink` por dentro de la pastilla, también sobre las de tipo. No cambia el tamaño, no se sale de la pastilla ni toca a las vecinas, y no depende solo del color.
   - **Pie:** «Limpiar» y «Aplicar», alineados a la derecha bajo los tipos.
   - **Tableta (768–1023px):** las regiones pasan a dos filas (5 + 4) y los tipos a tres filas de 6.
   - Es una sección desplegable, no un diálogo: al abrir, el foco se queda en el botón «Filtros». Se cierra con el mismo botón, con «×» o con Esc, y lo no aplicado se descarta.
 - **En móvil** es una hoja inferior a pantalla casi completa (un diálogo con el foco dentro), con los 18 tipos como bloques de 44px en 2 columnas y las regiones en pastillas. Si no cabe, se desplaza por dentro y el pie con «Limpiar» y «Aplicar» queda fijo abajo. Se cierra con «×», con Esc o tocando fuera.
-- **«Limpiar»** (en `--step`) vacía la selección del panel; no cambia nada hasta pulsar «Aplicar».
+- **«Limpiar»** (en `--control`) vacía la selección del panel; no cambia nada hasta pulsar «Aplicar».
 - **«Aplicar»** es el botón secundario en `--ink`, solo con el texto, sin contador. Sin cambios respecto a lo aplicado está desactivado: fondo `--step` y texto `--ink-soft`. Al pulsarlo aplica la selección a la URL y cierra el panel.
 - Al cerrar, si el foco estaba dentro del panel, vuelve al botón «Filtros» sin desplazar la página.
 
@@ -484,7 +492,7 @@ La fila de campos no está dentro de un panel, pero lleva el mismo `padding-inli
 Es una `<ol>` (el orden importa; sin números visibles) con 64px de margen superior para el artwork que sobresale (56px por debajo de 1024px).
 
 - **Columna de etiquetas:** el recuento «4/6» en `--step-head` 900 con cifras tabulares y debajo «miembros» / «members» en `--step-small`, `--ink-soft`, apoyados abajo. Es decorativo (`aria-hidden`): el recuento accesible lo da la lista.
-- **Columna de balance:** arriba, el **dado del equipo aleatorio** y a su derecha la **papelera de «Vaciar equipo»**, dos botones redondos de 44px en `--surface` separados 10px; debajo, «Compartir enlace» (secundario, `--ink`) a todo el ancho de la columna; todo apoyado abajo. Con el equipo vacío, compartir está desactivado (fondo `--step`, texto `--ink-soft`) y la papelera, al 35 %; el dado no.
+- **Columna de balance:** arriba, el **dado del equipo aleatorio** y a su derecha la **papelera de «Vaciar equipo»**, dos botones redondos de 44px en `--surface` (`--control` en oscuro) separados 10px; debajo, «Compartir enlace» (secundario, `--ink`) a todo el ancho de la columna; todo apoyado abajo. Con el equipo vacío, compartir está desactivado (fondo `--step`, texto `--ink-soft`) y la papelera, al 35 %; el dado no.
 - **Vaciar equipo:** icono `Trash2` de `lucide-react` en tinta, con `aria-label` «Vaciar equipo» / «Clear team» y el mismo globo que el dado. Va **junto al dado y a «Compartir enlace» en todos los tamaños**: antes, por debajo de 1024px, era un enlace de texto al final de la página y costaba encontrarlo. Como se puede deshacer (ver abajo), no necesita esconderse ni confirmación.
 - **Globo de los botones de icono** (dado y papelera): el mismo globo que el selector de tema (§4.1), en `--ink` con texto hueso, pero **encima** del botón, 10px por arriba. Aparece con el puntero y con el foco del teclado; en táctil no hay hover y el nombre va en `aria-label`. Sustituye al `title` nativo del dado.
 - **Equipo aleatorio:** el dado del Pokémon del día (§4.2, componente `Die`) en un botón redondo de 44px en `--surface`, con `aria-label` y globo «Equipo aleatorio» / «Random team». Al pulsarlo gira el dado, no el botón (así el globo no gira con él), con rebote (500ms; sin giro con movimiento reducido).
@@ -521,7 +529,7 @@ Es una `<ol>` (el orden importa; sin números visibles) con 64px de margen super
 Es el modal del comparador (§4.6) con otro final: el mismo buscador, las mismas mini tarjetas y, sin texto escrito, los tres Pokémon del día como sugerencias.
 - Debajo de las tarjetas, la **franja de formas** en `--raised-step`, **visible desde que se abre el modal**: «Forma», el hueco de las formas y, a la derecha y apoyado abajo, «Añadir al equipo» (secundario; debajo, a todo el ancho, por debajo de 640px). El botón tiene su propia columna: **las formas nunca pasan por detrás de él**.
   - Sin Pokémon elegido, el hueco dice «Elige un Pokémon» / «Choose a Pokémon» en `--ink-soft` y el botón está desactivado.
-  - Tocar una tarjeta la marca con el borde de selección (§2.3, regla 8) y el hueco pasa a una pastilla por forma de la especie («Forma base», «Calor», «Lavado», «Forma de Alola»…), con la activa marcada igual; el botón se activa. Una especie sin formas muestra solo «Forma base» marcada.
+  - Tocar una tarjeta la marca con el borde de selección (§2.3, regla 8) y el hueco pasa a una pastilla por forma de la especie, en `--control` («Forma base», «Calor», «Lavado», «Forma de Alola»…), con la activa marcada igual; el botón se activa. Una especie sin formas muestra solo «Forma base» marcada.
   - **La tarjeta marcada muestra la forma elegida:** su artwork, sus tipos, su total y, bajo el nombre de la especie, el nombre de la forma (800, en el `field-ink` del campo al 80 %). Rotom Lavado sale con el artwork de la lavadora y Eléctrico/Agua. El número sigue siendo el de la especie. Mientras llegan los datos de la forma nueva se ve la anterior, sin pasar por la base.
   - **Pastillas de 44px que pasan a otra línea** si no caben (Rotom: dos líneas en escritorio, tres en móvil). Antes iban en una sola línea con scroll horizontal oculto: las que no cabían quedaban detrás del botón sin ninguna pista, y el scroll recortaba por la izquierda la pastilla marcada. La franja crece con las líneas, así que el modal cambia de alto al elegir una especie con muchas formas.
   - **Tope de tres líneas** (`max-height` 172px): con más (Pikachu, 17 formas) la caja se desplaza en vertical con la barra a la vista, y asoma 12px de la cuarta línea como pista de que hay más.

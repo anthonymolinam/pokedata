@@ -162,7 +162,7 @@ export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamP
                   aria-pressed={form.slug === formSlug}
                   title={form.name?.full}
                   onClick={() => chooseForm(form.slug)}
-                  className="h-11 shrink-0 cursor-pointer rounded-pill bg-raised px-4 text-small font-extrabold aria-pressed:ring-selected motion-safe:transition-transform duration-150 active:scale-[0.96]"
+                  className="h-11 shrink-0 cursor-pointer rounded-pill bg-control px-4 text-small font-extrabold aria-pressed:ring-selected motion-safe:transition-transform duration-150 active:scale-[0.96]"
                 >
                   {form.name?.short ?? team.baseForm}
                 </button>

@@ -36,6 +36,10 @@
   --raised: #ffffff;
   /* Escalón sobre las capas flotantes: en claro, el mismo que --step */
   --raised-step: #e6e8ef;
+  /* Relleno de las pastillas y botones neutros (regiones, formas, «Limpiar»,
+     cerrar): en claro, el mismo que --step; en oscuro, un gris claro que se
+     ve como botón sobre los paneles y las capas flotantes (§2.4) */
+  --control: #e6e8ef;
   /* Cuánto field lleva el ×1 de la fila o columna elegida (§4.5) */
   --cross-mix: 35%;
   /* Base de las etiquetas de tipo dentro de un campo (§2.3, regla 4) */
@@ -210,6 +214,8 @@
   --raised: #262a35;
   /* --step casi coincide con --raised: sobre las capas flotantes, uno más claro */
   --raised-step: #363b48;
+  /* 3.1:1 sobre --surface y 2.7:1 sobre --raised; la tinta encima, 4.6:1 */
+  --control: #686c7a;
   /* Mezclado al 35 % con la superficie oscura el field se ensucia (el
      naranja sale marrón); al 80 % conserva su color */
   --cross-mix: 80%;
@@ -262,6 +268,7 @@
     --step: #282c37;
     --raised: #262a35;
     --raised-step: #363b48;
+    --control: #686c7a;
     --cross-mix: 80%;
     --tag-base: var(--ground);
     --ink: #eef0f5;
@@ -342,6 +349,7 @@
   --color-ground: var(--ground);
   --color-surface: var(--surface);
   --color-step: var(--step);
+  --color-control: var(--control);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-bone: var(--bone);

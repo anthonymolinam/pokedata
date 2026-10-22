@@ -33,7 +33,7 @@ export default function RandomTeamButton({
         onClick();
       }}
       whileTap={disabled ? undefined : { scale: 0.92 }}
-      className="icon-tip relative grid place-items-center size-11 shrink-0 rounded-pill bg-surface cursor-pointer disabled:opacity-35 disabled:cursor-default"
+      className="icon-tip relative grid place-items-center size-11 shrink-0 rounded-pill bg-surface dark:bg-control cursor-pointer disabled:opacity-35 disabled:cursor-default"
     >
       <motion.span
         className="grid place-items-center"
