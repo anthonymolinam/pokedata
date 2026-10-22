@@ -4,6 +4,7 @@
 // transparentes distintos (Caterpie ocupa la mitad del suyo, Venusaur casi todo).
 //
 // Uso: npm run artwork-bounds [-- --from 1 --to 1025]
+// Las formas tienen id propio desde el 10001: --from 10001 --to 10330
 // No tiene dependencias: descarga cada PNG y lo decodifica con zlib.
 
 import { writeFile, readFile, mkdir } from "node:fs/promises";

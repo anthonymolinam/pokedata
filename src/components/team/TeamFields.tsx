@@ -5,8 +5,9 @@ import { AnimatePresence, motion, useIsPresent, useReducedMotion, type HTMLMotio
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, RefreshCw, X, type LucideIcon } from "lucide-react";
 import Artwork from "@/components/common/Artwork";
+import ClearTeamButton from "@/components/team/ClearTeamButton";
 import RandomTeamButton from "@/components/team/RandomTeamButton";
-import { artworkUrl } from "@/lib/artwork";
+import { ARTWORK_SIZE, artworkUrl, figureStyle } from "@/lib/artwork";
 import { TEAM_SIZE, type TeamMember } from "@/lib/team";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { getDictionary } from "@/constants/translations";
@@ -43,8 +44,9 @@ interface TeamFieldsProps extends MemberActions {
 const spring = "ease-[cubic-bezier(.34,1.56,.64,1)] duration-[350ms]";
 
 // Altura del campo (§4.9): 290px desde 1024px y 300px por debajo. En táctil
-// crece a 330px para la fila de controles, así la ficha no se mueve
-const SLOT_HEIGHT = "h-[300px] lg:h-[290px] no-hover:h-[330px] lg:no-hover:h-[330px]";
+// los controles van siempre a la vista dentro de la ficha, que crece 12px
+// (156px), y el campo con ella: el artwork conserva su sitio
+const SLOT_HEIGHT = "h-[300px] lg:h-[290px] no-hover:h-[312px] lg:no-hover:h-[302px]";
 
 // Ficha del miembro en la forma que tiene en el equipo: la especie y, si es
 // otra forma, ?variant= (lo mismo a lo que redirige la ficha de una forma)
@@ -54,7 +56,7 @@ function memberHref(member: TeamMember, locale: Locale): string {
   return member.slug === base ? path : `${path}?variant=${member.slug}`;
 }
 
-// Botones de la columna de balance: secundario en tinta y terciario en superficie
+// «Compartir enlace» en la columna de balance: secundario en tinta
 const sideButton = `h-11 rounded-pill font-extrabold text-small motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-0.5 active:scale-[0.96]`;
 
 // Movimiento de los campos (§6): entrada «pop» como las tarjetas (600ms con
@@ -208,27 +210,20 @@ export default function TeamFields({
         </AnimatePresence>
       </ol>
 
+      {/* Arriba, el dado y la papelera de «Vaciar equipo», redondos de 44px;
+          debajo, «Compartir enlace» a todo el ancho. Apoyados abajo */}
       <div className="hidden lg:flex flex-col gap-2.5 self-end">
-        {/* El dado junto a «Compartir enlace»: en 186px caben los dos con 6px
-            de separación y 10px de relleno («Compartir enlace» mide 114px) */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2.5">
           <RandomTeamButton label={team.random} disabled={randomDisabled} onClick={() => onRandom?.()} />
-          <button
-            type="button"
-            onClick={onShare}
-            disabled={count === 0}
-            className={`${sideButton} flex-1 min-w-0 px-2.5 whitespace-nowrap bg-ink text-bone disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
-          >
-            {team.share}
-          </button>
+          <ClearTeamButton label={team.clear} disabled={count === 0} onClick={onClear} />
         </div>
         <button
           type="button"
-          onClick={onClear}
+          onClick={onShare}
           disabled={count === 0}
-          className={`${sideButton} w-full px-4.5 bg-surface text-ink disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
+          className={`${sideButton} w-full px-4.5 whitespace-nowrap bg-ink text-bone disabled:bg-step disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 disabled:cursor-not-allowed`}
         >
-          {team.clear}
+          {team.share}
         </button>
       </div>
     </div>
@@ -254,7 +249,8 @@ interface MemberFieldProps {
 }
 
 // Campo de un miembro: el campo de su tipo principal, el artwork que se sale
-// 64px por arriba (48px en móvil), la ficha de alto fijo abajo y los controles
+// 64px por arriba (52px por debajo de 1024px), la ficha de alto fijo abajo y
+// los controles dentro de ella
 function MemberField({
   ref,
   motionProps,
@@ -341,42 +337,61 @@ function MemberField({
           dragging ? "opacity-50" : ""
         }`}
       >
-        {/* Su alto manda; el ancho puede llegar al 140 % de la columna porque el
-            lienzo tiene márgenes transparentes. Los lados se recortan con clip.
-            Lleva a la ficha, como el nombre, que es el enlace accesible: este
-            queda fuera del orden de tabulación. No se arrastra como enlace: el
+        {/* Zona del artwork: todo el campo por encima de la ficha, de borde a
+            borde, más lo que se sale por arriba (64px; 52px por debajo de
+            1024px, el hueco entre filas menos 12px). La figura opaca (no el
+            lienzo, §4.3) cabe entera en alto y en ancho, apoyada sobre la
+            ficha; el 94 % del ancho deja sitio a la escala del hover. Lleva a
+            la ficha, como el nombre, que es el enlace accesible: este queda
+            fuera del orden de tabulación. No se arrastra como enlace: el
             arrastre es el del campo */}
         <Link
           href={href}
           aria-hidden="true"
           tabIndex={-1}
           draggable={false}
-          className="relative z-1 flex flex-1 min-h-0 items-end justify-center -mt-12 lg:-mt-16 mb-1.5"
+          className="relative z-1 block flex-1 min-h-0 -mx-1.5 -mt-[52px] lg:-mt-16 mb-1 [container-type:size]"
         >
-          <Artwork
-            src={artworkUrl(member.artworkId)}
-            alt=""
-            width={475}
-            height={475}
-            sizes="200px"
-            loading="eager"
-            draggable={false}
-            className={`h-full w-auto max-w-[140%] max-h-[475px] aspect-square flex-none object-contain motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.06]`}
-          />
+          <span
+            className={`absolute block motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.06]`}
+            style={figureStyle(member.artworkId, {
+              height: "100cqh",
+              maxWidth: "94cqw",
+              centerX: "50%",
+              bottom: "100%",
+              maxSize: `${ARTWORK_SIZE}px`,
+            })}
+          >
+            <Artwork
+              src={artworkUrl(member.artworkId)}
+              alt=""
+              fill
+              sizes="240px"
+              loading="eager"
+              draggable={false}
+              className="object-contain"
+            />
+          </span>
         </Link>
 
-        {/* Ficha: cuatro filas siempre en la misma posición. La de la forma
-            existe aunque no haya forma, y los tipos se apoyan abajo. Con
-            puntero, la fila de la forma cede su sitio a los controles al pasar
-            el ratón (por eso mide 24px), y la ficha mide 144px: con dos filas
-            de tipos, entre los controles y la primera queda el mismo aire que
-            entre pastillas (4px). En táctil, el margen de abajo es la fila de
-            controles. Entre
-            1024 y 1279px la ficha mide menos de 80px: menos relleno lateral y,
-            bajo 72px de contenido, etiquetas de 11px («Fantasma» cabe) */}
-        <div className="relative z-2 @container flex-none h-[140px] can-hover:h-[144px] grid grid-rows-[18px_24px_auto_1fr] can-hover:grid-rows-[18px_24px_24px_1fr] no-hover:mb-[42px] p-2.5 lg:max-xl:px-1.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
-          <p className="text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft num leading-[18px]">
+        {/* Ficha: cuatro filas siempre en la misma posición, y los tipos se
+            apoyan abajo. Con puntero, la tercera es la de la forma, que cede
+            su sitio a los controles al pasar el ratón (por eso mide 24px), y
+            la ficha mide 144px: con dos filas de tipos queda entre los
+            controles y la primera el mismo aire que entre pastillas. En
+            táctil, la forma sube a la línea del número («0154 · Mega», como en
+            la ficha del Pokémon) y la tercera fila es la de los controles,
+            siempre a la vista: 4px de aire y botones de 32px, así que la
+            ficha mide 156px y con dos filas de tipos quedan 6px. Entre 1024 y
+            1279px la ficha mide menos de 80px: menos relleno lateral y, bajo
+            72px de contenido, etiquetas de 11px («Fantasma» cabe) */}
+        <div className="relative z-2 @container flex-none h-[140px] can-hover:h-[144px] no-hover:h-[156px] grid grid-rows-[18px_24px_auto_1fr] can-hover:grid-rows-[18px_24px_24px_1fr] no-hover:grid-rows-[18px_24px_36px_1fr] p-2.5 lg:max-xl:px-1.5 rounded-[16px] lg:rounded-[20px] type-tag text-ink">
+          <p
+            title={member.form?.full}
+            className="text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft num leading-[18px] truncate"
+          >
             {String(member.id).padStart(4, "0")}
+            {member.form && <span className="hidden no-hover:inline"> · {member.form.short}</span>}
           </p>
           <p className="text-[clamp(14px,calc(100cqi/(var(--chars)*0.5+1)),20px)] lg:max-xl:text-[clamp(10px,calc(100cqi/(var(--chars)*0.5+1)),20px)] font-black tracking-[-0.03em] leading-6 whitespace-nowrap">
             <Link
@@ -390,7 +405,7 @@ function MemberField({
           </p>
           <p
             title={member.form?.full}
-            className={`row-start-3 col-start-1 text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft leading-[18px] truncate can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-0 can-hover:group-focus-within:opacity-0 ${
+            className={`row-start-3 col-start-1 no-hover:hidden text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft leading-[18px] truncate can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-0 can-hover:group-focus-within:opacity-0 ${
               menuOpen ? "can-hover:opacity-0" : ""
             }`}
           >
@@ -407,16 +422,16 @@ function MemberField({
               </li>
             ))}
           </ul>
-          {/* Controles: con puntero van dentro de la ficha, bajo el nombre, en
-              el sitio de la forma (que se aparta), y aparecen al pasar el ratón
-              o con el foco dentro, sin tapar el artwork; en táctil, fila propia
-              bajo la ficha, siempre visible */}
+          {/* Controles: dentro de la ficha, bajo el nombre, sin tapar nunca el
+              artwork. Con puntero ocupan el sitio de la forma (que se aparta) y
+              aparecen al pasar el ratón o con el foco dentro; en táctil tienen
+              su propia fila y siempre se ven */}
           <div
-            className={`z-3 flex justify-between gap-0.5 can-hover:col-start-1 can-hover:row-start-3 can-hover:self-start can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100 no-hover:absolute no-hover:inset-x-0 no-hover:top-full no-hover:mt-1.5 ${
+            className={`z-3 col-start-1 row-start-3 self-start flex justify-between gap-0.5 no-hover:mt-1 can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100 ${
               menuOpen ? "" : "can-hover:opacity-0"
             }`}
           >
-            <div className="flex gap-1 can-hover:gap-0.5">
+            <div className="flex gap-0.5">
               <ControlButton
                 icon={ArrowLeft}
                 control="left"
@@ -432,7 +447,7 @@ function MemberField({
                 onClick={() => actions.onMove(index, 1)}
               />
             </div>
-            <div className="flex gap-1 can-hover:gap-0.5">
+            <div className="flex gap-0.5">
               <ControlButton
                 ref={formButtonRef}
                 icon={RefreshCw}
@@ -484,9 +499,9 @@ interface ControlButtonProps {
   ref?: React.Ref<HTMLButtonElement>;
 }
 
-// Botón redondo: con puntero, dentro de la ficha, de 24px (menos si los cuatro
-// no caben a lo ancho, con el área ampliada por un pseudoelemento); en
-// táctil, sobre el campo, de 36px (44px de área). Desactivado, al 35 %
+// Botón redondo dentro de la ficha: de 24px con puntero y de 32px en táctil
+// (44px de área con el pseudoelemento), y menos si los cuatro no caben a lo
+// ancho (columnas de 1024 a 1279px). Desactivado, al 35 %
 function ControlButton({ icon: Icon, control, label, disabled, expanded, onClick, ref }: ControlButtonProps) {
   return (
     <button
@@ -499,9 +514,9 @@ function ControlButton({ icon: Icon, control, label, disabled, expanded, onClick
       aria-expanded={expanded}
       disabled={disabled}
       onClick={onClick}
-      className={`member-control relative grid place-items-center rounded-pill text-ink cursor-pointer after:absolute after:content-[''] size-9 after:-inset-1 can-hover:size-[min(24px,calc((100cqi-4px)/4))] can-hover:after:-inset-1 motion-safe:transition-transform ${spring} motion-safe:hover:scale-[1.08] active:scale-[0.96] disabled:opacity-35 disabled:cursor-default disabled:scale-100`}
+      className={`member-control relative grid place-items-center rounded-pill text-ink cursor-pointer after:absolute after:content-[''] size-[min(32px,calc((100cqi-4px)/4))] after:-inset-1.5 can-hover:size-[min(24px,calc((100cqi-4px)/4))] can-hover:after:-inset-1 motion-safe:transition-transform ${spring} motion-safe:hover:scale-[1.08] active:scale-[0.96] disabled:opacity-35 disabled:cursor-default disabled:scale-100`}
     >
-      <Icon aria-hidden="true" strokeWidth={2.5} className="size-4 can-hover:size-[min(14px,calc((100cqi-4px)/7))]" />
+      <Icon aria-hidden="true" strokeWidth={2.5} className="size-[min(16px,calc((100cqi-4px)/7))] can-hover:size-[min(14px,calc((100cqi-4px)/7))]" />
     </button>
   );
 }
@@ -518,8 +533,8 @@ interface FormMenuProps {
 }
 
 // Menú «Cambiar forma»: capa flotante dentro del campo, encima de los
-// controles (sobre la ficha con puntero, sobre la fila táctil en móvil), con una opción por forma. La actual va
-// rellena en tinta. Las flechas recorren las opciones
+// controles de la ficha, con una opción por forma. La actual lleva el borde
+// de selección. Las flechas recorren las opciones
 function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: FormMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   // El último onClose, sin volver a montar los escuchadores en cada render
@@ -571,7 +586,7 @@ function FormMenu({ member, label, baseLabel, trigger, onClose, onChoose }: Form
       aria-label={label}
       data-field="raised"
       onKeyDown={onKeyDown}
-      className="menu-in absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:bottom-[102px] no-hover:bottom-[52px]"
+      className="menu-in absolute inset-x-1.5 z-10 grid gap-0.5 rounded-[18px] bg-raised p-1.5 text-ink shadow-(--shadow-overlay) can-hover:bottom-[102px] no-hover:bottom-[110px]"
     >
       {member.forms.map((form) => {
         const checked = form.slug === member.slug;
@@ -649,7 +664,7 @@ function GhostField({ ref, motionProps }: { ref?: Ref<HTMLLIElement>; motionProp
       aria-hidden="true"
       className={`${SLOT_HEIGHT} flex flex-col justify-end p-1.5 rounded-surface bg-step skeleton-in`}
     >
-      <div className="h-[140px] can-hover:h-[144px] grid content-start gap-2 p-2.5 rounded-[16px] lg:rounded-[20px] bg-ground">
+      <div className="h-[140px] can-hover:h-[144px] no-hover:h-[156px] grid content-start gap-2 p-2.5 rounded-[16px] lg:rounded-[20px] bg-ground">
         <div className="h-3.5 w-10 rounded-pill bg-step" />
         <div className="h-5 w-3/4 rounded-pill bg-step" />
       </div>

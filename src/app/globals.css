@@ -671,18 +671,14 @@ body {
   background-color: color-mix(in srgb, var(--tag-base) 80%, var(--field));
 }
 
-/* Controles de cada miembro del equipo (§4.9). En táctil van sobre el campo,
-   como una etiqueta; con puntero, dentro de la ficha, un escalón de tinta
-   por encima de ella (opaco, sin línea ni sombra) */
+/* Controles de cada miembro del equipo (§4.9): dentro de la ficha, un
+   escalón de tinta por encima de ella (opaco, sin línea ni sombra), con
+   puntero y en táctil */
 .member-control {
-  background-color: color-mix(in srgb, var(--tag-base) 80%, var(--field));
+  background-color: color-mix(in srgb, var(--ink) 9%, color-mix(in srgb, var(--tag-base) 80%, var(--field)));
 }
 
 @media (hover: hover) {
-  .member-control {
-    background-color: color-mix(in srgb, var(--ink) 9%, color-mix(in srgb, var(--tag-base) 80%, var(--field)));
-  }
-
   .member-control:not(:disabled):hover {
     background-color: color-mix(in srgb, var(--ink) 16%, color-mix(in srgb, var(--tag-base) 80%, var(--field)));
   }
@@ -915,6 +911,44 @@ body {
 }
 
 .theme-option[data-tip]:focus-visible:not([data-tip-hidden])::before {
+  visibility: visible;
+  opacity: 1;
+  animation: tip-in 120ms ease-out;
+}
+
+/* Globo de los botones de icono del equipo (dado y vaciar, §4.9): el mismo
+   del selector de tema, encima del botón, con el puntero y con el foco del
+   teclado. En táctil no hay hover: el nombre está en aria-label. */
+.icon-tip[data-tip]::before {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 10;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  translate: -50% 0;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--bone);
+  font-size: var(--step-small);
+  font-weight: 800;
+  line-height: 1.45;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow-tooltip); /* taste-skill-ignore: capa flotante */
+  visibility: hidden;
+  opacity: 0;
+}
+
+@media (hover: hover) {
+  .icon-tip[data-tip]:hover::before {
+    visibility: visible;
+    opacity: 1;
+    animation: tip-in 120ms ease-out;
+  }
+}
+
+.icon-tip[data-tip]:focus-visible::before {
   visibility: visible;
   opacity: 1;
   animation: tip-in 120ms ease-out;

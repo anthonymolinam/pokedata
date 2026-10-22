@@ -5,6 +5,7 @@ import TeamCoverage from "@/components/team/TeamCoverage";
 import TeamDefense from "@/components/team/TeamDefense";
 import TeamFields, { type TeamSlot } from "@/components/team/TeamFields";
 import TeamPicker from "@/components/team/TeamPicker";
+import ClearTeamButton from "@/components/team/ClearTeamButton";
 import RandomTeamButton from "@/components/team/RandomTeamButton";
 import TeamStats from "@/components/team/TeamStats";
 import Toast, { type ToastMessage } from "@/components/common/Toast";
@@ -263,8 +264,9 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
 
   return (
     <div ref={fieldsRef} className="flex flex-col gap-5 md:gap-8">
-      {/* Por debajo de 1024px la columna de botones desaparece y el dado y
-          «Compartir enlace» suben aquí, junto al título (§4.9 «Móvil y tableta») */}
+      {/* Por debajo de 1024px la columna de botones desaparece y el dado, la
+          papelera y «Compartir enlace» suben aquí, junto al título (§4.9
+          «Móvil y tableta») */}
       <div className="flex items-end justify-between gap-x-6 gap-y-4 max-sm:flex-col max-sm:items-start">
         <div>
           <h1 className="text-hero font-black">{team.title}</h1>
@@ -272,6 +274,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
         </div>
         <div className="flex shrink-0 items-center gap-2.5 lg:hidden">
           <RandomTeamButton label={team.random} disabled={randomDisabled} onClick={randomize} />
+          <ClearTeamButton label={team.clear} disabled={count === 0} onClick={clear} />
           <button
             type="button"
             onClick={share}
@@ -328,15 +331,6 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
         <TeamDefense locale={locale} slots={slots} />
         <TeamCoverage locale={locale} members={loaded} />
         <TeamStats locale={locale} members={loaded} />
-        {/* «Vaciar equipo» al final de la página, como enlace de texto */}
-        <button
-          type="button"
-          onClick={clear}
-          disabled={count === 0}
-          className="mt-8 cursor-pointer text-small font-extrabold underline decoration-2 underline-offset-4 hover:decoration-ink-soft disabled:cursor-not-allowed disabled:text-ink-soft disabled:no-underline lg:hidden"
-        >
-          {team.clear}
-        </button>
       </div>
       {/* Con «Deshacer» el aviso dura más, para dar tiempo a pulsarlo */}
       <Toast message={toast} onDone={hideToast} duration={toast?.action ? 5000 : 1600} />
