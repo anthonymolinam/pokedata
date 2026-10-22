@@ -76,6 +76,8 @@ interface PokemonSelectDialogProps {
   // Equipo: cada tarjeta es un botón que la marca, y el pie decide qué hacer
   // con la elegida
   selected?: string | null;
+  // La tarjeta marcada con la forma elegida: su artwork, sus tipos y su nombre
+  selectedPreview?: PokemonSummary | null;
   onSelect?: (pokemon: PokemonSummary) => void;
   footer?: ReactNode;
 }
@@ -92,6 +94,7 @@ export function PokemonSelectDialog({
   hrefPrefix,
   currentSlug,
   selected,
+  selectedPreview,
   onSelect,
   footer,
 }: PokemonSelectDialogProps) {
@@ -228,7 +231,7 @@ export function PokemonSelectDialog({
               onSelect ? (
                 <li key={pokemon.id}>
                   <PokemonCard
-                    pokemon={pokemon}
+                    pokemon={pokemon.name === selected && selectedPreview ? selectedPreview : pokemon}
                     onSelect={() => onSelect(pokemon)}
                     selected={pokemon.name === selected}
                     locale={locale}

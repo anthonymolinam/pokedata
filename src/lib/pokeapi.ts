@@ -1,5 +1,6 @@
 import { GENERATIONS } from "@/constants/generations";
 import { artworkUrl } from "@/lib/artwork";
+import { formatVarietyLabel } from "@/lib/pokemon-names";
 import {
   MULTILINGUAL_ALIASES,
   normalizeQuery,
@@ -109,9 +110,16 @@ export interface PokemonSummary {
   // Suma de las estadísticas base (la pastilla «Total» de la tarjeta). Falta
   // solo cuando PokéAPI no responde y la tarjeta se arma con datos mínimos.
   total?: number;
+  // Una forma (la elegida en el selector del equipo): su artwork no es el de
+  // la especie, y su nombre va bajo el de la especie
+  artworkId?: number;
+  form?: string;
 }
 
 export interface PokemonDetail extends PokemonSummary {
+  // Número de la especie: id es el del Pokémon pedido, que en una forma es
+  // otro (rotom-wash es el 10009, Rotom el 479)
+  speciesId: number;
   height: number;
   weight: number;
   stats: { name: string; value: number }[];
@@ -268,74 +276,6 @@ export async function getPaginatedPokemonList(
   };
 }
 
-// 2. Standardized form / variety labeling in English
-const VARIETY_SUFFIX_MAP: Record<string, string> = {
-  // Regional
-  alola: "Alola",
-  galar: "Galar",
-  hisui: "Hisui",
-  paldea: "Paldea",
-  "galar-zen": "Galar (Zen Mode)",
-  "galar-standard": "Galar",
-  "paldea-combat": "Paldea (Combat Breed)",
-  "paldea-blaze": "Paldea (Blaze Breed)",
-  "paldea-aqua": "Paldea (Aqua Breed)",
-  "paldea-combat-breed": "Paldea (Combat Breed)",
-  "paldea-blaze-breed": "Paldea (Blaze Breed)",
-  "paldea-aqua-breed": "Paldea (Aqua Breed)",
-
-  // Megas / Gigantamax
-  mega: "Mega",
-  "mega-x": "Mega X",
-  "mega-y": "Mega Y",
-  gmax: "Gigantamax",
-
-  // Battle Formes
-  origin: "Origin Forme",
-  therian: "Therian Forme",
-  incarnate: "Incarnate Forme",
-  zen: "Zen Mode",
-  blade: "Blade Forme",
-  shield: "Shield Forme",
-  attack: "Attack Forme",
-  defense: "Defense Forme",
-  speed: "Speed Forme",
-
-  // Special Gen 7, 8, 9 forms
-  zero: "Zero Form",
-  hero: "Hero Form",
-  "red-meteor": "Meteor Form (Red)",
-  meteor: "Meteor Form",
-  disguised: "Disguised Form",
-  busted: "Busted Form",
-  solo: "Solo Form",
-  school: "School Form",
-  "full-belly": "Full Belly Mode",
-  hangry: "Hangry Mode",
-  ice: "Ice Face",
-  noice: "Noice Face",
-  "family-of-four": "Family of Four",
-  "family-of-three": "Family of Three",
-  "two-segment": "Two-Segment Form",
-  "three-segment": "Three-Segment Form",
-
-  // Pikachu disfrazado: siglas que el formateo genérico dejaría en «Phd»
-  phd: "PhD",
-};
-
-export function formatVarietyLabel(name: string, baseName: string): string {
-  if (name === baseName) return "Base Form";
-
-  const suffix = name.replace(`${baseName}-`, "").toLowerCase();
-
-  if (VARIETY_SUFFIX_MAP[suffix]) return VARIETY_SUFFIX_MAP[suffix];
-
-  return suffix
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
 // Fallbacks para especies cuya forma base requiere un sufijo en /pokemon/
 const DEFAULT_FORM_FALLBACKS: Record<string, string> = {
   maushold: "maushold-family-of-four",
@@ -438,6 +378,7 @@ export async function getPokemonDetail(
 
   return {
     id: data.id,
+    speciesId: data.species ? idFromResourceUrl(data.species.url) : data.id,
     name: speciesIdentifier,
     image:
       data.sprites.other?.["official-artwork"]?.front_default ??

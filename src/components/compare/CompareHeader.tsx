@@ -259,7 +259,7 @@ function CompareStage({
       <div className="flex flex-1 flex-col gap-4 px-5 pb-6 md:px-8 md:pb-8">
         <div>
           <p title={formLabel ?? undefined} className="truncate text-body font-extrabold num">
-            {detail.number} {String(pokemon.id).padStart(4, "0")}
+            {detail.number} {String(pokemon.speciesId).padStart(4, "0")}
             {formLabel && <span className="font-black"> · {formLabel}</span>}
           </p>
           <h2 id={headingId} className="mt-1 text-head font-black">

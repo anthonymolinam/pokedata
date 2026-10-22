@@ -40,7 +40,7 @@ export default function PokemonCard({
   const { card, typeNames } = getDictionary(locale);
   const name = formatPokemonDisplayName(pokemon.name);
   const types = pokemon.types.map((t) => t.toLowerCase()).filter(isPokemonType);
-  const fit = getArtworkFit(pokemon.id);
+  const fit = getArtworkFit(pokemon.artworkId ?? pokemon.id);
 
   const number = String(pokemon.id).padStart(4, "0");
   // El nombre y el número van en una línea: si no caben, bajan de --step-lead
@@ -67,7 +67,7 @@ export default function PokemonCard({
       type={types[0] ?? "normal"}
       current={current}
       className={className}
-      label={`${name}, ${card.number} ${pokemon.id}`}
+      label={`${name}${pokemon.form ? ` (${pokemon.form})` : ""}, ${card.number} ${pokemon.id}`}
     >
       <div
         aria-hidden="true"
@@ -105,7 +105,7 @@ export default function PokemonCard({
           <Heading className="flex-1 min-w-0 truncate font-black leading-[1.05] tracking-[-0.03em] @max-[18rem]:w-full @max-[18rem]:overflow-visible @max-[18rem]:whitespace-normal @max-[18rem]:break-words">
             {name}
             <span className="sr-only">
-              , {card.number} {pokemon.id}
+              {pokemon.form ? ` (${pokemon.form})` : ""}, {card.number} {pokemon.id}
             </span>
           </Heading>
           <span className="flex shrink-0 items-center justify-between gap-2 @max-[18rem]:w-full">
@@ -127,6 +127,12 @@ export default function PokemonCard({
             )}
           </span>
         </div>
+
+        {pokemon.form && (
+          <p className="-mt-0.5 truncate text-small font-extrabold leading-[18px] opacity-80">
+            {pokemon.form}
+          </p>
+        )}
 
         {/* mt-auto: en una fila de tarjetas de distinta altura, los tipos
             quedan alineados abajo */}

@@ -1,4 +1,5 @@
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
+import { FORM_LABELS } from "@/constants/formNames";
 import type { FormName } from "@/lib/team";
 
 // Nombres de la ficha: el nombre de la especie traducido (Colmilargo en
@@ -78,64 +79,63 @@ export function formatPokemonHeroName(name: string, locale: string): string {
     .join(" ");
 }
 
+// Etiqueta en inglés de una forma, a partir de su slug de PokéAPI y el de su
+// especie: «rotom-wash» → «Wash». formatVariantLabel la traduce
+export function formatVarietyLabel(name: string, baseName: string): string {
+  if (name === baseName) return "Base Form";
+
+  const lower = name.toLowerCase();
+  const suffix = lower.replace(`${baseName}-`, "");
+  const known = FORM_LABELS[lower] ?? FORM_LABELS[suffix];
+  if (known) return known[0];
+
+  return suffix
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+// Nombre de un slug que puede ser una forma, para los títulos de página:
+// «rotom-wash» → «Rotom (Lavado)». Busca el corte entre especie y forma
+// que la tabla conoce; sin él, es una especie («great-tusk»)
+export function formatPokemonSlugName(slug: string, locale: string): string {
+  const lower = slug.toLowerCase();
+  const parts = lower.split("-");
+  for (let i = 1; i < parts.length; i++) {
+    const known = FORM_LABELS[lower] ?? FORM_LABELS[parts.slice(i).join("-")];
+    if (known) {
+      const species = formatPokemonHeroName(parts.slice(0, i).join("-"), locale);
+      return `${species} (${known[locale === "es" ? 1 : 0]})`;
+    }
+  }
+  return formatPokemonHeroName(lower, locale);
+}
+
+// Etiqueta en inglés → nombre oficial en español, de la misma tabla
+const FORM_LABELS_ES = new Map(
+  Object.values(FORM_LABELS).map(([en, es]) => [en.toLowerCase(), es]),
+);
+
 export function formatVariantLabel(label: string, isEs: boolean): string {
   if (!label) return "";
   if (!isEs) return label;
 
   const lower = label.trim().toLowerCase();
 
+  const official = FORM_LABELS_ES.get(lower);
+  if (official) return official;
+
+  // Etiquetas que no salen de la tabla: la forma base y los nombres completos
+  // de las regionales
   const exactMatches: Record<string, string> = {
     default: "Por defecto",
     base: "Forma base",
     "base form": "Forma base",
     "base forme": "Forma base",
-    standard: "Estándar",
-    normal: "Normal",
     "alolan form": "Forma de Alola",
-    "alola form": "Forma de Alola",
-    alola: "Alola",
     "galarian form": "Forma de Galar",
-    "galar form": "Forma de Galar",
-    galar: "Galar",
     "hisuian form": "Forma de Hisui",
-    "hisui form": "Forma de Hisui",
-    hisui: "Hisui",
     "paldean form": "Forma de Paldea",
-    "paldea form": "Forma de Paldea",
-    paldea: "Paldea",
-    origin: "Forma Origen",
-    "origin form": "Forma Origen",
-    "origin forme": "Forma Origen",
-    altered: "Forma Modificada",
-    "altered form": "Forma Modificada",
-    "altered forme": "Forma Modificada",
-    therian: "Forma Tótem",
-    "therian form": "Forma Tótem",
-    "therian forme": "Forma Tótem",
-    incarnate: "Forma Avatar",
-    "incarnate form": "Forma Avatar",
-    "incarnate forme": "Forma Avatar",
-    gmax: "Gigamax",
-    gigantamax: "Gigamax",
-    mega: "Mega",
-    "mega x": "Mega X",
-    "mega y": "Mega Y",
-    hero: "Guerrero avezado",
-    "hero form": "Guerrero avezado",
-    "hero of many battles": "Guerrero avezado",
-    crowned: "Forma Suprema",
-    "crowned sword": "Espada suprema",
-    "crowned shield": "Escudo supremo",
-    blade: "Forma Filo",
-    "blade forme": "Forma Filo",
-    shield: "Forma Escudo",
-    "shield forme": "Forma Escudo",
-    attack: "Forma Ataque",
-    "attack forme": "Forma Ataque",
-    defense: "Forma Defensa",
-    "defense forme": "Forma Defensa",
-    speed: "Forma Velocidad",
-    "speed forme": "Forma Velocidad",
   };
 
   if (exactMatches[lower]) {

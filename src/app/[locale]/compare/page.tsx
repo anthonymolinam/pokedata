@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { getPokemonDetail } from "@/lib/pokeapi";
 import { getDictionary } from "@/constants/translations";
-import {
-  CANONICAL_TO_SPANISH,
-  resolveCanonicalPokemonName,
-} from "@/constants/pokemonAliases";
+import { resolveCanonicalPokemonName } from "@/constants/pokemonAliases";
+import { formatPokemonSlugName } from "@/lib/pokemon-names";
 import { getLocalizedPath } from "@/constants/routes";
 import CompareHeader from "@/components/compare/CompareHeader";
 import CompareStatBars from "@/components/compare/CompareStatBars";
@@ -15,20 +13,6 @@ import { pageMetadata } from "@/lib/metadata";
 interface ComparePageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ p1?: string; p2?: string }>;
-}
-
-function formatMetaName(name: string, isEs: boolean): string {
-  const lower = name.toLowerCase();
-  if (isEs && CANONICAL_TO_SPANISH[lower]) {
-    return CANONICAL_TO_SPANISH[lower]
-      .split("-")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
-  }
-  return name
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
 }
 
 export async function generateMetadata({
@@ -44,7 +28,7 @@ export async function generateMetadata({
   // enlace sin parámetros
   const pair =
     p1 && p2
-      ? { p1: formatMetaName(p1, isEs), p2: formatMetaName(p2, isEs) }
+      ? { p1: formatPokemonSlugName(p1, locale), p2: formatPokemonSlugName(p2, locale) }
       : null;
   const query = p1 && p2
     ? `?p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}`

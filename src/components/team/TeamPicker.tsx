@@ -4,8 +4,9 @@ import { useEffect, useId, useRef, useState } from "react";
 import { PokemonSelectDialog } from "@/components/compare/PokemonSelectModal";
 import { getDailyPokemonFor, type DailyPokemon } from "@/lib/daily";
 import { loadTeamMembers } from "@/lib/team-members";
+import { artworkUrl } from "@/lib/artwork";
 import type { PokemonSummary } from "@/lib/pokeapi";
-import type { TeamForm } from "@/lib/team";
+import { STAT_KEYS, type TeamForm, type TeamMember } from "@/lib/team";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 
@@ -35,7 +36,8 @@ async function loadDaily(): Promise<DailyPokemon[]> {
 
 // Selector «Añadir al equipo» (DESIGN.md §4.9): el diálogo del comparador con
 // otro final. Tocar una tarjeta la marca y abre debajo la franja de formas de
-// su especie, con «Añadir al equipo» a la derecha.
+// su especie, con «Añadir al equipo» a la derecha. La tarjeta marcada muestra
+// la forma elegida: su artwork, sus tipos y su nombre.
 export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamPickerProps) {
   const { team } = getDictionary(locale);
   const id = useId();
@@ -43,8 +45,12 @@ export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamP
   const [picked, setPicked] = useState<PokemonSummary | null>(null);
   const [forms, setForms] = useState<TeamForm[] | null>(null);
   const [formSlug, setFormSlug] = useState<string | null>(null);
-  // La última especie tocada: una respuesta que llega tarde no pisa a otra
+  // Los datos de la forma elegida; hasta que llegan se ve la anterior
+  const [shownMember, setShownMember] = useState<TeamMember | null>(null);
+  // La última especie y la última forma tocadas: una respuesta que llega
+  // tarde no pisa a otra
   const pickedRef = useRef<string | null>(null);
+  const formRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -61,36 +67,63 @@ export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamP
   // «Forma base» marcada y se puede añadir
   function pick(pokemon: PokemonSummary) {
     pickedRef.current = pokemon.name;
+    formRef.current = pokemon.name;
     setPicked(pokemon);
     setForms(null);
     setFormSlug(pokemon.name);
+    setShownMember(null);
     loadTeamMembers([pokemon.name], locale)
       .then((members) => {
         const member = members.get(pokemon.name);
         if (!member || pickedRef.current !== pokemon.name) return;
         setForms(member.forms);
-        setFormSlug(member.slug);
+        if (formRef.current === pokemon.name) {
+          formRef.current = member.slug;
+          setFormSlug(member.slug);
+          setShownMember(member);
+        }
       })
       .catch(() => {
         // Sin PokéAPI se queda solo la forma base
       });
   }
 
-  // Deja cargada la forma elegida, para que el campo aparezca al añadirla
+  // Pide la forma elegida para pintarla en la tarjeta; así además queda
+  // cargada y el campo aparece al añadirla
   function chooseForm(slug: string) {
+    formRef.current = slug;
     setFormSlug(slug);
-    loadTeamMembers([slug], locale).catch(() => {});
+    loadTeamMembers([slug], locale)
+      .then((members) => {
+        const member = members.get(slug);
+        if (member && formRef.current === slug) setShownMember(member);
+      })
+      .catch(() => {});
   }
 
   function handleClose() {
     pickedRef.current = null;
+    formRef.current = null;
     setPicked(null);
     setForms(null);
     setFormSlug(null);
+    setShownMember(null);
     onClose();
   }
 
   const shownForms: TeamForm[] = forms ?? (picked ? [{ slug: picked.name, name: null }] : []);
+  const preview: PokemonSummary | null =
+    picked && shownMember
+      ? {
+          id: shownMember.id,
+          name: picked.name,
+          image: artworkUrl(shownMember.artworkId),
+          types: shownMember.types,
+          total: STAT_KEYS.reduce((sum, key) => sum + shownMember.stats[key], 0),
+          artworkId: shownMember.artworkId,
+          form: shownMember.form?.short,
+        }
+      : null;
 
   return (
     <PokemonSelectDialog
@@ -100,23 +133,27 @@ export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamP
       locale={locale}
       suggestions={daily}
       selected={picked?.name ?? null}
+      selectedPreview={preview}
       onSelect={pick}
       footer={
-        // La franja está desde que se abre, para que el diálogo no crezca al
-        // elegir: sin Pokémon dice «Elige un Pokémon» y el botón espera. Las
-        // formas van en una sola línea que se desplaza si no caben (Pikachu)
+        // La franja está desde que se abre: sin Pokémon dice «Elige un
+        // Pokémon» y el botón espera. Las formas pasan a otra línea si no
+        // caben, nunca por detrás del botón; con más de tres líneas (Pikachu)
+        // la caja se desplaza en vertical con su barra a la vista. El relleno
+        // de 6px, que el margen negativo devuelve, deja sitio al foco (3px
+        // separado 3px) para que no lo recorte el scroll
         <div
           data-field="raised"
-          className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3.5 gap-y-3 bg-step px-7 py-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] md:px-8 md:pb-6"
+          className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3.5 gap-y-3 bg-step px-7 py-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] md:px-8 md:pb-6"
         >
-          <span id={`${id}-forms`} className="text-small font-extrabold">
+          <span id={`${id}-forms`} className="flex h-11 items-center text-small font-extrabold">
             {team.form}
           </span>
           {picked && formSlug ? (
             <div
               role="group"
               aria-labelledby={`${id}-forms`}
-              className="flex h-11 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="custom-scrollbar -m-1.5 flex max-h-[10.75rem] flex-wrap content-start gap-2 overflow-y-auto overscroll-contain p-1.5"
             >
               {shownForms.map((form) => (
                 <button
@@ -125,7 +162,7 @@ export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamP
                   aria-pressed={form.slug === formSlug}
                   title={form.name?.full}
                   onClick={() => chooseForm(form.slug)}
-                  className="h-10 shrink-0 cursor-pointer rounded-pill bg-raised px-4 text-small font-extrabold aria-pressed:ring-selected motion-safe:transition-transform duration-150 active:scale-[0.96]"
+                  className="h-11 shrink-0 cursor-pointer rounded-pill bg-raised px-4 text-small font-extrabold aria-pressed:ring-selected motion-safe:transition-transform duration-150 active:scale-[0.96]"
                 >
                   {form.name?.short ?? team.baseForm}
                 </button>
@@ -140,7 +177,7 @@ export default function TeamPicker({ open, onClose, locale, full, onAdd }: TeamP
             type="button"
             disabled={full || !picked || !formSlug}
             onClick={() => formSlug && onAdd(formSlug)}
-            className="col-span-full h-11 cursor-pointer rounded-pill bg-ink px-4.5 text-small font-extrabold text-bone motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96] disabled:cursor-not-allowed disabled:bg-raised disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 sm:col-span-1"
+            className="col-span-full h-11 cursor-pointer self-end rounded-pill bg-ink px-4.5 text-small font-extrabold text-bone motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96] disabled:cursor-not-allowed disabled:bg-raised disabled:text-ink-soft disabled:translate-y-0 disabled:scale-100 sm:col-span-1"
           >
             {full ? team.full : team.addToTeam}
           </button>
