@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Artwork from "@/components/common/Artwork";
 import AddToTeamButton from "@/components/pokemon-detail/AddToTeamButton";
 import AbilityLine from "@/components/pokemon-detail/AbilityLine";
+import FormPicker from "@/components/pokemon-detail/FormPicker";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { PokemonDetail, PokemonVariety } from "@/lib/pokeapi";
@@ -194,6 +195,10 @@ export default function PokemonStage({
         </AnimatePresence>
       </div>
 
+      {/* Izquierda, el número, el nombre, tipos con altura y peso y, debajo,
+          las habilidades; a la derecha, las formas y aparte «Añadir al
+          equipo». La columna de la derecha tiene ancho propio (no el de su
+          contenido), así las formas se reparten sin depender de sí mismas */}
       <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6 px-5 pb-6 md:px-10 md:pb-10">
         <div className="min-w-0">
           {/* La forma va en la línea del número, así el escenario mide lo
@@ -206,8 +211,7 @@ export default function PokemonStage({
             {name}
           </h1>
 
-          {/* relative: el globo de las habilidades se ancla a esta fila */}
-          <div className="relative mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
             <ul className="flex flex-wrap gap-1.5">
               {types.map((type) => (
                 <li
@@ -227,34 +231,34 @@ export default function PokemonStage({
                 <dt>{detail.weight}</dt>
                 <dd className="font-black num">{measure.format(active.weight)} kg</dd>
               </div>
-              {/* Con key por forma: al cambiarla se cierra el globo abierto */}
-              <AbilityLine key={active.name} abilities={active.abilities} locale={locale} />
             </dl>
           </div>
+
+          {/* relative: el globo de las habilidades se ancla a esta línea. Con
+              key por forma: al cambiarla se cierra el globo abierto */}
+          <dl className="relative mt-3 text-body">
+            <AbilityLine key={active.name} abilities={active.abilities} locale={locale} />
+          </dl>
         </div>
 
-        {/* Las formas y, al final de la misma fila, «Añadir al equipo» con la
-            forma que se ve (sin variocolor: el equipo usa el artwork normal) */}
-        <div className="flex max-w-xl flex-wrap gap-2 md:justify-end">
+        <div className="flex w-full flex-col gap-6 md:ml-auto md:w-auto md:max-w-xl md:flex-1 md:basis-[22rem] md:items-end">
           {varieties.length > 1 && (
-            <div role="group" aria-label={detail.forms} className="contents">
-              {varieties.map((variant) => (
-                <button
-                  key={variant.name}
-                  type="button"
-                  aria-pressed={(selectedVariant?.name ?? pokemon.name) === variant.name}
-                  onClick={() => onVariantChange(variant)}
-                  className={control}
-                >
-                  {formatVariantLabel(variant.label, isEs)}
-                </button>
-              ))}
-            </div>
+            <FormPicker
+              varieties={varieties}
+              selected={selectedVariant?.name ?? pokemon.name}
+              onChange={onVariantChange}
+              locale={locale}
+              pill={control}
+            />
           )}
-          <AddToTeamButton
-            slug={selectedVariant && !selectedVariant.isDefault ? selectedVariant.name : pokemon.name}
-            locale={locale}
-          />
+          {/* Aparte de las formas, en su propia fila: añade la forma que se
+              ve (sin variocolor: el equipo usa el artwork normal) */}
+          <div>
+            <AddToTeamButton
+              slug={selectedVariant && !selectedVariant.isDefault ? selectedVariant.name : pokemon.name}
+              locale={locale}
+            />
+          </div>
         </div>
       </div>
     </section>
