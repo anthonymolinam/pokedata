@@ -53,6 +53,15 @@ interface ApiPokemonResponse {
   };
 }
 
+interface ApiAbilityResponse {
+  names: { name: string; language: ApiNamedResource }[];
+  flavor_text_entries: {
+    flavor_text: string;
+    language: ApiNamedResource;
+    version_group: ApiNamedResource;
+  }[];
+}
+
 interface ApiListResponse {
   count: number;
   next: string | null;
@@ -116,6 +125,15 @@ export interface PokemonSummary {
   form?: string;
 }
 
+// Una habilidad con su nombre y el texto de los juegos en los dos idiomas
+// (DESIGN.md §4.4). El texto es null si PokéAPI no tiene ninguno.
+export interface PokemonAbility {
+  slug: string;
+  hidden: boolean;
+  name: { es: string; en: string };
+  text: { es: string | null; en: string | null };
+}
+
 export interface PokemonDetail extends PokemonSummary {
   // Número de la especie: id es el del Pokémon pedido, que en una forma es
   // otro (rotom-wash es el 10009, Rotom el 479)
@@ -123,7 +141,7 @@ export interface PokemonDetail extends PokemonSummary {
   height: number;
   weight: number;
   stats: { name: string; value: number }[];
-  abilities: string[];
+  abilities: PokemonAbility[];
   shinyImage?: string | null;
   varieties?: PokemonVariety[];
 }
@@ -167,6 +185,7 @@ export interface PokemonVariety {
   stats: { name: string; value: number }[];
   height: number;
   weight: number;
+  abilities: PokemonAbility[];
 }
 
 export interface AdjacentPokemon {
@@ -208,6 +227,70 @@ async function pokeFetch<T>(
   }
 
   return res.json();
+}
+
+const cleanFlavorText = (text: string) =>
+  text.replace(/­/g, "").replace(/\s+/g, " ").trim();
+
+// Texto de la versión más reciente en ese idioma: los grupos de versiones de
+// PokéAPI se numeran en orden de salida (los dos japoneses de la 1.ª
+// generación van al final, pero no tienen habilidades)
+function latestFlavorText(
+  entries: ApiAbilityResponse["flavor_text_entries"],
+  language: string,
+): string | null {
+  let best: { id: number; text: string } | null = null;
+  for (const entry of entries) {
+    if (entry.language.name !== language) continue;
+    const id = idFromResourceUrl(entry.version_group.url);
+    if (!best || id >= best.id) best = { id, text: entry.flavor_text };
+  }
+  return best ? cleanFlavorText(best.text) : null;
+}
+
+async function getAbility(slug: string): Promise<PokemonAbility> {
+  const fallbackName = formatPokemonDisplayName(slug);
+  try {
+    const data = await pokeFetch<ApiAbilityResponse>(
+      `ability/${encodeURIComponent(slug)}`,
+    );
+    const nameIn = (language: string) =>
+      data.names.find((n) => n.language.name === language)?.name;
+    const en = nameIn("en") ?? fallbackName;
+    return {
+      slug,
+      hidden: false,
+      name: { es: nameIn("es") ?? en, en },
+      text: {
+        es: latestFlavorText(data.flavor_text_entries, "es"),
+        en: latestFlavorText(data.flavor_text_entries, "en"),
+      },
+    };
+  } catch (err) {
+    console.error("Error fetching ability:", slug, err);
+    return {
+      slug,
+      hidden: false,
+      name: { es: fallbackName, en: fallbackName },
+      text: { es: null, en: null },
+    };
+  }
+}
+
+// Las formas comparten casi todas las habilidades: cada una se pide una vez
+function abilityLoader() {
+  const cache = new Map<string, Promise<PokemonAbility>>();
+  return (abilities: ApiPokemonAbility[]) =>
+    Promise.all(
+      [...abilities]
+        .sort((a, b) => a.slot - b.slot)
+        .map(async ({ ability, is_hidden }) => {
+          if (!cache.has(ability.name)) {
+            cache.set(ability.name, getAbility(ability.name));
+          }
+          return { ...(await cache.get(ability.name)!), hidden: is_hidden };
+        }),
+    );
 }
 
 // Limpiador para devolver la especie raíz en formas por defecto
@@ -332,6 +415,9 @@ export async function getPokemonDetail(
   const speciesIdentifier =
     data.species?.name || getCleanSpeciesSlug(data.name);
 
+  const loadAbilities = abilityLoader();
+  const abilities = loadAbilities(data.abilities);
+
   let varieties: PokemonVariety[] = [];
   try {
     const speciesData =
@@ -367,6 +453,7 @@ export async function getPokemonDetail(
               })),
               height: vData.height / 10,
               weight: vData.weight / 10,
+              abilities: await loadAbilities(vData.abilities),
             };
           },
         ),
@@ -395,7 +482,7 @@ export async function getPokemonDetail(
       name: s.stat.name,
       value: s.base_stat,
     })),
-    abilities: data.abilities.map((a) => a.ability.name),
+    abilities: await abilities,
     varieties,
   };
 }

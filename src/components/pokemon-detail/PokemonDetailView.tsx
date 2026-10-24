@@ -15,6 +15,7 @@ import PokemonStage from "./PokemonStage";
 import BaseStats from "./BaseStats";
 import EvolutionTree from "./EvolutionTree";
 import TypeWeaknesses from "./TypeWeaknesses";
+import PokemonAbilities from "./PokemonAbilities";
 import PokemonNavigation from "./PokemonNavigation";
 
 interface PokemonDetailViewProps {
@@ -70,6 +71,9 @@ export default function PokemonDetailView({
 
   const activeTypes = selectedVariant ? selectedVariant.types : pokemon.types;
   const activeStats = selectedVariant ? selectedVariant.stats : pokemon.stats;
+  const activeAbilities = selectedVariant
+    ? selectedVariant.abilities
+    : pokemon.abilities;
 
   // 1. Weaknesses recalculated on the fly
   const activeWeaknesses = useMemo(() => {
@@ -174,7 +178,16 @@ export default function PokemonDetailView({
           primaryType={activeTypes[0]?.toLowerCase() ?? "normal"}
           locale={locale}
         />
-        <TypeWeaknesses effectiveness={activeWeaknesses} locale={locale} />
+        {/* Habilidades bajo Debilidades: su aviso queda justo encima de la
+            habilidad que lo explica */}
+        <div className="flex flex-col gap-5 md:gap-8">
+          <TypeWeaknesses
+            effectiveness={activeWeaknesses}
+            abilities={activeAbilities}
+            locale={locale}
+          />
+          <PokemonAbilities abilities={activeAbilities} locale={locale} />
+        </div>
       </div>
 
       {/* Cadena evolutiva, con las formas regionales de la forma activa */}
