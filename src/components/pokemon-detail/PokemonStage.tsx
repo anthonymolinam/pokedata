@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Artwork from "@/components/common/Artwork";
 import AddToTeamButton from "@/components/pokemon-detail/AddToTeamButton";
+import AbilityLine from "@/components/pokemon-detail/AbilityLine";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { PokemonDetail, PokemonVariety } from "@/lib/pokeapi";
@@ -205,7 +206,8 @@ export default function PokemonStage({
             {name}
           </h1>
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+          {/* relative: el globo de las habilidades se ancla a esta fila */}
+          <div className="relative mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
             <ul className="flex flex-wrap gap-1.5">
               {types.map((type) => (
                 <li
@@ -225,6 +227,8 @@ export default function PokemonStage({
                 <dt>{detail.weight}</dt>
                 <dd className="font-black num">{measure.format(active.weight)} kg</dd>
               </div>
+              {/* Con key por forma: al cambiarla se cierra el globo abierto */}
+              <AbilityLine key={active.name} abilities={active.abilities} locale={locale} />
             </dl>
           </div>
         </div>

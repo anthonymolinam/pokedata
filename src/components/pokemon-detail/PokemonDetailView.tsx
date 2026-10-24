@@ -15,7 +15,6 @@ import PokemonStage from "./PokemonStage";
 import BaseStats from "./BaseStats";
 import EvolutionTree from "./EvolutionTree";
 import TypeWeaknesses from "./TypeWeaknesses";
-import PokemonAbilities from "./PokemonAbilities";
 import PokemonNavigation from "./PokemonNavigation";
 
 interface PokemonDetailViewProps {
@@ -169,7 +168,8 @@ export default function PokemonDetailView({
         locale={locale}
       />
 
-      <div className="grid gap-5 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+      {/* Cada panel a su altura natural, sin estirarse al de al lado */}
+      <div className="grid gap-5 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start">
         {/* Al pasar a otro Pokémon (el buscador reutiliza la página) o a otra
             forma, el panel se vuelve a montar y las barras crecen de nuevo */}
         <BaseStats
@@ -184,9 +184,6 @@ export default function PokemonDetailView({
           locale={locale}
         />
       </div>
-
-      {/* Habilidades a todo el ancho, una columna por habilidad */}
-      <PokemonAbilities abilities={activeAbilities} locale={locale} />
 
       {/* Cadena evolutiva, con las formas regionales de la forma activa */}
       <EvolutionTree

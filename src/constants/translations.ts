@@ -144,7 +144,6 @@ export const translations = {
       immuneTo: "Immune to",
       // Habilidades (DESIGN.md §4.4). {types} lo rellena la interfaz
       abilities: "Abilities",
-      hiddenAbility: "Hidden ability",
       byAbility: "Depending on its ability",
       hiddenSuffix: "(hidden)",
       ifItHas: "If it has",
@@ -421,7 +420,6 @@ export const translations = {
       resists: "Resiste",
       immuneTo: "Inmune a",
       abilities: "Habilidades",
-      hiddenAbility: "Habilidad oculta",
       byAbility: "Según su habilidad",
       hiddenSuffix: "(oculta)",
       ifItHas: "Si tiene",

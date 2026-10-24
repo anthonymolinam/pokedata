@@ -1052,3 +1052,29 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--step) transparent;
 }
+
+/* Habilidades en el escenario (§4.4): el nombre es un botón de texto con un
+   subrayado punteado en la tinta del campo, que dice «hay más». El globo es
+   el de los tooltips (tinta con texto hueso, 8px, sombra de capa flotante),
+   pero con texto en varias líneas: el texto de los juegos en 600 y el nombre
+   en 800 encima. */
+.ability-name {
+  position: relative;
+  text-decoration: underline dotted 2px;
+  text-underline-offset: 5px;
+}
+
+/* Área táctil de 44px (§4.0) sin que la línea crezca */
+.ability-name::after {
+  content: "";
+  position: absolute;
+  inset: -10px -4px;
+}
+
+.ability-tip {
+  line-height: 1.45;
+  font-weight: 600;
+  pointer-events: none;
+  box-shadow: var(--shadow-tooltip); /* taste-skill-ignore: capa flotante */
+  animation: tip-in 120ms ease-out;
+}
