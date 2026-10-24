@@ -1,6 +1,6 @@
 "use client";
 
-import { KeyboardEvent, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PokemonVariety } from "@/lib/pokeapi";
 import { formatVariantLabel } from "@/lib/pokemon-names";
 import { getDictionary } from "@/constants/translations";
@@ -52,7 +52,7 @@ function guess(count: number, selected: number): number[] {
 }
 
 // Selector de formas del escenario (DESIGN.md §4.4): pastillas en una o dos
-// líneas bajo la etiqueta «Formas», alineadas a la derecha desde 768px. Las que no caben se agrupan en
+// líneas, alineadas a la derecha desde 768px. Las que no caben se agrupan en
 // «+N formas», que abre un menú encima con el resto. Una copia invisible de
 // todas las pastillas da sus anchos; al cambiar el ancho se vuelve a repartir.
 export default function FormPicker({ varieties, selected, onChange, locale, pill }: FormPickerProps) {
@@ -65,7 +65,6 @@ export default function FormPicker({ varieties, selected, onChange, locale, pill
   const ruler = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
-  const labelId = useId();
 
   useLayoutEffect(() => {
     const box = root.current;
@@ -132,11 +131,7 @@ export default function FormPicker({ varieties, selected, onChange, locale, pill
 
   return (
     <div ref={root} className="relative w-full">
-      {/* La etiqueta visible separa las formas de «Añadir al equipo» */}
-      <p id={labelId} className="mb-2 text-body md:text-right">
-        {detail.forms}
-      </p>
-      <div role="group" aria-labelledby={labelId} className="flex flex-wrap gap-2 md:justify-end">
+      <div role="group" aria-label={detail.forms} className="flex flex-wrap gap-2 md:justify-end">
         {shown.map((i) => {
           const variant = varieties[i];
           return (
