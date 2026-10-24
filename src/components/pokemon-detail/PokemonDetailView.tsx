@@ -70,9 +70,6 @@ export default function PokemonDetailView({
 
   const activeTypes = selectedVariant ? selectedVariant.types : pokemon.types;
   const activeStats = selectedVariant ? selectedVariant.stats : pokemon.stats;
-  const activeAbilities = selectedVariant
-    ? selectedVariant.abilities
-    : pokemon.abilities;
 
   // 1. Weaknesses recalculated on the fly
   const activeWeaknesses = useMemo(() => {
@@ -168,8 +165,9 @@ export default function PokemonDetailView({
         locale={locale}
       />
 
-      {/* Cada panel a su altura natural, sin estirarse al de al lado */}
-      <div className="grid gap-5 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start">
+      {/* En escritorio, los dos paneles a la altura del más alto (ninguno
+          fijo al desplazar) */}
+      <div className="grid gap-5 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         {/* Al pasar a otro Pokémon (el buscador reutiliza la página) o a otra
             forma, el panel se vuelve a montar y las barras crecen de nuevo */}
         <BaseStats
@@ -180,7 +178,6 @@ export default function PokemonDetailView({
         />
         <TypeWeaknesses
           effectiveness={activeWeaknesses}
-          abilities={activeAbilities}
           locale={locale}
         />
       </div>

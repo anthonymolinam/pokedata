@@ -1,6 +1,4 @@
 import { TypeEffectiveness } from "@/lib/type-matrix";
-import type { PokemonAbility } from "@/lib/pokeapi";
-import { ABILITY_DEFENSE } from "@/constants/abilityDefense";
 import { getDictionary } from "@/constants/translations";
 import { isPokemonType } from "@/constants/typeColors";
 import type { PokemonType } from "@/constants/typeChart";
@@ -8,7 +6,6 @@ import { Locale } from "@/proxy";
 
 interface TypeWeaknessesProps {
   effectiveness: TypeEffectiveness;
-  abilities: PokemonAbility[];
   locale: Locale;
 }
 
@@ -19,29 +16,9 @@ const tags = (types: string[], multiplier: string): Tag[] =>
 
 // Debilidades (DESIGN.md §4.4): etiquetas de tipo en su field, con el
 // multiplicador dentro de la propia etiqueta. Las debilidades van más grandes
-// que las resistencias, que es lo que se busca primero. Si una habilidad cambia
-// el daño que recibe (Levitación, Sebo), va como aviso al final: los
-// multiplicadores son siempre los del tipo.
-export default function TypeWeaknesses({ effectiveness, abilities, locale }: TypeWeaknessesProps) {
+// que las resistencias, que es lo que se busca primero.
+export default function TypeWeaknesses({ effectiveness, locale }: TypeWeaknessesProps) {
   const { detail, typeNames } = getDictionary(locale);
-  const list = new Intl.ListFormat(locale, { type: "conjunction" });
-
-  const notes = abilities.flatMap((ability) => {
-    const effects = ABILITY_DEFENSE[ability.slug];
-    if (!effects) return [];
-    const text = effects
-      .map((effect) =>
-        detail.abilityEffects[effect.kind].replace(
-          "{types}",
-          "types" in effect ? list.format(effect.types.map((t) => typeNames[t])) : "",
-        ),
-      )
-      .join("; ");
-    return [{ slug: ability.slug, name: ability.name[locale], hidden: ability.hidden, text }];
-  });
-  // Con varias habilidades posibles el aviso es condicional («Si tiene
-  // Sebo: …»); con una sola, afirmativo («Levitación: …»)
-  const conditional = abilities.length > 1;
 
   const groups = [
     {
@@ -97,23 +74,6 @@ export default function TypeWeaknesses({ effectiveness, abilities, locale }: Typ
           </div>
         ))}
 
-        {notes.length > 0 && (
-          <div>
-            <h3 className="text-body font-extrabold">{detail.byAbility}</h3>
-            <ul className="mt-2.5 flex flex-col gap-1.5 rounded-surface bg-step px-4 py-3.5 text-body">
-              {notes.map((note) => (
-                <li key={note.slug}>
-                  {conditional && `${detail.ifItHas} `}
-                  <span className="font-extrabold">
-                    {note.name}
-                    {note.hidden && ` ${detail.hiddenSuffix}`}
-                  </span>
-                  : {note.text}.
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </section>
   );
