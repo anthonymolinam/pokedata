@@ -14,8 +14,7 @@ interface BaseStatsProps {
 // barra sobre 255, en el color de texto del tipo principal (deep en claro, glow en oscuro) sobre una pista --step. Cada
 // barra crece cuando su fila entra en pantalla, cada vez que se monta el panel
 // (la ficha le da una key por Pokémon y forma); sin JavaScript o con
-// movimiento reducido se ven ya llenas. Desde 1024px mide lo que su contenido y
-// acompaña al desplazar a la columna de Debilidades y Habilidades, más alta.
+// movimiento reducido se ven ya llenas.
 export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps) {
   const { detail } = getDictionary(locale);
   const ref = useReveal<HTMLElement>();
@@ -26,7 +25,7 @@ export default function BaseStats({ stats, primaryType, locale }: BaseStatsProps
       ref={ref}
       aria-labelledby="stats-title"
       data-type={primaryType}
-      className="rounded-surface bg-surface p-6 md:p-10 text-ink lg:sticky lg:top-[104px] lg:self-start"
+      className="rounded-surface bg-surface p-6 md:p-10 text-ink"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
         <h2 id="stats-title" className="text-head font-black">

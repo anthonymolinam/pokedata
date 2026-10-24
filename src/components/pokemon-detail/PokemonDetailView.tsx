@@ -178,17 +178,15 @@ export default function PokemonDetailView({
           primaryType={activeTypes[0]?.toLowerCase() ?? "normal"}
           locale={locale}
         />
-        {/* Habilidades bajo Debilidades: su aviso queda justo encima de la
-            habilidad que lo explica */}
-        <div className="flex flex-col gap-5 md:gap-8">
-          <TypeWeaknesses
-            effectiveness={activeWeaknesses}
-            abilities={activeAbilities}
-            locale={locale}
-          />
-          <PokemonAbilities abilities={activeAbilities} locale={locale} />
-        </div>
+        <TypeWeaknesses
+          effectiveness={activeWeaknesses}
+          abilities={activeAbilities}
+          locale={locale}
+        />
       </div>
+
+      {/* Habilidades a todo el ancho, una columna por habilidad */}
+      <PokemonAbilities abilities={activeAbilities} locale={locale} />
 
       {/* Cadena evolutiva, con las formas regionales de la forma activa */}
       <EvolutionTree

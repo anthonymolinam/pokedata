@@ -7,9 +7,10 @@ interface PokemonAbilitiesProps {
   locale: Locale;
 }
 
-// Habilidades (DESIGN.md §4.4): una lista con el nombre y el texto de los
-// juegos, la oculta al final con su etiqueta. Sin texto en el idioma de la
-// página se usa el del otro, marcado con su lang.
+// Habilidades (DESIGN.md §4.4): un panel a todo el ancho con una columna por
+// habilidad (nombre y texto de los juegos), la oculta al final con su
+// etiqueta. Sin texto en el idioma de la página se usa el del otro, marcado
+// con su lang.
 export default function PokemonAbilities({ abilities, locale }: PokemonAbilitiesProps) {
   const { detail } = getDictionary(locale);
   const other: Locale = locale === "es" ? "en" : "es";
@@ -25,7 +26,10 @@ export default function PokemonAbilities({ abilities, locale }: PokemonAbilities
         {detail.abilities}
       </h2>
 
-      <ul className="mt-6 md:mt-8 flex flex-col gap-5">
+      <ul
+        className="mt-6 md:mt-8 grid gap-5 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:gap-x-10"
+        style={{ "--cols": abilities.length } as React.CSSProperties}
+      >
         {abilities.map((ability) => {
           const text = ability.text[locale] ?? ability.text[other];
           return (
