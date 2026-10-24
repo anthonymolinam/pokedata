@@ -16,18 +16,31 @@ export default function PokemonAbilities({ abilities, locale }: PokemonAbilities
   const other: Locale = locale === "es" ? "en" : "es";
 
   if (abilities.length === 0) return null;
+  const single = abilities.length === 1;
 
+  // Con una sola habilidad, el título y la habilidad van en la misma fila y
+  // el panel mide la mitad. Desde 1024px la habilidad empieza en la vertical
+  // del texto de Debilidades: columnas 7/5 como la fila de arriba y 144px de
+  // hueco, que es el de esa fila (32px) más los dos rellenos (2 × 40px) que
+  // el panel ancho no tiene por dentro, más lo que esos 48px quitan a la
+  // columna de 7/12.
   return (
     <section
       aria-labelledby="abilities-title"
-      className="rounded-surface bg-surface p-6 md:p-10 text-ink"
+      className={`rounded-surface bg-surface p-6 md:p-10 text-ink ${
+        single
+          ? "md:grid md:grid-cols-2 md:items-start md:gap-x-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-[144px]"
+          : ""
+      }`}
     >
       <h2 id="abilities-title" className="text-head font-black">
         {detail.abilities}
       </h2>
 
       <ul
-        className="mt-6 md:mt-8 grid gap-5 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:gap-x-10"
+        className={`mt-6 grid gap-5 md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:gap-x-10 ${
+          single ? "md:mt-0" : "md:mt-8"
+        }`}
         style={{ "--cols": abilities.length } as React.CSSProperties}
       >
         {abilities.map((ability) => {

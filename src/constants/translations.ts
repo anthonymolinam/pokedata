@@ -147,6 +147,7 @@ export const translations = {
       hiddenAbility: "Hidden ability",
       byAbility: "Depending on its ability",
       hiddenSuffix: "(hidden)",
+      ifItHas: "If it has",
       abilityEffects: {
         immune: "immune to {types}",
         half: "takes half damage from {types}",
@@ -423,6 +424,7 @@ export const translations = {
       hiddenAbility: "Habilidad oculta",
       byAbility: "Según su habilidad",
       hiddenSuffix: "(oculta)",
+      ifItHas: "Si tiene",
       abilityEffects: {
         immune: "inmune a {types}",
         half: "recibe la mitad de daño de {types}",

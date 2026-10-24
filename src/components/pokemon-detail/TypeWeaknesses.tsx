@@ -39,6 +39,9 @@ export default function TypeWeaknesses({ effectiveness, abilities, locale }: Typ
       .join("; ");
     return [{ slug: ability.slug, name: ability.name[locale], hidden: ability.hidden, text }];
   });
+  // Con varias habilidades posibles el aviso es condicional («Si tiene
+  // Sebo: …»); con una sola, afirmativo («Levitación: …»)
+  const conditional = abilities.length > 1;
 
   const groups = [
     {
@@ -100,6 +103,7 @@ export default function TypeWeaknesses({ effectiveness, abilities, locale }: Typ
             <ul className="mt-2.5 flex flex-col gap-1.5 rounded-surface bg-step px-4 py-3.5 text-body">
               {notes.map((note) => (
                 <li key={note.slug}>
+                  {conditional && `${detail.ifItHas} `}
                   <span className="font-extrabold">
                     {note.name}
                     {note.hidden && ` ${detail.hiddenSuffix}`}
