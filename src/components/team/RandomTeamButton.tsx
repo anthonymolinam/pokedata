@@ -27,6 +27,7 @@ export default function RandomTeamButton({
       type="button"
       aria-label={label}
       data-tip={label}
+      data-action="random"
       disabled={disabled}
       onClick={() => {
         setSpins((n) => n + 1);

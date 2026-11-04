@@ -19,6 +19,7 @@ export default function ClearTeamButton({
       type="button"
       aria-label={label}
       data-tip={label}
+      data-action="clear"
       disabled={disabled}
       onClick={onClick}
       className="icon-tip relative grid place-items-center size-11 shrink-0 rounded-pill bg-surface dark:bg-control text-ink cursor-pointer motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.92] disabled:opacity-35 disabled:cursor-default disabled:translate-y-0 disabled:scale-100"

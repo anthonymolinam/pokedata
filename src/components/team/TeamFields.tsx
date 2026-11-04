@@ -410,7 +410,7 @@ function MemberField({
           </p>
           <p
             title={member.form?.full}
-            className={`row-start-3 col-start-1 no-hover:hidden text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft leading-[18px] truncate can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-0 can-hover:group-focus-within:opacity-0 ${
+            className={`row-start-3 col-start-1 no-hover:hidden text-small lg:max-xl:text-[12px] font-extrabold text-ink-soft leading-[18px] truncate can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-0 can-hover:group-has-[:focus-visible]:opacity-0 ${
               menuOpen ? "can-hover:opacity-0" : ""
             }`}
           >
@@ -429,10 +429,11 @@ function MemberField({
           </ul>
           {/* Controles: dentro de la ficha, bajo el nombre, sin tapar nunca el
               artwork. Con puntero ocupan el sitio de la forma (que se aparta) y
-              aparecen al pasar el ratón o con el foco dentro; en táctil tienen
-              su propia fila y siempre se ven */}
+              aparecen al pasar el ratón o con foco de teclado dentro
+              (:focus-visible, no un foco puesto por código tras usar el ratón);
+              en táctil tienen su propia fila y siempre se ven */}
           <div
-            className={`z-3 col-start-1 row-start-3 self-start flex justify-between gap-0.5 no-hover:mt-1 can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-focus-within:opacity-100 ${
+            className={`z-3 col-start-1 row-start-3 self-start flex justify-between gap-0.5 no-hover:mt-1 can-hover:transition-opacity can-hover:duration-150 can-hover:group-hover:opacity-100 can-hover:group-has-[:focus-visible]:opacity-100 ${
               menuOpen ? "" : "can-hover:opacity-0"
             }`}
           >

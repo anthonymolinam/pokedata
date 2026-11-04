@@ -102,14 +102,18 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   const loaded = slots?.flatMap((s) => (s.kind === "member" ? [s.member] : [])) ?? null;
 
   // Tras cada cambio el foco va a su sitio. El diálogo, al cerrarse, devuelve
-  // el foco al hueco que lo abrió; este efecto corre después y lo mueve
+  // el foco al hueco que lo abrió; este efecto corre después y lo mueve. Se
+  // salta lo que no se ve: el dado y la papelera están dos veces (columna de
+  // escritorio y fila junto al título) y solo una a la vista
   useEffect(() => {
     const selectors = pendingFocus.current;
     const root = fieldsRef.current;
     if (!selectors || !root) return;
     for (const selector of selectors) {
-      const el = root.querySelector<HTMLElement>(selector);
-      if (el && !(el as HTMLButtonElement).disabled) {
+      const el = [...root.querySelectorAll<HTMLElement>(selector)].find(
+        (e) => !(e as HTMLButtonElement).disabled && e.getClientRects().length > 0,
+      );
+      if (el) {
         pendingFocus.current = null;
         el.focus();
         return;
@@ -122,6 +126,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   // miembro no sabe qué especies ni qué tipos evitar
   const randomDisabled = !slots || slots.some((s) => s.kind === "loading");
   const slot = (i: number) => `[data-slot="${i}"]`;
+  const action = (name: "random" | "clear") => `[data-action="${name}"]`;
 
   function add(slug: string) {
     const current = getTeamSnapshot();
@@ -169,13 +174,16 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
 
   // Los siguientes se desplazan a la izquierda: el foco va al campo que ocupa
   // ahora ese sitio, o al hueco vacío si era el último. «Deshacer» lo
-  // devuelve a su hueco con su forma, y el foco vuelve a él
+  // devuelve a su hueco con su forma, y el foco vuelve a su botón «Quitar»
   function remove(index: number) {
     const current = getTeamSnapshot();
     const name = members?.[index]?.name ?? current[index];
     pendingFocus.current = [slot(index), slot(Math.max(0, index - 1))];
     setTeam(current.filter((_, i) => i !== index));
-    offerUndo(team.removed.replace("{name}", name), current, [slot(index)]);
+    offerUndo(team.removed.replace("{name}", name), current, [
+      `${slot(index)} [data-control="remove"]`,
+      slot(index),
+    ]);
   }
 
   function notify(text: string, action?: ToastMessage["action"]) {
@@ -183,7 +191,8 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   }
 
   // Aviso con «Deshacer», que vuelve al equipo de antes. Cada aviso sustituye
-  // al anterior, así que solo se deshace el último cambio
+  // al anterior, así que solo se deshace el último cambio. El aviso desaparece
+  // al deshacer y el foco vuelve al botón desde el que se actuó (`focus`)
   function offerUndo(text: string, previous: string[], focus: string[]) {
     notify(text, {
       label: team.undo,
@@ -222,7 +231,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
       return;
     }
     setTeam(picked);
-    offerUndo(team.random, current, [slot(0)]);
+    offerUndo(team.random, current, [action("random"), slot(0)]);
   }
 
   // Escribe ?t= en la URL y la comparte: en táctil con la hoja nativa; si
@@ -265,7 +274,7 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
     const current = getTeamSnapshot();
     pendingFocus.current = [slot(0)];
     setTeam([]);
-    offerUndo(team.cleared, current, [slot(0)]);
+    offerUndo(team.cleared, current, [action("clear"), slot(0)]);
   }
 
   const pressable = "cursor-pointer motion-safe:transition-transform duration-150 motion-safe:hover:-translate-y-0.5 active:scale-[0.96]";
