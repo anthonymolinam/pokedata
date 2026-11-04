@@ -333,11 +333,14 @@ function MemberField({
       }`}
     >
       <div
-        className={`relative h-full flex flex-col p-1.5 rounded-surface bg-field text-field-ink overflow-x-clip motion-safe:transition-transform ${spring} motion-safe:group-hover:-translate-y-1.5 ${
+        className={`relative h-full flex flex-col p-1.5 rounded-surface bg-field text-field-ink [clip-path:inset(-100vh_0)] motion-safe:transition-transform ${spring} motion-safe:group-hover:-translate-y-1.5 ${
           dragging ? "opacity-50" : ""
         }`}
       >
-        {/* Zona del artwork: todo el campo por encima de la ficha, de borde a
+        {/* El campo recorta solo por los lados con clip-path (inset negativo
+            arriba y abajo). Con overflow-x: clip, WebKit aplica el radio y
+            recorta también por arriba, y el artwork no sobresalía en iPhone.
+            Zona del artwork: todo el campo por encima de la ficha, de borde a
             borde, más lo que se sale por arriba (64px; 52px por debajo de
             1024px, el hueco entre filas menos 12px). La figura opaca (no el
             lienzo, §4.3) cabe entera en alto y en ancho, apoyada sobre la
