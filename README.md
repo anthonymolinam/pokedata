@@ -2,6 +2,8 @@
 
 PokéData is a modern, fast Pokémon database built with **Next.js 16 (App Router)**, **TypeScript**, and **Tailwind CSS 4**. Engineered with a focus on performance, mobile accessibility, and seamless UX across all 1,025 official Pokémon and their alternate forms, in English and Spanish, with a team builder that analyzes your six.
 
+**Live:** [pokedata.app](https://pokedata.app)
+
 > **Fan-made project.** PokéData is not affiliated with, endorsed by, or connected to Nintendo, Game Freak, or Creatures. Pokémon and Pokémon character names are trademarks of their respective owners.
 
 ---
