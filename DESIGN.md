@@ -628,6 +628,9 @@ Todos en `translations.ts`, en una sección `team`, en los dos idiomas: navegaci
 - `next/image` con `sizes` correctos: unos 300px en tarjeta, 280px en columna del día y 60vh en la ficha.
 - Las imágenes ya están permitidas en `next.config.ts` (`raw.githubusercontent.com/PokeAPI/sprites/**`).
 - Se mantiene el aviso legal: proyecto no oficial; Pokémon pertenece a Nintendo, Creatures y GAME FREAK.
+- **Imagen para compartir** (`src/app/[locale]/opengraph-image.tsx`, 1200×630, una por idioma en `/es/opengraph-image` y `/en/opengraph-image`): el suelo claro; a la izquierda la Pokébola del logo, «PokéData» en 900 y la frase del pie («Los 1025 Pokémon, con su artwork oficial.» / «All 1025 Pokémon, with their official artwork.») en 800, y «pokedata.app» en el acento; a la derecha, tres columnas como las del Pokémon del día (§4.2) en el campo de su tipo, con el artwork asomando por arriba y el nombre en una pastilla blanca: Charizard, Pikachu (más alto) y Squirtle. Colores fijos, iguales en los dos temas. Satori no lee woff2, así que usa Nunito 800 y 900 en ttf (`src/app/fonts/og`, misma licencia OFL).
+  - La llevan todas las páginas sin imagen propia (`pageMetadata`, en `src/lib/metadata.ts`), con la tarjeta grande de X (`summary_large_image`). Las fichas de Pokémon llevan su artwork, cuadrado, con la tarjeta pequeña.
+- **Dominio:** las canónicas, el `hreflang`, `og:url`, el JSON-LD, el sitemap y `robots.txt` salen de `SITE_URL` (`src/lib/metadata.ts`): `https://www.pokedata.app`, el dominio principal en Vercel (`pokedata.app` redirige ahí), salvo que `NEXT_PUBLIC_SITE_URL` diga otra cosa.
 
 ---
 

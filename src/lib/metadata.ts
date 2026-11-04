@@ -43,6 +43,15 @@ export function pageMetadata({
 }: PageMetadataInput): Metadata {
   const fullTitle = typeof title === "string" ? withSiteName(title) : title.absolute;
   const url = `${SITE_URL}${paths[locale]}`;
+  // Sin imagen propia, la del sitio (app/[locale]/opengraph-image.tsx). Next
+  // solo la pone sola en la portada: las demás páginas dan su propio
+  // openGraph y, sin esto, se quedaban sin imagen
+  const shared = image ?? {
+    url: `/${locale}/opengraph-image`,
+    width: 1200,
+    height: 630,
+    alt: SITE_NAME,
+  };
 
   return {
     title,
@@ -64,13 +73,15 @@ export function pageMetadata({
       url,
       title: fullTitle,
       description,
-      ...(image && { images: [image] }),
+      images: [shared],
     },
+    // La del sitio es apaisada: tarjeta grande. El artwork de una ficha es
+    // cuadrado: la pequeña
     twitter: {
-      card: "summary",
+      card: image ? "summary" : "summary_large_image",
       title: fullTitle,
       description,
-      ...(image && { images: [image.url] }),
+      images: [shared.url],
     },
     // Va aquí y no en el layout: la 404 recibiría «index» junto al noindex de Next
     robots: index
