@@ -962,6 +962,12 @@ body {
   animation: tip-in 120ms ease-out;
 }
 
+/* Con su capa abierta (opciones del dado), el globo no la tapa */
+.icon-tip[data-tip][aria-expanded="true"]::before {
+  visibility: hidden;
+  opacity: 0;
+}
+
 /* Capas flotantes (§6): aparecen y suben 8px en 250ms */
 @keyframes layer-in {
   from {

@@ -1,6 +1,6 @@
 // Las pruebas corren con node --test y los tipos que Node quita de los .ts.
 // Este hook resuelve el alias @/ de tsconfig a src/ y añade la extensión .ts
-// que los imports del proyecto omiten.
+// que los imports del proyecto omiten; a los .json les pone type: "json".
 //
 // Uso: npm test
 
@@ -15,6 +15,11 @@ registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier.startsWith("@/")) {
       const base = resolve(SRC, specifier.slice(2));
+      // Los .json se importan sin atributo, como en Next: aquí se les pone
+      if (base.endsWith(".json") && existsSync(base)) {
+        const resolved = nextResolve(pathToFileURL(base).href, context);
+        return { ...resolved, importAttributes: { type: "json" } };
+      }
       const file = [".ts", ".tsx", "/index.ts"].map((ext) => base + ext).find(existsSync);
       if (file) return nextResolve(pathToFileURL(file).href, context);
     }

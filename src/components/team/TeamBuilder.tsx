@@ -7,6 +7,7 @@ import TeamFields, { type TeamSlot } from "@/components/team/TeamFields";
 import TeamPicker from "@/components/team/TeamPicker";
 import ClearTeamButton from "@/components/team/ClearTeamButton";
 import RandomTeamButton from "@/components/team/RandomTeamButton";
+import DiceOptionsButton from "@/components/team/DiceOptionsButton";
 import TeamStats from "@/components/team/TeamStats";
 import Toast, { type ToastMessage } from "@/components/common/Toast";
 import {
@@ -24,6 +25,7 @@ import {
 import { getDictionary } from "@/constants/translations";
 import { getCachedMember, loadTeamMembers } from "@/lib/team-members";
 import { pickRandomMembers } from "@/lib/team-random";
+import { diceAllows, getDiceFilters } from "@/lib/dice-filters";
 import { Locale } from "@/proxy";
 
 // Pide los miembros que faltan y, cuando llegan, limpia el equipo que se ve:
@@ -200,14 +202,20 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
   }
 
   // Rellena los huecos con especies nuevas, en su forma base y de tipos
-  // variados. Con el equipo completo lo cambia entero y ofrece deshacer
+  // variados, entre las que dejan pasar las opciones del dado. Con el equipo
+  // completo lo cambia entero y ofrece deshacer
   async function randomize() {
     // El índice id → tipos solo se descarga la primera vez, como el del día
     const { default: index } = await import("@/data/pokemon-index.json");
     const current = getTeamSnapshot();
     const full = current.length >= TEAM_SIZE;
     const kept = full ? [] : (loaded ?? []).map((m) => ({ id: m.id, types: m.types }));
-    const picked = pickRandomMembers(index, kept, TEAM_SIZE - kept.length, Math.random);
+    const filters = getDiceFilters();
+    const picked = pickRandomMembers(index, kept, TEAM_SIZE - kept.length, Math.random, (id) =>
+      diceAllows(id, filters),
+    );
+    // Sin ninguna especie que sacar, el dado no cambia nada
+    if (picked.length === 0) return;
     if (!full) {
       dropUndo();
       setTeam([...current, ...picked].slice(0, TEAM_SIZE));
@@ -264,16 +272,18 @@ export default function TeamBuilder({ locale }: { locale: Locale }) {
 
   return (
     <div ref={fieldsRef} className="flex flex-col gap-5 md:gap-8">
-      {/* Por debajo de 1024px la columna de botones desaparece y el dado, la
-          papelera y «Compartir enlace» suben aquí, junto al título (§4.9
-          «Móvil y tableta») */}
+      {/* Por debajo de 1024px la columna de botones desaparece y el dado, sus
+          opciones, la papelera y «Compartir enlace» suben aquí, junto al
+          título (§4.9 «Móvil y tableta») */}
       <div className="flex items-end justify-between gap-x-6 gap-y-4 max-sm:flex-col max-sm:items-start">
         <div>
           <h1 className="text-hero font-black">{team.title}</h1>
           <p className="mt-3 text-body text-ink-soft max-sm:hidden">{team.lead}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2.5 lg:hidden">
+        {/* relative: las opciones del dado se abren debajo de esta fila */}
+        <div className="relative flex shrink-0 items-center gap-2.5 lg:hidden">
           <RandomTeamButton label={team.random} disabled={randomDisabled} onClick={randomize} />
+          <DiceOptionsButton locale={locale} placement="below" />
           <ClearTeamButton label={team.clear} disabled={count === 0} onClick={clear} />
           <button
             type="button"

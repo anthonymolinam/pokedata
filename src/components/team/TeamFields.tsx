@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, RefreshCw, X, type LucideIcon } from "lucide-rea
 import Artwork from "@/components/common/Artwork";
 import ClearTeamButton from "@/components/team/ClearTeamButton";
 import RandomTeamButton from "@/components/team/RandomTeamButton";
+import DiceOptionsButton from "@/components/team/DiceOptionsButton";
 import { ARTWORK_SIZE, artworkUrl, figureStyle } from "@/lib/artwork";
 import { TEAM_SIZE, type TeamMember } from "@/lib/team";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
@@ -210,11 +211,12 @@ export default function TeamFields({
         </AnimatePresence>
       </ol>
 
-      {/* Arriba, el dado y la papelera de «Vaciar equipo», redondos de 44px;
-          debajo, «Compartir enlace» a todo el ancho. Apoyados abajo */}
+      {/* Arriba, el dado, sus opciones y la papelera de «Vaciar equipo»,
+          redondos de 44px; debajo, «Compartir enlace» a todo el ancho. Apoyados abajo */}
       <div className="hidden lg:flex flex-col gap-2.5 self-end">
         <div className="flex items-center gap-2.5">
           <RandomTeamButton label={team.random} disabled={randomDisabled} onClick={() => onRandom?.()} />
+          <DiceOptionsButton locale={locale} placement="above" />
           <ClearTeamButton label={team.clear} disabled={count === 0} onClick={onClear} />
         </div>
         <button
