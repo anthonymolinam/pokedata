@@ -562,10 +562,16 @@ body {
   pointer-events: none;
 }
 
-.type-glow:hover::before,
 .type-glow:focus-visible::before,
 .type-glow:has(:focus-visible)::before {
   opacity: 1;
+}
+
+/* Solo con ratón: en táctil el :hover se queda pegado tras tocar */
+@media (hover: hover) {
+  .type-glow:hover::before {
+    opacity: 1;
+  }
 }
 
 /* En oscuro el color de tipo luce de verdad (§4.3): la capa de abajo sube al

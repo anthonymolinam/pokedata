@@ -60,18 +60,16 @@ export default function AbilityLine({ abilities, locale }: AbilityLineProps) {
   const currentText = current && textOf(current);
 
   return (
-    <div ref={root} className="flex flex-wrap items-center gap-x-2.5">
+    <div ref={root} className="flex flex-wrap items-baseline gap-x-2.5">
       <dt>{detail.abilities}</dt>
-      <dd className="flex flex-wrap items-center">
+      {/* En móvil, una habilidad por línea y sin separadores; desde sm, en
+          fila, con el «·» pegado al final de la anterior para que al partirse
+          la línea nunca empiece por él */}
+      <dd className="flex flex-col items-start sm:flex-row sm:flex-wrap sm:items-center">
         {abilities.map((ability, index) => {
           const text = textOf(ability);
           return (
-            <span key={ability.slug} className="inline-flex items-center">
-              {index > 0 && (
-                <span aria-hidden="true" className="px-2.5 font-black">
-                  ·
-                </span>
-              )}
+            <span key={ability.slug} className="inline-flex items-center whitespace-nowrap">
               {text ? (
                 <button
                   type="button"
@@ -101,6 +99,11 @@ export default function AbilityLine({ abilities, locale }: AbilityLineProps) {
               {text && (
                 <span id={`${id}-${ability.slug}`} lang={text.lang} className="sr-only">
                   {text.text}
+                </span>
+              )}
+              {index < abilities.length - 1 && (
+                <span aria-hidden="true" className="hidden sm:inline px-2.5 font-black">
+                  ·
                 </span>
               )}
             </span>
