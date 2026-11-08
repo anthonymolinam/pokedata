@@ -278,6 +278,23 @@ export const translations = {
       viewTeam: "View team",
       inTeam: "In your team",
     },
+    // Favoritos (DESIGN.md §4.10). {name} y {n} los rellena la interfaz. El
+    // «Quitar filtro» del chip es filters.remove seguido de chip
+    favorites: {
+      button: "Favorite",
+      cardButton: "Favorite: {name}",
+      filter: "Only favorites",
+      // La pastilla del panel con la cifra, y su nombre para lectores
+      filterCount: "Only favorites · {n}",
+      filterCountLabel: "Only favorites, {n} saved",
+      chip: "Favorites",
+      title: "Your favorites",
+      emptyTitle: "No favorites yet.",
+      emptyBody: "Tap the heart on any Pokémon to keep it here.",
+      showAll: "Show all",
+      noMatchTitle: "None of your favorites match.",
+      clearOthers: "Clear other filters",
+    },
   },
   es: {
     nav: {
@@ -554,6 +571,20 @@ export const translations = {
       added: "Añadido a tu equipo",
       viewTeam: "Ver equipo",
       inTeam: "En tu equipo",
+    },
+    favorites: {
+      button: "Favorito",
+      cardButton: "Favorito: {name}",
+      filter: "Solo favoritos",
+      filterCount: "Solo favoritos · {n}",
+      filterCountLabel: "Solo favoritos, {n} guardados",
+      chip: "Favoritos",
+      title: "Tus favoritos",
+      emptyTitle: "Aún no tienes favoritos.",
+      emptyBody: "Toca el corazón de cualquier Pokémon para guardarlo aquí.",
+      showAll: "Ver todos",
+      noMatchTitle: "Ninguno de tus favoritos coincide.",
+      clearOthers: "Quitar los demás filtros",
     },
   },
 } as const;
