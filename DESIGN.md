@@ -620,6 +620,82 @@ Dos columnas (1fr / 2.4fr; apiladas por debajo de 1024px):
 
 Todos en `translations.ts`, en una sección `team`, en los dos idiomas: navegación, título y frase, recuento, botones (compartir, vaciar, añadir, quitar, mover, cambiar forma, sin otras formas), aviso de riesgo con sus plurales, encabezados del balance, cobertura (subtítulos, clave, texto para lectores), estadísticas, selector (título, buscador, forma, añadir, completo), banda de equipo compartido, avisos flotantes y los tres estados del botón de la ficha.
 
+### 4.10 Favoritos
+
+Opción elegida (8 de noviembre de 2026): **un botón redondo como el de Variocolor** en la ficha y en las tarjetas, y **una pastilla «Solo favoritos»** en el panel de filtros. El corazón va en la tinta del botón, nunca en rojo: un rojo se perdería en los campos de Fuego, Lucha y Hada, y Pop no tiene un color de acento fuera de los tipos.
+
+#### El botón
+
+- **Forma:** el mismo control que Variocolor (§4.4), con el icono `Heart` de `lucide-react` (trazo 2.5). Sin marcar va en blanco (`--surface`, así que en oscuro es la superficie oscura) con el corazón vacío en tinta; marcado va en `--ink` con el corazón **relleno** en hueso. El estado no depende solo del color, porque el corazón pasa de vacío a lleno.
+- **Accesible:** es un `<button>` con `aria-pressed` y un nombre fijo: «Favorito» en la ficha, y «Favorito: Charizard» / «Favorite: Charizard» en la tarjeta, porque hay muchos en la página. El `title` lleva el mismo texto en la ficha y no se pone en la tarjeta (con el puntero ya se ve el nombre). No hay aviso flotante: el cambio se lee en el botón y `aria-pressed` lo anuncia.
+- **Por especie:** se guarda el número de la especie (el de §3, «N.º 0479»), no la forma. Rotom Lavado y Rotom comparten corazón, igual que Mega Charizard X y Charizard. En una tarjeta de forma, el corazón es el de su especie.
+- **Movimiento (§6):** al marcar, el corazón sube a `scale(1.3)` y vuelve con la curva de rebote (350ms) mientras se rellena; al desmarcar solo pierde el relleno, sin rebote. Con movimiento reducido no hay escala. Pulsación con `scale(0.96)`, como todos los botones.
+
+#### En la ficha
+
+- Va en la esquina de arriba a la derecha del escenario, **a la izquierda de Variocolor** y a 10px de él: 48px, `right-4 top-4` (`md:right-6 md:top-6`) para el grupo. Variocolor no se mueve de donde está hoy. Si la forma no tiene variocolor, el corazón ocupa la esquina.
+- En el orden del teclado va antes que Variocolor.
+- Comprobar que el grupo no tapa el artwork ni el nombre gigante en las formas más anchas (Wailord, Eternatus Eternamax, Mega Rayquaza) a 390, 768 y 1440px.
+
+#### En las tarjetas de la portada
+
+**Dónde no puede ir:** arriba, en la esquina del campo. Medido con `artwork-bounds.json`, el recuadro opaco del artwork invade un botón de 40px en la esquina superior derecha en 976 de 1025 especies con la tarjeta de móvil (169px), en 818 a 221px y en 556 a 305px. Encima del artwork lo tapaba, y debajo quedaba tapado.
+
+**Dónde va:** en la **zona reservada** de la tarjeta (§4.3), donde el artwork no entra nunca, arriba a la derecha y alineado con la primera línea de texto: `top: calc(62cqi + 0.75rem)` (la zona superior más el relleno de la zona reservada), `right: var(--card-pad)`. Mide **32px** a la vista y su área táctil llega a 44px con un pseudoelemento que crece hacia arriba (dentro del relleno de 12px) y a los lados, no hacia abajo, para no pisar el nombre.
+
+**Su hueco, según el ancho de la tarjeta** (está reservado siempre, se vea el botón o no, así que la tarjeta no se mueve al aparecer):
+- **≥ 18rem (fila del nombre):** la fila «Charizard … 0006» deja 40px a la derecha (32 + 8 de hueco), y el cálculo de `--name-inline` resta esos 40px del ancho.
+- **De 12 a 18rem (número encima):** la fila «0006 · Total 534» deja los mismos 40px. Cabe: a 768px el interior mide 192px y el número con el Total, 100px.
+- **< 12rem (móvil a 2 columnas):** con el número y el Total quedan de 0 a 33px libres (medido a 320, 360 y 390px), y el corazón no cabe. **El Total compacto se oculta** y la fila queda «0006 … ♥». Es la misma regla que ya oculta el Total ancho por debajo de 12rem (§4.3), y el Total sigue en la ficha. La línea de tipos no se toca: en móvil, las dos etiquetas más largas ya ocupan dos líneas.
+
+**No se activa al tocar la tarjeta, ni la tarjeta al tocarlo:**
+- La tarjeta es un enlace, y un botón no puede ir dentro de un enlace. El corazón es **hermano** del enlace, dentro de una celda (`relative`, `@container`, del mismo ancho que la tarjeta), y va posicionado encima. Pulsar la tarjeta nunca llega al botón, y pulsar el botón no navega.
+- **La subida, el brillo y el crecimiento del artwork** (§4.3) pasan del enlace a la celda (`group/cell`). El corazón sube con la tarjeta, y pasar el ratón por encima del corazón no hace que la tarjeta baje.
+- Fuera del corazón y de su área de 44px, toda la tarjeta sigue llevando a la ficha.
+
+**Cuándo se ve:**
+- **Con puntero** (`@media (hover: hover)`): aparece con un fundido de 150ms al pasar el ratón por la celda o con foco de teclado en ella (`:has(:focus-visible)`, como los controles del equipo, §4.9). Si ya es favorito, se ve siempre.
+- **En táctil** (`hover: none`): se ve siempre.
+- **Antes de hidratar:** el servidor no conoce los favoritos, así que el botón no se pinta hasta la hidratación (`useSyncExternalStore` con `getServerSnapshot` nulo). Su hueco ya está reservado, así que nada se mueve.
+- **Teclado:** el orden es tarjeta, su corazón y la tarjeta siguiente. El corazón oculto sigue en el orden del teclado y se muestra al recibir el foco.
+
+**Solo en la rejilla de la portada.** No llevan corazón la cadena evolutiva, el Pokémon del día, el selector del equipo ni el comparador (una prop `favorite` en `PokemonCard`, desactivada por defecto).
+
+#### El filtro
+
+- **En el panel** (escritorio y hoja móvil), la fila de cabecera pasa a tener a la izquierda una pastilla **«♥ Solo favoritos · 12»** («Only favorites · 12»), igual que las de región (`--control`, 40px; 44px en la hoja). Al elegirla lleva la marca ✓ y el borde de selección, y la cifra es el número de favoritos guardados. El «×» sigue a la derecha, y «Región» baja a la línea siguiente, sobre sus pastillas. En escritorio el panel crece unos 52px (de unos 355 a unos 407px) y sigue sin scroll interno.
+- Se aplica con el resto al pulsar «Aplicar», escribe **`?fav=1`** en la URL y suma uno al contador de «Filtros». Se combina con la región, los tipos y la búsqueda (`?q=`): el resultado es la intersección. La paginación se mantiene.
+- **`?fav=1` quiere decir «mis favoritos»:** quien abre un enlace con `?fav=1` ve los suyos, no los de quien lo envió.
+- **Chip:** el primero de la fila de chips, una pastilla blanca con el corazón relleno y «Favoritos» / «Favorites», y su «×» («Quitar filtro Favoritos»).
+- **Título de la barra:** «Tus favoritos» / «Your favorites» si no hay región. Con región manda la región, como ahora, y el chip dice el resto.
+- **Desmarcar dentro de la vista de favoritos** deja la tarjeta en su sitio, con el corazón vacío, hasta la próxima navegación o recarga. Así se puede volver a marcar si fue un error, y la rejilla no salta bajo el dedo. El recuento tampoco cambia hasta entonces.
+
+#### Estados vacíos
+
+Siguen el estado vacío de §4.3: texto centrado y un botón, con el icono `Heart` vacío de 40px en `--ink-soft` encima.
+- **Sin ningún favorito:** «Aún no tienes favoritos.» y debajo «Toca el corazón de cualquier Pokémon para guardarlo aquí.» («No favorites yet.» / «Tap the heart on any Pokémon to keep it here.»). Botón secundario «Ver todos» («Show all»), que quita solo `?fav=1`.
+- **Con favoritos, pero ninguno coincide** con la región, los tipos o la búsqueda: «Ninguno de tus favoritos coincide.» («None of your favorites match.») con «Quitar los demás filtros» («Clear other filters»), que conserva `?fav=1` y quita el resto.
+
+#### Guardado
+
+- **`localStorage`, clave `pokedata-favorites`:** `{ "v": 1, "ids": [6, 25, 448] }`, con los números de especie ordenados y sin repetir (1–1025; los desconocidos se descartan). Todo acceso va en `try/catch`. Si falla, los favoritos viven solo en memoria y la página funciona igual.
+- **Entre pestañas:** un almacén para `useSyncExternalStore` escucha el evento `storage`, como el equipo y las opciones del dado (§4.9). Marcar en una pestaña rellena el corazón en las demás, sin recargar sus rejillas.
+- **Copia para el servidor:** la portada filtra en el servidor (recuento, paginación, tarjetas fantasma), y el servidor no lee `localStorage`. Por eso cada cambio escribe también una cookie `pokedata-favorites`, `Path=/`, `SameSite=Lax`, un año. Manda `localStorage`: al cargar, si la cookie no coincide, se reescribe y, si la página tiene `?fav=1`, se hace `router.refresh()`. Sin cuentas: los dos viven en el navegador.
+- **Formato compacto de la cookie:** `1.` (versión) seguido de un **mapa de bits** en base64url: un bit por especie, el bit *n − 1* para el número *n*, de 1 a 1025, con los bytes cortados tras el último favorito.
+  - **Su tamaño no depende de cuántos favoritos haya, sino del número más alto:** marcar los 1025 da 1025 bits, que son 129 bytes y 172 caracteres; con solo Pikachu son 4 bytes. Con el nombre y los atributos, la cabecera queda por debajo de 260 bytes, un 6 % del límite de unos 4 KB por cookie (4096 bytes contando nombre, valor y atributos). Una lista de números separados por comas llegaría a unos 4.000 caracteres con todos (2.993 dígitos y 1.024 comas), justo en el límite, y por eso no se usa.
+  - **Margen para especies nuevas:** cada 6 especies más suman un carácter. El límite de 4 KB solo se alcanzaría con unas 23.000 especies. Si `pokemon-index.json` crece, el mapa crece con él sin cambiar el formato.
+  - **El servidor solo se fía de una cookie válida:** con la versión `1.`, base64url correcto, como mucho 3.900 caracteres de valor y sin bits por encima de la última especie conocida. Si no cumple, la trata como **ausente** y no como «sin favoritos», así que nunca muestra un vacío falso.
+- **Si la cookie no llega completa al servidor** (el navegador bloquea las cookies, la escritura falla, el valor supera el tope o el servidor la descarta por inválida), **el filtro sigue funcionando en el navegador:**
+  - Tras escribir la cookie, el cliente la lee de vuelta con `document.cookie`. Si no coincide con `localStorage`, la página pasa a **modo navegador** para esa visita.
+  - En modo navegador, con `?fav=1`, la rejilla y el recuento los pide el cliente a `GET /api/home?fav=<mapa de bits>&types=&gen=&q=&page=`. La lista va en el parámetro, con el mismo formato y el mismo tope, y la ruta reutiliza la consulta de `home-query.ts`. Mientras llega se ven las tarjetas fantasma (§4.8), como en el servidor. La URL visible sigue siendo `?fav=1`: el mapa de bits no se escribe en la barra ni se comparte.
+  - Si el servidor recibe `?fav=1` sin cookie válida, no filtra. Pinta las tarjetas fantasma y deja que el cliente cargue el resultado en modo navegador.
+  - Si tampoco hay `localStorage`, los favoritos de la sesión viven en memoria y el modo navegador usa esa lista.
+  - No se avisa al usuario: el resultado es el mismo y solo cambia quién lo calcula.
+
+#### Textos
+
+Todos en `translations.ts`, en una sección `favorites`, en los dos idiomas: el nombre del botón (ficha y tarjeta), la pastilla del filtro con su cifra, el chip y su «Quitar filtro», el título «Tus favoritos», los dos estados vacíos con sus botones y la etiqueta del contador de filtros si cambia.
+
 ---
 
 ## 5. Imágenes
@@ -744,3 +820,27 @@ Referencia visual: `mockups/team.html` (§4.9). Cada paso se cierra con la app f
     - Equipos de prueba: el de la maqueta; uno con Umbreon y un nombre largo (Crabominable) para el tamaño único de nombre; uno con Megas y formas regionales; uno sin débiles compartidos; el equipo vacío; un enlace con slugs inválidos.
     - Teclado completo: añadir, cambiar forma, mover, quitar y compartir sin ratón, con el foco siempre visible y en su sitio.
     - **Resultado (20 de octubre de 2026).** `lint.mjs`, `check-contrast`, `tsc`, ESLint y las pruebas sin errores. `inspect.mjs` da los mismos avisos en claro y en oscuro, con equipo y vacío: los heredados de Pop (etiquetas de 12–14px, pocas fotos con el equipo vacío, ningún vídeo, la línea y el texto largo del pie) y tres propios que se aceptan: la matriz desplazable en móvil (§4.9, como la tabla de tipos), la etiqueta de tipo de la última ficha leída como «antetítulo» de «Defensa» a 768px y, con un nombre de 12 letras entre 1024 y 1279px, el nombre a 10px. Se corrigieron cuatro fallos: las cifras de la fila de riesgo en claro con tipos oscuros (`field-ink` blanco sobre el tinte claro), «Resisten» e «Inmunes» pisándose en la matriz de móvil (columna de 168 a 186px), nombres largos y etiquetas como «Fantasma» saliéndose de la ficha a 1024px, y el foco al añadir o quitar con el teclado, que acababa en el campo que salía (los campos que salen dejan de marcar su hueco). Los equipos de prueba y el recorrido con teclado pasan.
+
+---
+
+## 10. Orden de trabajo: favoritos
+
+Especificación en §4.10. Cada paso se cierra con la app funcionando, `tsc` y ESLint sin errores, y en los dos temas.
+
+1. **Almacén, sin interfaz.** `src/lib/favorites.ts`: lectura y escritura de `pokedata-favorites` con `try/catch` y versión, normalización (números de 1 a 1025, ordenados, sin repetir), alternar, un almacén para `useSyncExternalStore` con el evento `storage` y la cookie en mapa de bits (`1.` + base64url, codificar, decodificar y validar). Pruebas: ida y vuelta del mapa de bits con 0, 1 (Pikachu: 4 bytes) y 1025 favoritos (172 caracteres, cabecera completa de menos de 260 bytes), descarte de números inválidos, una versión desconocida, base64 roto, un valor de más de 3.900 caracteres y bits por encima de la última especie (todo esto se trata como cookie ausente, no como «sin favoritos»).
+2. **Consulta del servidor.** `Query` (`src/lib/home-query.ts`) gana `favorites: number[] | null`, que lee la cookie solo si hay `?fav=1`. Con `?fav=1` y la cookie ausente o inválida, la portada no filtra y pinta las tarjetas fantasma para el modo navegador. Hay que intersecarlo en `getSearchMatches`, `countResults` y la lista filtrada, y añadir el caso de solo favoritos (sus números en orden). La paginación y la clave de `Suspense` lo incluyen. Pruebas: favoritos solos, con región, con tipos, con búsqueda, y la intersección vacía.
+3. **Textos.** La sección `favorites` de `translations.ts` completa en ES y EN.
+4. **Botón de la ficha.** El componente del corazón (con su rebote y la alternativa sin movimiento) y su sitio a la izquierda de Variocolor, por especie. Comprobar con una forma (Rotom Lavado y Rotom comparten estado) y sin variocolor. Revisar que no tape nada a 390, 768 y 1440px con Wailord, Eternatus y Mega Rayquaza.
+5. **Celda de la tarjeta.** Envolver la tarjeta de la rejilla en la celda, pasar la subida, el brillo y la escala del artwork a `group/cell` y reservar el hueco de 40px en las dos filas. Ocultar el Total compacto por debajo de 12rem. La cadena evolutiva, el Pokémon del día, el selector del equipo y el comparador no cambian: comprobarlo con capturas antes y después.
+6. **Corazón en la tarjeta.** El botón hermano del enlace, su posición en `cqi`, el área táctil hacia arriba y a los lados, la visibilidad (hover, foco, favorito, táctil) y el pintado solo tras hidratar. Comprobar que pulsar la tarjeta abre la ficha sin marcar, y que pulsar el corazón marca sin navegar, con ratón, con el dedo (WebKit, perfil de iPhone) y con Intro y Espacio.
+7. **Filtro.** La pastilla en el panel y en la hoja móvil, con la cabecera reordenada y la medida del panel; `?fav=1` al aplicar, el contador, el chip, el título y la cookie reescrita con `router.refresh()` si no coincide.
+8. **Modo navegador.** La lectura de vuelta de la cookie tras escribirla, la ruta `GET /api/home?fav=…` sobre la misma consulta y la rejilla y el recuento pedidos desde el cliente. Comprobar con las cookies bloqueadas (contexto de Playwright sin cookies), con una cookie inválida escrita a mano y sin `localStorage`: el filtro da lo mismo que con la cookie, en las combinaciones del paso 2.
+9. **Estados vacíos y desmarcar en la vista.** Los dos vacíos con sus botones, y la tarjeta que se queda en su sitio hasta navegar.
+10. **Sincronización.** Dos pestañas: marcar en una rellena el corazón en la otra (ficha y portada), y con `?fav=1` abierto en las dos, el recuento se actualiza al navegar.
+11. **Revisión.**
+    - `lint.mjs` sin FAIL e `inspect.mjs` contra `npm run dev` a 1440, 768 y 390px, en claro y en oscuro, con favoritos y sin ellos. Los avisos heredados de Pop se aceptan como en §8.
+    - Medir que el corazón no se cruza con el artwork en ninguna especie: con `artwork-bounds.json`, a los anchos de tarjeta de 320, 390, 768, 1080 y 1440px (debe dar 0 de 1025).
+    - Nombres largos (Crabominable, Fletchinder, Kommo-o) en las tres anchuras de tarjeta: el nombre no se corta y el corazón no lo pisa.
+    - `check-contrast` sin cambios (no hay tokens nuevos). El corazón vacío sobre `--surface` y el relleno en hueso sobre `--ink`, en los dos temas.
+    - Teclado completo: marcar desde la tarjeta y desde la ficha, aplicar y quitar el filtro, y los dos estados vacíos, sin ratón y con el foco siempre visible.
+    - WebKit con perfil de iPhone: el corazón se ve siempre, no se queda en hover y el Total no aparece a 2 columnas.
