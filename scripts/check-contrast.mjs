@@ -181,7 +181,8 @@ const GLOBAL_ROWS = [
   ["`--ink-soft` sobre `--ground` / `--surface` / `--step` / `--raised`", "--ink-soft", ["--ground", "--surface", "--step", "--raised"], TEXT],
   ["`--bone` sobre `--ink` (botones, «Total», tooltips)", "--bone", ["--ink"], TEXT],
   ["`--on-dark` / `--on-dark-soft` sobre `--footer`", ["--on-dark", "--on-dark-soft"], "--footer", TEXT],
-  ["`--accent` sobre `--ground` (mitad del logo, gráfico)", "--accent", ["--ground"], GRAPHIC],
+  ["`--accent` sobre `--ground` / `--footer` (la P del logo, gráfico)", "--accent", ["--ground", "--footer"], GRAPHIC],
+  ["`--lens` sobre `--lens-white` (la lente dentro de su aro, gráfico)", "--lens", ["--lens-white"], GRAPHIC],
 ];
 
 // En oscuro la pastilla neutra tiene que verse como botón sobre el panel

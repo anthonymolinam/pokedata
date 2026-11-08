@@ -15,10 +15,11 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 // Colores fijos de globals.css (§2.1): el suelo claro, la tinta, el acento de
-// la Pokébola y los campos de tipo, que son iguales en los dos temas
+// la P y la lente del logo y los campos de tipo, iguales en los dos temas
 const GROUND = "#f3f4f8";
 const INK = "#15161c";
 const ACCENT = "#cc2e0b";
+const LENS = "#3d7bef";
 const WHITE = "#ffffff";
 
 const COLUMNS = [
@@ -53,13 +54,16 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", width: 520 }}>
+          {/* La marca de la lente (LensMark), con sus colores fijos */}
           <svg width="96" height="96" viewBox="0 0 32 32">
-            <circle cx="16" cy="16" r="15.5" fill={INK} />
-            <circle cx="16" cy="16" r="13" fill={WHITE} />
-            <path d="M3 16a13 13 0 0 1 26 0Z" fill={ACCENT} />
-            <rect x="2" y="14.5" width="28" height="3" fill={INK} />
-            <circle cx="16" cy="16" r="5.5" fill={INK} />
-            <circle cx="16" cy="16" r="3" fill={WHITE} />
+            <path
+              d="M9 3H17.5A10.5 10.5 0 0 1 17.5 24H13V25A4 4 0 0 1 5 25V7A4 4 0 0 1 9 3Z"
+              fill={ACCENT}
+            />
+            <circle cx="17.5" cy="13.5" r="7" fill={WHITE} />
+            <circle cx="17.5" cy="13.5" r="5.2" fill={LENS} />
+            <circle cx="15.6" cy="11.6" r="1.7" fill={WHITE} />
+            <circle cx="19.6" cy="15.9" r="0.8" fill={WHITE} />
           </svg>
           <div style={{ marginTop: 28, fontSize: 100, fontWeight: 900, letterSpacing: -3, lineHeight: 1 }}>
             PokéData

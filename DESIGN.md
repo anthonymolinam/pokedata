@@ -40,16 +40,17 @@ Cada token tiene un valor por tema. El código usa siempre el token, nunca el va
 | `--bone` | `#F7F5F0` | `#14161D` | Texto sobre un relleno en `--ink` (botón secundario, «Total», tooltip, nav activa) |
 | `--footer` | `#15161C` | `#1D2029` | Campo del pie (§4.7) |
 | `--ok` | `#3FB950` | `#3FB950` | Punto verde del SHA en el pie. Es una marca gráfica, nunca texto |
-| `--accent` | `#CC2E0B` | `#CC2E0B` | Rojo Pokébola. Solo en la mitad superior del logo (3.4:1 sobre el fondo oscuro, suficiente para un gráfico). Si algún día vuelve una acción principal, texto blanco: 5.3:1 |
+| `--accent` | `#CC2E0B` | `#CC2E0B` | Rojo del logo. Solo en la P de la marca (3.4:1 sobre el fondo oscuro y 3.07:1 sobre el pie oscuro, suficiente para un gráfico). Si algún día vuelve una acción principal, texto blanco: 5.3:1 |
 
 **Constantes que no cambian con el tema.** Todo lo que se pinta sobre un campo de tipo usa estas dos, no `--ink` ni `--bone`, porque el campo es el mismo en los dos temas:
 
 | Constante | Valor | Uso |
 | --- | --- | --- |
-| `--on-light` | `#15161C` | Tinta sobre campos claros, contorno y banda de la Pokébola, base translúcida de la pastilla «Total» estrecha |
-| `--on-dark` | `#F7F5F0` | Tinta sobre campos oscuros, mitad inferior de la Pokébola, texto del pie |
+| `--on-light` | `#15161C` | Tinta sobre campos claros, base translúcida de la pastilla «Total» estrecha |
+| `--on-dark` | `#F7F5F0` | Tinta sobre campos oscuros, texto del pie |
 | `--on-dark-soft` | `#B9BCC8` | Texto secundario del pie (antes `--bone-soft`) |
-| `--pokeball-white` | `#FFFFFF` | Mitad inferior y centro de la Pokébola del logo |
+| `--lens-white` | `#FFFFFF` | Aro y brillo de la lente del logo |
+| `--lens` | `#3D7BEF` | La lente del logo (3.97:1 con su aro blanco, gráfico) |
 
 En oscuro, `--ink` y `--bone` intercambian su papel: la tinta es clara y los rellenos en tinta (botón secundario, «Total», navegación activa, tooltips, celdas ×2 de la tabla) pasan a ser pastillas claras con texto oscuro. Es intencionado: el elemento más fuerte de cada pantalla sigue siendo el de más contraste.
 
@@ -65,7 +66,8 @@ El acento rojo no se usa nunca para marcar estados ni selecciones; eso lo hace l
 | `--ink-soft` sobre `--ground` / `--surface` / `--step` / `--raised` | 5.68 / 6.24 / 5.10 / 6.24 | 7.61 / 6.85 / 5.87 / 6.04 |
 | `--bone` sobre `--ink` (botones, «Total», tooltips) | 16.56 | 15.84 |
 | `--on-dark` / `--on-dark-soft` sobre `--footer` | 16.56 / 9.53 | 14.93 / 8.59 |
-| `--accent` sobre `--ground` (mitad del logo, gráfico) | 4.82 | 3.40 |
+| `--accent` sobre `--ground` / `--footer` (la P del logo, gráfico) | 4.82 / 3.40 | 3.40 / 3.07 |
+| `--lens` sobre `--lens-white` (la lente dentro de su aro, gráfico) | 3.97 | 3.97 |
 
 ### 2.2 Los 18 tipos
 
@@ -158,7 +160,7 @@ Cada `glow` se obtuvo mezclando el campo con blanco en pasos del 1 % hasta llega
 **Lo que cambia en oscuro y nada más.** Casi todo sale de los tokens; lo poco que no, usa la variante `dark:` de Tailwind (definida en `globals.css`), que cubre el tema forzado y el automático:
 - **Brillo de hover de las tarjetas** (§4.3): mismo alcance, más intensidad. Sobre fondo oscuro el color de tipo luce de verdad, y se aprovecha: dos capas en lugar de una.
 - **Sombras:** las de claro no se ven sobre `#14161D`. La cabecera al desplazar usa `0 6px 20px rgba(0,0,0,.45)` y las capas flotantes van en `--raised` con `0 16px 40px rgba(0,0,0,.55)`. La separación la da sobre todo el escalón de tono.
-- **Pokébola del logo:** contorno, banda y botón en `--on-light`, mitad inferior y centro en `--pokeball-white`, mitad superior en `--accent`. Con colores fijos el logo es el mismo en los dos temas; sobre el fondo oscuro la silueta la dibujan el rojo y el blanco (18.07:1).
+- **Marca del logo (la lente):** la P en `--accent`, el aro y el brillo en `--lens-white` y la lente en `--lens`. Con colores fijos el logo es el mismo en los dos temas; sobre el fondo oscuro la silueta la dibujan el rojo (3.4:1) y el aro blanco.
 - **Tabla de tipos:** la fila o columna seleccionada se tiñe con su `field` mezclado con `--surface` (en claro, que es blanco, queda igual que ahora). La proporción es `--cross-mix`: 35 % en claro y 80 % en oscuro, porque al 35 % sobre la superficie oscura el campo se ensucia (el naranja de Fuego sale marrón). La guía de hover usa `--ink` al 5 %, que en oscuro aclara.
 - **Velo bajo modales y hojas:** `--on-light` al 40 % en los dos temas. Con `--ink` se volvería un velo claro en oscuro.
 - **Pastilla «Total» estrecha:** base `--on-light` al 15 % en los dos temas, con texto en `field-ink`. Con `--ink` se aclararía en oscuro y bajaría el contraste de la tinta hueso.
@@ -218,7 +220,8 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - Controles (botones, chips, buscador, etiquetas): pastilla completa (`999px`).
 - **Sombras permitidas:** la cabecera cuando la página se ha desplazado, las capas flotantes (desplegable del buscador, hoja móvil de filtros, modales, tooltips) y el brillo de las tarjetas en hover (§4.3). Nada más lleva sombra en reposo. Los valores oscuros están en §2.4.
 - **«Blanco» quiere decir `--surface`** (o `--raised` en lo que flota). Donde este documento dice «panel blanco» o «pastilla blanca», en oscuro es la superficie oscura. Ningún componente escribe `#FFF` ni `bg-white`.
-- **Sin degradados.** La Pokébola del logo es un SVG de formas planas.
+- **Sin degradados.** La marca del logo es un SVG de formas planas.
+- **Logo: «la lente».** Una P roja cuyo hueco es una lente azul con su aro blanco y un brillo, inspirada en el ojo de la Pokédex de la serie sin dibujar el aparato. No usa personajes, siluetas ni la Pokébola. Elegida entre cuatro propuestas (`mockups/logo.html`, referencia local que no se versiona). Es `LensMark` (`src/components/common/LensMark.tsx`), en un `viewBox` de 32: la P va de x 5 a 28 y de y 3 a 29, la lente está centrada en (17.5, 13.5) con radio 7 el aro y 5.2 el cristal, y el brillo son dos puntos (radio 1.7 arriba a la izquierda y 0.8 abajo a la derecha). Va en la cabecera (§4.1), en el pie (§4.7), en la imagen para compartir (§5) y en los iconos (§5). Ningún otro fichero redibuja la marca salvo la imagen para compartir, que Satori pinta con sus mismas formas y colores.
 - **Botones:** no hay botón principal en rojo; la búsqueda es automática y no lo necesita.
   - Secundario: relleno `--ink` con texto hueso.
   - Terciario: relleno `--surface` con texto en tinta.
@@ -230,8 +233,8 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 
 ### 4.1 Cabecera (todas las páginas)
 
-**Composición:** el logo (Pokébola + «PokéData», Nunito 900, 24px), la navegación («Pokédex», «Equipo», «Comparador», «Tipos» / «Pokédex», «Team», «Compare», «Types», en este orden también en la hoja móvil y en el pie), el buscador compacto, el selector de idioma y el selector de tema. Con cuatro enlaces, la cabecera se volvió a medir (20 de octubre de 2026): en español invadía 58px del margen a 768px y 45px a 1024px, y bajar las pastillas a 10px no bastaba. Para no quitar nada:
-  - **768–1023px:** logo a su tamaño de móvil (20px, Pokébola de 28px), pastillas de navegación a 8px de relleno lateral y sin hueco entre ellas, 8px entre bloques y 6px dentro del grupo de la derecha. Quedan 12px libres en español.
+**Composición:** el logo (la lente de 32px + «PokéData», Nunito 900, 24px), la navegación («Pokédex», «Equipo», «Comparador», «Tipos» / «Pokédex», «Team», «Compare», «Types», en este orden también en la hoja móvil y en el pie), el buscador compacto, el selector de idioma y el selector de tema. Con cuatro enlaces, la cabecera se volvió a medir (20 de octubre de 2026): en español invadía 58px del margen a 768px y 45px a 1024px, y bajar las pastillas a 10px no bastaba. Para no quitar nada:
+  - **768–1023px:** logo a su tamaño de móvil (20px, lente de 28px), pastillas de navegación a 8px de relleno lateral y sin hueco entre ellas, 8px entre bloques y 6px dentro del grupo de la derecha. Quedan 12px libres en español.
   - **1024–1279px:** pastillas a 12px, 16px entre bloques y buscador compacto de 208px. Quedan 19px libres.
   - **Desde 1280px:** todo como antes (pastillas de 16px, 24px entre bloques, buscador de 240px).
 
@@ -253,7 +256,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
   - **En la portada,** el buscador compacto está oculto mientras el buscador grande del hero está en pantalla. Cuando el del hero sale por arriba, el compacto aparece (opacidad y 8px de subida, 200ms).
   - Ctrl K funciona siempre: enfoca el buscador del hero si se ve; si no, el de la cabecera.
   - **Tableta (768–1023px):** el buscador compacto no cabe junto a los selectores de idioma y tema, así que la cabecera muestra solo la lupa de 44px, que abre el buscador a pantalla completa como en móvil, y Ctrl K abre ese mismo buscador. La separación entre bloques y el relleno de las pastillas son los de la composición, arriba.
-- **Logo:** al pasar el ratón (o al enfocarlo), la Pokébola da una vuelta completa en 600ms con un ligero rebote. Con movimiento reducido no gira.
+- **Logo:** al pasar el ratón (o al enfocarlo con el teclado), el brillo de la lente da una vuelta completa alrededor de su centro en 600ms con un ligero rebote, como un reflejo que recorre el cristal; la P y la lente no se mueven. Con movimiento reducido no se mueve.
 - **Móvil (< 768px):**
   - La cabecera mide 60px y muestra el logo, un botón de lupa que abre el buscador a pantalla completa, ES/EN y un botón «Menú».
   - «Menú» abre una hoja inferior con la navegación y, debajo, el **selector de tema**: el mismo control de tres segmentos, a todo el ancho de la hoja, con el icono **y su nombre visible** en cada segmento (en táctil no hay hover, así que no hay tooltip). «Según el sistema» no cabe en un tercio de la hoja a 360px, así que ahí se lee «Sistema» / «System»; el nombre accesible sigue siendo el completo, que lo contiene. Fuera de la hoja, la cabecera móvil no lo muestra.
@@ -445,7 +448,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 Un pie **compacto** sobre el campo `--footer` a sangre, sin la palabra gigante. En claro es la tinta; en oscuro, un escalón por encima del fondo (`#1D2029`). Todo su texto usa las constantes `--on-dark` y `--on-dark-soft`, que valen igual en los dos temas: donde abajo dice «hueso» es `--on-dark` y donde dice `--bone-soft` es `--on-dark-soft`. Mide unos 180px de alto en escritorio y tiene un margen superior de 64px respecto al contenido.
 
 **Fila principal:** dos extremos.
-- **Izquierda:** el logo (Pokébola + «PokéData», Nunito 900, 22px, en hueso) y debajo una frase corta en `--step-small`, en `--bone-soft`: «Los 1025 Pokémon, con su artwork oficial.»
+- **Izquierda:** el logo (la lente de 28px + «PokéData», Nunito 900, 22px, en hueso) y debajo una frase corta en `--step-small`, en `--bone-soft`: «Los 1025 Pokémon, con su artwork oficial.»
 - **Derecha:** enlaces de texto en hueso, Nunito 800, `--step-small`, alineados al borde derecho.
   - Son «Pokédex», «Equipo», «Comparador», «Tipos» y «GitHub», en el orden de la cabecera.
   - «GitHub» va al repositorio en una pestaña nueva, con una flecha ↗ y un aviso accesible «(se abre en una pestaña nueva)».
@@ -705,8 +708,14 @@ Todos en `translations.ts`, en una sección `favorites`, en los dos idiomas: el 
 - `next/image` con `sizes` correctos: unos 300px en tarjeta, 280px en columna del día y 60vh en la ficha.
 - Las imágenes ya están permitidas en `next.config.ts` (`raw.githubusercontent.com/PokeAPI/sprites/**`).
 - Se mantiene el aviso legal: proyecto no oficial; Pokémon pertenece a Nintendo, Creatures y GAME FREAK.
-- **Imagen para compartir** (`src/app/[locale]/opengraph-image.tsx`, 1200×630, una por idioma en `/es/opengraph-image` y `/en/opengraph-image`): el suelo claro; a la izquierda la Pokébola del logo, «PokéData» en 900 y la frase del pie («Los 1025 Pokémon, con su artwork oficial.» / «All 1025 Pokémon, with their official artwork.») en 800, y «pokedata.app» en el acento; a la derecha, tres columnas como las del Pokémon del día (§4.2) en el campo de su tipo, con el artwork asomando por arriba y el nombre en una pastilla blanca: Charizard, Pikachu (más alto) y Squirtle. Colores fijos, iguales en los dos temas. Satori no lee woff2, así que usa Nunito 800 y 900 en ttf (`src/app/fonts/og`, misma licencia OFL).
+- **Imagen para compartir** (`src/app/[locale]/opengraph-image.tsx`, 1200×630, una por idioma en `/es/opengraph-image` y `/en/opengraph-image`): el suelo claro; a la izquierda la lente del logo, «PokéData» en 900 y la frase del pie («Los 1025 Pokémon, con su artwork oficial.» / «All 1025 Pokémon, with their official artwork.») en 800, y «pokedata.app» en el acento; a la derecha, tres columnas como las del Pokémon del día (§4.2) en el campo de su tipo, con el artwork asomando por arriba y el nombre en una pastilla blanca: Charizard, Pikachu (más alto) y Squirtle. Colores fijos, iguales en los dos temas. Satori no lee woff2, así que usa Nunito 800 y 900 en ttf (`src/app/fonts/og`, misma licencia OFL).
   - La llevan todas las páginas sin imagen propia (`pageMetadata`, en `src/lib/metadata.ts`), con la tarjeta grande de X (`summary_large_image`). Las fichas de Pokémon llevan su artwork, cuadrado, con la tarjeta pequeña.
+- **Iconos** (todos con la marca de la lente y sus colores fijos, iguales en los dos temas: el rojo se lee sobre la pestaña clara y sobre la oscura). Los genera `npm run logo-icons` (`scripts/logo-icons.mjs`, con el `sharp` que trae Next), que repite las formas de `LensMark`; si la marca cambia, se cambian en los dos sitios y se regeneran todos:
+  - `src/app/icon.svg`: el favicon vectorial, encuadrado en `3 2.5 27 27` para que la P llene el cuadrado. Next lo enlaza con `sizes="any"`.
+  - `src/app/favicon.ico`: 16, 32 y 48px para los navegadores que no leen SVG. El de 16px quita el brillo pequeño, que a ese tamaño es medio píxel.
+  - `src/app/apple-icon.png`: 180×180 para iPhone, la marca al 68 % sobre blanco a sangre (iOS redondea las esquinas y no admite transparencia).
+  - `src/app/manifest.ts` (`/manifest.webmanifest`) para Android: «PokéData», `display: standalone`, fondo y `theme_color` en `--ground` claro, y tres iconos en `public/icons/`: 192 y 512 (`any`, la marca al 72 % sobre blanco) y 512 `maskable` (la marca al 54 %, dentro del círculo seguro del 80 %).
+  - El proxy de idioma deja pasar estas rutas porque llevan un punto.
 - **Dominio:** las canónicas, el `hreflang`, `og:url`, el JSON-LD, el sitemap y `robots.txt` salen de `SITE_URL` (`src/lib/metadata.ts`): `https://www.pokedata.app`, el dominio principal en Vercel (`pokedata.app` redirige ahí), salvo que `NEXT_PUBLIC_SITE_URL` diga otra cosa.
 
 ---
@@ -720,7 +729,7 @@ Solo se animan `transform` y `opacity`. Todo tiene alternativa con `prefers-redu
 | Tarjetas (movimiento principal) | Entrada «pop»: suben 30px y crecen desde 0.94 | 600ms · `cubic-bezier(.34,1.56,.64,1)` · 45ms de escalonado · solo las 24 primeras · una vez |
 | Tarjetas, hover | Subida, crecimiento del artwork y brillo de tipo (§4.3) | 350ms de rebote · 250ms el brillo |
 | Pokémon del día | Giro del dado y cambio escalonado de columnas | 500ms · 60ms entre columnas |
-| Logo | Vuelta completa de la Pokébola en hover | 600ms con rebote |
+| Logo | El brillo de la lente da una vuelta en hover o foco | 600ms con rebote |
 | Cabecera | Aparece la sombra al desplazar y entra el buscador compacto en la portada | 200ms |
 | Panel de filtros | Escritorio: se despliega en altura con fundido y empuja la rejilla (con movimiento reducido, solo el fundido). Móvil: la hoja sube desde abajo | 250ms · `cubic-bezier(.22,.8,.24,1)` |
 | Chips activos | Entrada con escala y salida con fundido | 200ms |
@@ -746,7 +755,7 @@ Lo que ya está en el código de los últimos commits (tokens, Chivo, cabecera y
 | Chivo, títulos en mayúsculas | Nunito, sentence case |
 | Esquinas rectas en todo | Superficies de 28px y controles en pastilla |
 | Fondo papel `#F7F5F0` | Fondo `#F3F4F8` con superficies blancas |
-| Sin acento: botón principal en tinta | Rojo Pokébola `#CC2E0B` solo en el logo |
+| Sin acento: botón principal en tinta | Rojo `#CC2E0B` solo en la P del logo |
 | Portada como índice en filas | Hero compacto con el Pokémon del día y rejilla de tarjetas de color |
 | Filtros siempre visibles | Botón «Filtros» con contador, panel y chips removibles |
 | Ficha en un campo a sangre en toda la página | Escenario de color con el nombre gigante y paneles blancos debajo |
@@ -772,7 +781,7 @@ La dirección «Pop» ya está construida (merge 99fcfce); su orden de trabajo q
    - Añadir `--type-*-text` (de momento igual a `deep`) y `--type-dark-field-dark`.
    - Pasar a tokens (`--shadow-header`, `--shadow-sheet`, `--shadow-overlay`, `--shadow-modal`, `--shadow-tooltip`) las cinco sombras que los componentes escribían con color fijo. No queda ningún `bg-white` ni `#fff` fuera de `globals.css`.
    - Comprobar con capturas que el modo claro no ha cambiado ni un píxel.
-2. **Repaso de usos.** Cada componente que pinta sobre un campo de tipo usa `field-ink` o las constantes `--on-*`; cada texto de tipo, `--type-*-text`; cada capa flotante, `--raised`. La Pokébola pasa a colores fijos (§2.4). Así el paso 3 cambia solo variables.
+2. **Repaso de usos.** Cada componente que pinta sobre un campo de tipo usa `field-ink` o las constantes `--on-*`; cada texto de tipo, `--type-*-text`; cada capa flotante, `--raised`. El logo pasa a colores fijos (§2.4). Así el paso 3 cambia solo variables.
 3. **Valores oscuros.** El bloque oscuro de `globals.css`, en `:root[data-theme="dark"]` y en `@media (prefers-color-scheme: dark)` con `:not([data-theme="light"])`. Incluye `color-scheme`, `field-dark` de Siniestro, `glow` como `--type-*-text` y las sombras oscuras. Se prueba con el modo oscuro del sistema, sin selector todavía.
 4. **Script de arranque.** El `<script>` inline en el `<head>` del layout raíz (§2.4), `suppressHydrationWarning` en `<html>` y `theme-color` con `media` en el `viewport` del layout. Prueba: forzar `localStorage.setItem("pokedata-theme","dark")` con el sistema en claro y recargar con la red y la CPU ralentizadas: el primer pintado ya es oscuro.
 5. **Selector de escritorio** (§4.1). Grupo de radios con sol, luna y monitor, tooltip, marca del activo por `data-theme-pref`, guardado, evento `storage` y textos en `translations.ts` en los dos idiomas. A 768px no cabía: entre 768 y 1023px el buscador compacto se queda en su lupa de 44px (§4.1).

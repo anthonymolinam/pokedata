@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import Pokeball from "@/components/common/Pokeball";
+import LensMark from "@/components/common/LensMark";
 import GlobalSearchBar from "@/components/common/GlobalSearchBar";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemeSwitcher from "@/components/common/ThemeSwitcher";
@@ -144,7 +144,7 @@ export default function SiteHeader({ locale, labels }: SiteHeaderProps) {
           aria-label={labels.home}
           className="group flex items-center gap-2 shrink-0 rounded-pill display text-[1.25rem] lg:text-[1.5rem] leading-none"
         >
-          <Pokeball className="size-7 lg:size-8 motion-safe:transition-transform motion-safe:duration-600 motion-safe:ease-[cubic-bezier(.34,1.56,.64,1)] motion-safe:group-hover:rotate-360 motion-safe:group-focus-visible:rotate-360" />
+          <LensMark spin className="size-7 lg:size-8" />
           <span aria-hidden="true">PokéData</span>
         </Link>
 

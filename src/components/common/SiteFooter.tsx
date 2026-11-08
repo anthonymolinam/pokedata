@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Pokeball from "@/components/common/Pokeball";
+import LensMark from "@/components/common/LensMark";
 import { getLocalizedPath } from "@/constants/routes";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
@@ -34,7 +34,7 @@ export default function SiteFooter({ locale }: { locale: Locale }) {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
           <div>
             <p className="flex items-center gap-2 display text-[1.375rem] leading-none">
-              <Pokeball className="size-7" />
+              <LensMark className="size-7" />
               PokéData
             </p>
             <p className="mt-2 text-small text-on-dark-soft">{footer.tagline}</p>

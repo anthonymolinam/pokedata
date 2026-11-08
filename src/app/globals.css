@@ -53,7 +53,9 @@
   --on-light: #15161c;
   --on-dark: #f7f5f0;
   --on-dark-soft: #b9bcc8;
-  --pokeball-white: #ffffff;
+  /* Aro y brillo de la lente del logo, y la propia lente (§4.0) */
+  --lens-white: #ffffff;
+  --lens: #3d7bef;
 
   /* Sombras (§4.0 y §2.4): solo cabecera desplazada y capas flotantes */
   --shadow-header: 0 6px 20px rgb(21 22 28 / 0.08); /* taste-skill-ignore: cabecera desplazada */
