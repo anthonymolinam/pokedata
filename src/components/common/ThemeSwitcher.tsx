@@ -60,7 +60,7 @@ export default function ThemeSwitcher({ labels, variant = "header" }: ThemeSwitc
       role="radiogroup"
       aria-label={labels.theme}
       data-variant={variant}
-      className="theme-switcher relative flex items-center gap-0.5 p-1 rounded-pill bg-step"
+      className="theme-switcher relative flex items-center gap-0.5 p-1 rounded-pill bg-step dark:bg-control"
     >
       <span
         aria-hidden="true"
@@ -87,7 +87,7 @@ export default function ThemeSwitcher({ labels, variant = "header" }: ThemeSwitc
             onKeyDown={(e) => onKeyDown(e, index)}
             onBlur={(e) => e.currentTarget.removeAttribute("data-tip-hidden")}
             onMouseLeave={(e) => e.currentTarget.removeAttribute("data-tip-hidden")}
-            className={`theme-option relative rounded-pill cursor-pointer text-ink-soft hover:text-ink active:scale-[0.96] transition-transform duration-150 ${
+            className={`theme-option relative rounded-pill cursor-pointer text-ink-soft dark:text-ink hover:text-ink active:scale-[0.96] transition-transform duration-150 ${
               sheet
                 ? "flex flex-1 min-w-0 items-center justify-center gap-2 h-11 px-2 font-extrabold text-small"
                 : "grid place-items-center size-9 after:absolute after:-inset-1"

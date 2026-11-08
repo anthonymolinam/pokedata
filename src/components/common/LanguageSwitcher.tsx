@@ -135,7 +135,7 @@ export default function LanguageSwitcher({
     <div
       role="group"
       aria-label={label}
-      className="flex items-center gap-0.5 p-1 rounded-pill bg-step font-extrabold text-small"
+      className="flex items-center gap-0.5 p-1 rounded-pill bg-step dark:bg-control font-extrabold text-small"
     >
       {options.map((option) => {
         const segment =
@@ -158,7 +158,7 @@ export default function LanguageSwitcher({
             hrefLang={option.locale}
             scroll={false}
             onClick={(event) => switchLocale(event, option.locale)}
-            className={`${segment} text-ink-soft hover:text-ink active:scale-[0.96] transition-transform duration-150`}
+            className={`${segment} text-ink-soft dark:text-ink hover:text-ink active:scale-[0.96] transition-transform duration-150`}
           >
             <span aria-hidden="true">{option.label}</span>
             <span className="sr-only">{option.name}</span>

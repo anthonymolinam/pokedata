@@ -31,7 +31,7 @@ Cada token tiene un valor por tema. El código usa siempre el token, nunca el va
 | --- | --- | --- | --- |
 | `--ground` | `#F3F4F8` | `#14161D` | Fondo de todas las páginas |
 | `--surface` | `#FFFFFF` | `#1D2029` | Paneles: hero, buscador, panel de filtros, bloques de la ficha, chips sin color |
-| `--step` | `#E6E8EF` | `#282C37` | Un tono por debajo del fondo en claro y por encima en oscuro: buscador enfocado, pista de controles segmentados, hover de enlaces |
+| `--step` | `#E6E8EF` | `#282C37` | Un tono por debajo del fondo en claro y por encima en oscuro: buscador enfocado, pista de controles segmentados (en claro; en oscuro van en `--control`), hover de enlaces |
 | `--raised` | `#FFFFFF` | `#262A35` | Capas flotantes: desplegable del buscador, hoja móvil, modales |
 | `--raised-step` | `#E6E8EF` | `#363B48` | El `--step` dentro de una capa flotante (`data-field="raised"`): en oscuro `--step` casi coincide con `--raised` |
 | `--control` | `#E6E8EF` | `#686C7A` | Relleno de las pastillas y botones neutros: regiones del filtro, formas del selector del equipo, «Limpiar», botones «×» de cerrar. En claro es el mismo que `--step`; en oscuro, un gris claro que se ve como botón (§2.4) |
@@ -125,7 +125,8 @@ Antes de cerrar cada pantalla se hacen capturas de Pikachu (Eléctrico), Glaceon
 **Pastillas y botones neutros en oscuro (`--control`).** Con `--step` (`#282C37`) las regiones del filtro casi no se distinguían del panel (1.2:1) y en la hoja móvil, sobre `--raised`, coincidían con él: se leía el texto pero no se veía el botón. En oscuro van en `#686C7A`: 3.1:1 sobre `--surface` (WCAG 1.4.11) y 2.7:1 sobre `--raised`, con la tinta encima a 4.6:1. Más claro no se puede sin que la tinta baje de 4.5:1. La selección sigue destacando: el borde en `--ink` contrasta 4.6:1 con la pastilla y en los filtros va con ✓.
 - Lo usan las regiones (panel y hoja móvil), «Limpiar», los «×» de cerrar (filtros, búsqueda y menú de la cabecera, modales del comparador) y las pastillas de forma del selector del equipo (antes en `--raised` sobre la franja en `--raised-step`: en oscuro, más oscuras que la franja).
 - Los botones redondos que van sobre el fondo de la página en `--surface` (búsqueda y «Menú» de la cabecera móvil, dado del Pokémon del día, dado y papelera del equipo, «×» del buscador) pasan a `--control` solo en oscuro, con la variante `dark:`: en claro el blanco ya se ve sobre `--ground`.
-- No lo usan los botones desactivados (siguen en `--step`, que no deben parecer pulsables), ni las pistas de los controles segmentados, ni las pastillas sobre un campo de tipo (formas de la ficha y del comparador), que ya contrastan con el campo.
+- Las pistas de los selectores de idioma y de tema (en la cabecera y en la hoja del menú) también pasan a `--control` en oscuro, para que formen grupo con la lupa y «Menú» en vez de quedar más oscuras: `--step` sobre `--ground` era 1.3:1; `--control`, 3.45:1. El segmento activo sigue en `--surface` y se lee como una pastilla oscura sobre la pista clara (3.1:1 con ella, la tinta encima a 14.3:1). Los segmentos inactivos pasan de `--ink-soft` a `--ink` en oscuro: `--ink-soft` sobre `--control` se quedaba en 2.2:1 (`--ink`, 4.6:1). En claro no cambian.
+- No lo usan los botones desactivados (siguen en `--step`, que no deben parecer pulsables), ni las pastillas sobre un campo de tipo (formas de la ficha y del comparador), que ya contrastan con el campo.
 
 **Campos de tipo en oscuro.** Sobre `#14161D`, un campo necesita 3:1 con el fondo para que el borde de la tarjeta se vea (WCAG 1.4.11). Diecisiete tipos lo cumplen sin tocar nada. Solo **Siniestro** (2.70:1) se aclara un 5 %, a `field-dark` `#775F4F` (3.04:1), y su tinta hueso sigue en 5.45:1. Su `step` en oscuro es `#665244`.
 
@@ -237,7 +238,7 @@ Las dos piezas decorativas (la marca de agua del número y el nombre gigante de 
 - **Fija al hacer scroll** (`position: sticky; top: 0`) y con fondo `--ground` sólido, sin desenfoque ni transparencia.
 - **Sombra solo con la página desplazada:** a partir de 4px de scroll aparece `0 6px 20px rgba(21,22,28,.08)` con un fundido de 200ms. En reposo arriba del todo no hay sombra.
 - **Navegación:** pastillas de texto. La activa va rellena en `--ink` con texto hueso, como en la maqueta.
-- **Selector de idioma:** un control segmentado con **ES** y **EN** visibles a la vez, sobre una pista `--step`. El idioma activo se rellena en `--surface` y el otro es un enlace a la misma página en ese idioma.
+- **Selector de idioma:** un control segmentado con **ES** y **EN** visibles a la vez, sobre una pista `--step` (`--control` en oscuro, §2.4). El idioma activo se rellena en `--surface` y el otro es un enlace a la misma página en ese idioma.
 - **Selector de tema:** a la derecha del de idioma, con la misma pista `--step` y la misma altura, pero con iconos en vez de texto.
   - Tres segmentos redondos de 36px (44px de área táctil), en este orden: **sol** (claro), **luna** (oscuro) y **monitor** (según el sistema). Iconos de `lucide-react` (`Sun`, `Moon`, `Monitor`) a 18px y trazo 2.25, para que pesen como Nunito 800.
   - El activo se rellena en `--surface` con el icono en `--ink`; los otros, icono en `--ink-soft` (5.88:1 sobre la pista en oscuro). El segmento activo lo marca el CSS a partir de `data-theme-pref` (§2.4), así que es correcto desde el primer pintado.
