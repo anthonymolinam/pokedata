@@ -1,13 +1,18 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { getPaginatedPokemonList } from "@/lib/pokeapi";
 import {
-  getPaginatedPokemonList,
-  getFilteredPokemonList,
-  searchPokemonGlobal,
-  PokemonSummary,
-} from "@/lib/pokeapi";
-import { countResults, getSearchMatches, hasFilters, type Query } from "@/lib/home-query";
-import { GENERATIONS } from "@/constants/generations";
+  countResults,
+  getFilteredPage,
+  homeQueryKey,
+  homeQueryParams,
+  needsBrowserFavorites,
+  parseHomeQuery,
+  type HomeSearchParams,
+  type Query,
+} from "@/lib/home-query";
+import { FAVORITES_COOKIE } from "@/lib/favorites";
 import { getDictionary } from "@/constants/translations";
 import { Locale } from "@/proxy";
 import { pageMetadata } from "@/lib/metadata";
@@ -18,12 +23,7 @@ import { PokemonGridSkeleton } from "@/components/pokemon/PokemonCardSkeleton";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{
-    page?: string;
-    types?: string;
-    gen?: string;
-    q?: string;
-  }>;
+  searchParams: Promise<HomeSearchParams & { page?: string }>;
 }
 
 const PAGE_SIZE = 24;
@@ -51,16 +51,16 @@ export default async function HomePage({ params, searchParams }: PageProps) {
   const { filters } = getDictionary(locale);
 
   const currentPage = Math.max(1, Number(resolvedParams?.page) || 1);
-  const typesParam = resolvedParams?.types || null;
-  const genParam = GENERATIONS.some((g) => g.id === Number(resolvedParams?.gen))
-    ? Number(resolvedParams.gen)
-    : null;
-  const query: Query = {
-    types: typesParam ? typesParam.split(",").filter(Boolean) : [],
-    genId: genParam,
-    q: resolvedParams?.q?.trim() ?? "",
-  };
-  const queryKey = `${genParam || "all"}-${typesParam || "all"}-${query.q}`;
+  // La cookie de favoritos solo se lee con ?fav=1 (DESIGN.md §4.10)
+  const query = await parseHomeQuery(
+    resolvedParams,
+    async () => (await cookies()).get(FAVORITES_COOKIE)?.value,
+  );
+  const genParam = query.genId;
+  const queryKey = homeQueryKey(query);
+  // ?fav=1 sin cookie válida: el servidor no filtra y el resultado lo calcula
+  // el navegador; mientras, las tarjetas fantasma
+  const browserFavorites = needsBrowserFavorites(query);
 
   // El recuento y la rejilla se cargan aparte: mientras llega cada página,
   // filtro o búsqueda se ven las tarjetas fantasma (DESIGN.md §4.8)
@@ -77,21 +77,29 @@ export default async function HomePage({ params, searchParams }: PageProps) {
           locale={locale}
           title={genParam ? filters.regionNames[genParam - 1] : filters.national}
           count={
-            <Suspense
-              key={queryKey}
-              fallback={<span className="invisible">1025 Pokémon</span>}
-            >
-              <ResultCount query={query} />
-            </Suspense>
+            browserFavorites ? (
+              <span className="invisible">1025 Pokémon</span>
+            ) : (
+              <Suspense
+                key={queryKey}
+                fallback={<span className="invisible">1025 Pokémon</span>}
+              >
+                <ResultCount query={query} />
+              </Suspense>
+            )
           }
         />
 
-        <Suspense
-          key={`${queryKey}-${currentPage}`}
-          fallback={<PokemonGridSkeleton />}
-        >
-          <HomeResults locale={locale} currentPage={currentPage} query={query} />
-        </Suspense>
+        {browserFavorites ? (
+          <PokemonGridSkeleton />
+        ) : (
+          <Suspense
+            key={`${queryKey}-${currentPage}`}
+            fallback={<PokemonGridSkeleton />}
+          >
+            <HomeResults locale={locale} currentPage={currentPage} query={query} />
+          </Suspense>
+        )}
       </section>
     </div>
   );
@@ -106,38 +114,14 @@ async function HomeResults({
   currentPage: number;
   query: Query;
 }) {
-  let pokemon: PokemonSummary[];
-  let totalPages: number;
-
-  if (query.q) {
-    const matches = await getSearchMatches(query);
-    totalPages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
-    const page = Math.min(currentPage, totalPages);
-    ({ results: pokemon } = await searchPokemonGlobal(
-      matches,
-      (page - 1) * PAGE_SIZE,
-      PAGE_SIZE,
-    ));
-  } else if (hasFilters(query)) {
-    ({ pokemon, totalPages } = await getFilteredPokemonList({
-      types: query.types,
-      genId: query.genId,
-      page: currentPage,
-      pageSize: PAGE_SIZE,
-    }));
-  } else {
-    ({ pokemon, totalPages } = await getPaginatedPokemonList(
-      currentPage,
-      PAGE_SIZE,
-    ));
-  }
+  // Búsqueda, región, tipos o favoritos; sin ninguno, la lista paginada
+  const { pokemon, totalPages } =
+    (await getFilteredPage(query, currentPage, PAGE_SIZE)) ??
+    (await getPaginatedPokemonList(currentPage, PAGE_SIZE));
 
   const makePageUrl = (pageNum: number) => {
-    const queryParams = new URLSearchParams();
+    const queryParams = homeQueryParams(query);
     queryParams.set("page", String(pageNum));
-    if (query.types.length > 0) queryParams.set("types", query.types.join(","));
-    if (query.genId) queryParams.set("gen", String(query.genId));
-    if (query.q) queryParams.set("q", query.q);
     return `/${locale}?${queryParams.toString()}#pokedex`;
   };
 

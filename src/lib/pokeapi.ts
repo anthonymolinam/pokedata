@@ -201,12 +201,13 @@ function sumBaseStats(stats: ApiPokemonStat[]): number {
 
 // Lleva el código HTTP para distinguir un Pokémon que no existe (404) de una
 // PokéAPI que no responde
+// (sin propiedad en el constructor: las pruebas de Node solo quitan tipos)
 class PokeApiError extends Error {
-  constructor(
-    readonly status: number,
-    url: string,
-  ) {
+  readonly status: number;
+
+  constructor(status: number, url: string) {
     super(`PokéAPI error: ${status} at ${url}`);
+    this.status = status;
   }
 }
 
@@ -1007,6 +1008,38 @@ export async function getFilteredPokemonIds({
   return candidateIds;
 }
 
+// 10b. Summaries for a list of ids, in that order. If one fails, it keeps its
+// artwork and falls back to the given types
+export async function getPokemonSummariesByIds(
+  ids: number[],
+  fallbackTypes: string[] = [],
+): Promise<PokemonSummary[]> {
+  return Promise.all(
+    ids.map(async (id) => {
+      try {
+        const pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${id}`);
+        return {
+          id: pData.id,
+          name: pData.species?.name || getCleanSpeciesSlug(pData.name),
+          image:
+            pData.sprites.other?.["official-artwork"]?.front_default ??
+            pData.sprites.front_default ??
+            "/placeholder.png",
+          types: pData.types.map((t) => t.type.name),
+          total: sumBaseStats(pData.stats),
+        };
+      } catch {
+        return {
+          id,
+          name: `pokemon-${id}`,
+          image: artworkUrl(id),
+          types: fallbackTypes,
+        };
+      }
+    }),
+  );
+}
+
 // 11. Filtered query (Types + Generation) with pagination
 export async function getFilteredPokemonList({
   types = [],
@@ -1028,30 +1061,7 @@ export async function getFilteredPokemonList({
     const offset = (validPage - 1) * pageSize;
     const paginatedIds = candidateIds.slice(offset, offset + pageSize);
 
-    const pokemon = await Promise.all(
-      paginatedIds.map(async (id) => {
-        try {
-          const pData = await pokeFetch<ApiPokemonResponse>(`pokemon/${id}`);
-          return {
-            id: pData.id,
-            name: pData.species?.name || getCleanSpeciesSlug(pData.name),
-            image:
-              pData.sprites.other?.["official-artwork"]?.front_default ??
-              pData.sprites.front_default ??
-              "/placeholder.png",
-            types: pData.types.map((t) => t.type.name),
-            total: sumBaseStats(pData.stats),
-          };
-        } catch {
-          return {
-            id,
-            name: `pokemon-${id}`,
-            image: artworkUrl(id),
-            types: types,
-          };
-        }
-      }),
-    );
+    const pokemon = await getPokemonSummariesByIds(paginatedIds, types);
 
     return { pokemon, totalPages, totalCount };
   } catch (error) {
