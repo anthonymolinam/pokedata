@@ -14,12 +14,15 @@ const mark = (small = false) =>
   `<path d="M9 3H17.5A10.5 10.5 0 0 1 17.5 24H13V25A4 4 0 0 1 5 25V7A4 4 0 0 1 9 3Z" fill="${RED}"/>` +
   `<circle cx="17.5" cy="13.5" r="7" fill="${WHITE}"/><circle cx="17.5" cy="13.5" r="5.2" fill="${LENS}"/>` +
   `<circle cx="15.6" cy="11.6" r="1.7" fill="${WHITE}"/>` + (small ? "" : `<circle cx="19.6" cy="15.9" r="0.8" fill="${WHITE}"/>`);
-// La P ocupa x 5–28 e y 3–29: este encuadre la centra y llena el cuadrado
-const VB = "3 2.5 27 27";
+// La P ocupa x 5–28 e y 3–29 (23 × 26). En la pestaña el icono va pegado al
+// título, así que el encuadre llena el alto y apoya la P en el borde derecho:
+// el aire que sobra (3 de 26, unos 2px a 16px) queda a la izquierda, contra
+// el borde de la pestaña, y no entre la P y el texto
+const VB = "2 3 26 26";
 const tight = (small) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VB}">${mark(small)}</svg>`;
 // Sobre fondo blanco a sangre; `scale` es el lado de la marca respecto al icono
 const plate = (scale) => {
-  const side = 27 / scale, x = 3 - (side - 27) / 2, y = 2.5 - (side - 27) / 2;
+  const side = 27 / scale, x = 3 - (side - 27) / 2, y = 2.5 - (side - 27) / 2; // centrada
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${side} ${side}"><rect x="${x}" y="${y}" width="${side}" height="${side}" fill="${WHITE}"/>${mark()}</svg>`;
 };
 const png = (svg, size) => sharp(Buffer.from(svg), { density: 72 * size / 27 * 4 }).resize(size, size).png().toBuffer();
