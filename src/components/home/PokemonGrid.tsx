@@ -73,6 +73,7 @@ export default function PokemonGrid({
               locale={locale}
               eager={index < 4}
               headingAs="h3"
+              favorite
             />
           </li>
         ))}

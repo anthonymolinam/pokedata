@@ -565,13 +565,17 @@ body {
 }
 
 .type-glow:focus-visible::before,
-.type-glow:has(:focus-visible)::before {
+.type-glow:has(:focus-visible)::before,
+.card-cell:has(:focus-visible) .type-glow::before {
   opacity: 1;
 }
 
-/* Solo con ratón: en táctil el :hover se queda pegado tras tocar */
+/* Solo con ratón: en táctil el :hover se queda pegado tras tocar. En la
+   rejilla de la portada el brillo lo enciende la celda (§4.10), también con el
+   puntero sobre el corazón */
 @media (hover: hover) {
-  .type-glow:hover::before {
+  .type-glow:hover::before,
+  .card-cell:hover .type-glow::before {
     opacity: 1;
   }
 }

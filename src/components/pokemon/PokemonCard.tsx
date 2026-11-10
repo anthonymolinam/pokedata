@@ -19,6 +19,11 @@ interface PokemonCardProps {
   headingAs?: "h2" | "h3";
   // En la cadena evolutiva de la ficha, el Pokémon que se está viendo
   current?: boolean;
+  // Solo en la rejilla de la portada (§4.10): la tarjeta va en una celda con
+  // el hueco del corazón reservado. El corazón es hermano del enlace (un botón
+  // no puede ir dentro de un enlace) y se pinta encima, en la celda.
+  favorite?: boolean;
+  favoriteSlot?: ReactNode;
 }
 
 // Curva de rebote de la dirección Pop (§4.3 y §6)
@@ -36,6 +41,8 @@ export default function PokemonCard({
   eager = false,
   headingAs: Heading = "h3",
   current = false,
+  favorite = false,
+  favoriteSlot,
 }: PokemonCardProps) {
   const { card, typeNames } = getDictionary(locale);
   const name = formatPokemonDisplayName(pokemon.name);
@@ -49,17 +56,34 @@ export default function PokemonCard({
   // encima con el total a su derecha, y el nombre se ajusta solo a su propio
   // largo, con algo de margen para las letras anchas (Crabominable). 18rem es
   // lo que piden las dos etiquetas de tipo más largas y el total en una línea
-  const inner = "(100cqi - 2 * var(--card-pad))";
+  // Con favorito, la fila del nombre deja 40px a la derecha para el corazón
+  // (32px y 8 de hueco), y su ancho los resta
+  const inner = favorite
+    ? "(100cqi - 2 * var(--card-pad) - 40px)"
+    : "(100cqi - 2 * var(--card-pad))";
   const nameSize = {
     "--name-inline": `max(1rem, min(var(--step-lead), calc(${inner} / ${(Math.max(name.length, 1) + number.length) * 0.6 + 0.5})))`,
     "--name-stacked": `max(0.875rem, min(var(--step-lead), calc(${inner} / ${Math.max(name.length, 1) * 0.68})))`,
   } as CSSProperties;
 
   // En el selector, el foco cae en el botón que cubre la tarjeta: la subida
-  // del foco sale de has-focus-visible
-  const className = `group type-glow relative flex h-full flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:ring-selected motion-safe:transition-transform ${spring} motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:has-focus-visible:-translate-y-1.5 motion-safe:active:scale-[0.98]`;
+  // del foco sale de has-focus-visible. Con favorito, la subida, el brillo y
+  // el crecimiento del artwork los da la celda (group/cell): el corazón sube
+  // con la tarjeta y pasar por encima de él no la hace bajar
+  const lift = favorite
+    ? ""
+    : "motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5 motion-safe:has-focus-visible:-translate-y-1.5";
+  const className = `group type-glow relative flex h-full flex-col rounded-surface bg-field text-field-ink @container [--card-pad:max(0.875rem,6.5cqi)] focus-visible:outline-ink aria-[current=page]:ring-selected motion-safe:transition-transform ${spring} ${lift} motion-safe:active:scale-[0.98]`;
+  const grow = favorite
+    ? "motion-safe:group-hover/cell:scale-[1.08] motion-safe:group-has-focus-visible/cell:scale-[1.08]"
+    : "motion-safe:group-hover:scale-[1.08] motion-safe:group-focus-visible:scale-[1.08]";
+  // El hueco del corazón está reservado siempre, se vea o no, para que la
+  // tarjeta no se mueva cuando aparece: en la fila del nombre (≥ 18rem) o en
+  // la del número, que en las estrechas va encima del nombre
+  const slot = favorite ? "@min-[18rem]:pr-10" : "";
+  const numberSlot = favorite ? "@max-[18rem]:pr-10" : "";
 
-  return (
+  const card_ = (
     <CardRoot
       href={href}
       onSelect={onSelect}
@@ -75,7 +99,7 @@ export default function PokemonCard({
         style={{ height: `${ART_TOP_ZONE}cqi` }}
       >
         <div
-          className={`pointer-events-none absolute motion-safe:transition-transform ${spring} motion-safe:group-hover:scale-[1.08] motion-safe:group-focus-visible:scale-[1.08]`}
+          className={`pointer-events-none absolute motion-safe:transition-transform ${spring} ${grow}`}
           style={{
             left: `${fit.left}cqi`,
             top: `${fit.top}cqi`,
@@ -99,7 +123,7 @@ export default function PokemonCard({
       <div className="relative z-10 flex flex-1 flex-col gap-[max(0.375rem,2.5cqi)] px-(--card-pad) pt-3 pb-(--card-pad) min-h-[84px] md:min-h-24">
         {/* Marca de agua del número en la fila del nombre: el artwork no llega */}
         <div
-          className="flex items-baseline gap-[0.5em] text-(length:--name-inline) @max-[18rem]:flex-col-reverse @max-[18rem]:items-start @max-[18rem]:gap-0.5 @max-[18rem]:text-(length:--name-stacked)"
+          className={`flex items-baseline gap-[0.5em] text-(length:--name-inline) ${slot} @max-[18rem]:flex-col-reverse @max-[18rem]:items-start @max-[18rem]:gap-0.5 @max-[18rem]:text-(length:--name-stacked)`}
           style={nameSize}
         >
           <Heading className="flex-1 min-w-0 truncate font-black leading-[1.05] tracking-[-0.03em] @max-[18rem]:w-full @max-[18rem]:overflow-visible @max-[18rem]:whitespace-normal @max-[18rem]:break-words">
@@ -108,7 +132,7 @@ export default function PokemonCard({
               {pokemon.form ? ` (${pokemon.form})` : ""}, {card.number} {pokemon.id}
             </span>
           </Heading>
-          <span className="flex shrink-0 items-center justify-between gap-2 @max-[18rem]:w-full">
+          <span className={`flex shrink-0 items-center justify-between gap-2 @max-[18rem]:w-full ${numberSlot}`}>
             <span
               aria-hidden="true"
               className="font-black leading-none tracking-[-0.04em] num opacity-40 select-none @max-[18rem]:text-small"
@@ -117,12 +141,15 @@ export default function PokemonCard({
             </span>
             {/* En tarjetas estrechas el total va aquí, a la derecha del número,
                 y la línea de tipos queda solo para los tipos */}
+            {/* Con favorito, por debajo de 12rem no cabe junto al corazón y
+                se oculta: la fila queda «0006 … corazón» (el Total sigue en la
+                ficha) */}
             {pokemon.total !== undefined && (
               <TotalPill
                 label={card.total}
                 total={pokemon.total}
                 compact
-                className="hidden @max-[18rem]:block"
+                className={`hidden @max-[18rem]:block ${favorite ? "@max-[12rem]:hidden" : ""}`}
               />
             )}
           </span>
@@ -155,6 +182,22 @@ export default function PokemonCard({
         </div>
       </div>
     </CardRoot>
+  );
+
+  if (!favorite) return card_;
+
+  // La celda: del ancho de la tarjeta, recibe el hover y el foco (también el
+  // del corazón) y no se mueve, así que la subida no la hace parpadear al
+  // pasar por el borde. Dentro, lo que sube: la tarjeta y su corazón.
+  return (
+    <div className="card-cell group/cell relative h-full">
+      <div
+        className={`relative h-full @container [--card-pad:max(0.875rem,6.5cqi)] motion-safe:transition-transform ${spring} motion-safe:group-hover/cell:-translate-y-1.5 motion-safe:group-has-focus-visible/cell:-translate-y-1.5`}
+      >
+        {card_}
+        {favoriteSlot}
+      </div>
+    </div>
   );
 }
 
