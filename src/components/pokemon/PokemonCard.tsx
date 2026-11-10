@@ -77,6 +77,9 @@ export default function PokemonCard({
   const grow = favorite
     ? "motion-safe:group-hover/cell:scale-[1.08] motion-safe:group-has-focus-visible/cell:scale-[1.08]"
     : "motion-safe:group-hover:scale-[1.08] motion-safe:group-focus-visible:scale-[1.08]";
+  const willGrow = favorite
+    ? "motion-safe:group-hover/cell:will-change-transform motion-safe:group-has-focus-visible/cell:will-change-transform"
+    : "motion-safe:group-hover:will-change-transform motion-safe:group-focus-visible:will-change-transform";
   // El hueco del corazón está reservado siempre, se vea o no, para que la
   // tarjeta no se mueva cuando aparece: en la fila del nombre (≥ 18rem), a la
   // izquierda del número, que sigue pegado al borde y alineado con el Total
@@ -103,11 +106,12 @@ export default function PokemonCard({
         style={{ height: `${ART_TOP_ZONE}cqi` }}
       >
         <div
-          // will-change: el navegador dibuja el artwork una vez y lo reutiliza
-          // al crecer. Sin él, Chrome lo estira durante la animación y al
-          // acabar lo vuelve a dibujar a su nuevo tamaño: se veía «saltar» a
-          // nítido medio segundo después del hover
-          className={`pointer-events-none absolute motion-safe:will-change-transform motion-safe:transition-transform ${spring} ${grow}`}
+          // will-change solo mientras crece: el navegador dibuja el artwork una
+          // vez y lo reutiliza. Sin él, Chrome lo estiraba durante la animación
+          // y al acabar lo volvía a dibujar: se veía «saltar» a nítido medio
+          // segundo después del hover. Siempre puesto, en reposo la capa
+          // reducía el artwork peor que la página (bordes más ásperos)
+          className={`pointer-events-none absolute motion-safe:transition-transform ${spring} ${grow} ${willGrow}`}
           style={{
             left: `${fit.left}cqi`,
             top: `${fit.top}cqi`,
