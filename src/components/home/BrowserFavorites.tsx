@@ -22,6 +22,7 @@ interface BrowserResult {
   pokemon: PokemonSummary[];
   totalPages: number;
   count: number;
+  saved: number;
 }
 
 // Una petición por consulta, compartida por el recuento y la rejilla
@@ -116,8 +117,17 @@ export function BrowserFavoritesGrid({
     return `/${locale}?${params.toString()}#pokedex`;
   };
 
+  const showAllParams = new URLSearchParams(searchParams.toString());
+  showAllParams.delete("fav");
+  showAllParams.delete("page");
+  const showAll = showAllParams.toString();
+
   return (
     <PokemonGrid
+      favoritesView={{
+        saved: data.saved,
+        showAllHref: `/${locale}${showAll ? `?${showAll}` : ""}`,
+      }}
       initialList={data.pokemon}
       currentPage={page}
       totalPages={data.totalPages}

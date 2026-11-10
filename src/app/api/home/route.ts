@@ -25,5 +25,7 @@ export async function GET(request: Request) {
     pokemon: result?.pokemon ?? [],
     totalPages: result?.totalPages ?? 1,
     count,
+    // Para elegir el estado vacío: ninguno guardado o ninguno que coincida
+    saved: query.favorites?.length ?? 0,
   });
 }

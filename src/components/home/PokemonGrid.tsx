@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { PokemonSummary, formatPokemonDisplayName } from "@/lib/pokeapi";
 import PokemonCard from "@/components/pokemon/PokemonCard";
 import FavoriteButton from "@/components/common/FavoriteButton";
@@ -24,6 +24,9 @@ interface PokemonGridProps {
   prevPageHref?: string;
   nextPageHref?: string;
   locale: Locale;
+  // Con ?fav=1 (§4.10): cuántos favoritos hay guardados, para elegir el estado
+  // vacío, y la portada sin ?fav=1 para «Ver todos»
+  favoritesView?: { saved: number; showAllHref: string };
 }
 
 // Rejilla de la portada (DESIGN.md §4.3): tarjetas, estado vacío y
@@ -35,6 +38,7 @@ export default function PokemonGrid({
   prevPageHref,
   nextPageHref,
   locale,
+  favoritesView,
 }: PokemonGridProps) {
   const { grid, favorites } = getDictionary(locale);
 
@@ -47,6 +51,33 @@ export default function PokemonGrid({
 
     return `/${locale}/pokemon/${slug}`;
   };
+
+  // Estados vacíos de favoritos (§4.10): el del §4.3 con el corazón encima.
+  // Sin ninguno guardado, «Ver todos» quita solo ?fav=1; con favoritos que no
+  // coinciden, «Quitar los demás filtros» deja solo ?fav=1.
+  if (initialList.length === 0 && favoritesView) {
+    const none = favoritesView.saved === 0;
+    return (
+      <div className="py-24 text-center">
+        <Heart
+          aria-hidden="true"
+          strokeWidth={2.5}
+          className="mx-auto mb-5 size-10 text-ink-soft"
+        />
+        <p className="text-lead font-black">
+          {none ? favorites.emptyTitle : favorites.noMatchTitle}
+        </p>
+        {none && <p className="mt-2 text-body">{favorites.emptyBody}</p>}
+        <Link
+          href={none ? favoritesView.showAllHref : `/${locale}?fav=1`}
+          scroll={false}
+          className={`${secondary} mt-6`}
+        >
+          {none ? favorites.showAll : favorites.clearOthers}
+        </Link>
+      </div>
+    );
+  }
 
   if (initialList.length === 0) {
     return (
@@ -79,14 +110,16 @@ export default function PokemonGrid({
                 // Hermano del enlace, encima de la zona reservada (§4.10): en
                 // la rejilla, el número de la tarjeta es el de la especie. En
                 // la fila del nombre (≥ 18rem) su centro va al de las cifras,
-                // que en Nunito 900 está a 0.47em de la parte de arriba
+                // que en Nunito 900 está a 0.47em de la parte de arriba. En la
+                // vista de favoritos se ve siempre: al desmarcar, la tarjeta y
+                // su corazón vacío se quedan hasta la próxima navegación
                 <FavoriteButton
                   speciesId={pokemon.id}
                   label={favorites.cardButton.replace(
                     "{name}",
                     formatPokemonDisplayName(pokemon.name),
                   )}
-                  className="card-heart absolute right-(--card-pad) top-[calc(62cqi+0.75rem)] @min-[18rem]:top-[calc(62cqi+0.75rem+0.47*var(--name-inline)-1rem)] z-20 size-8 before:absolute before:-top-3 before:-inset-x-1.5 before:bottom-0"
+                  className={`card-heart ${favoritesView ? "card-heart-keep" : ""} absolute right-(--card-pad) top-[calc(62cqi+0.75rem)] @min-[18rem]:top-[calc(62cqi+0.75rem+0.47*var(--name-inline)-1rem)] z-20 size-8 before:absolute before:-top-3 before:-inset-x-1.5 before:bottom-0`}
                 />
               }
             />

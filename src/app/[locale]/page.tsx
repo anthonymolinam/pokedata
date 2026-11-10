@@ -156,8 +156,19 @@ async function HomeResults({
     return `/${locale}?${queryParams.toString()}#pokedex`;
   };
 
+  // «Ver todos» (§4.10): la misma portada sin ?fav=1 ni página
+  const showAll = homeQueryParams({ ...query, fav: false }).toString();
+
   return (
     <PokemonGrid
+      favoritesView={
+        query.fav
+          ? {
+              saved: query.favorites?.length ?? 0,
+              showAllHref: `/${locale}${showAll ? `?${showAll}` : ""}`,
+            }
+          : undefined
+      }
       initialList={pokemon}
       currentPage={currentPage}
       totalPages={totalPages}

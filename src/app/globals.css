@@ -596,6 +596,12 @@ body {
   .card-cell:has(:focus-visible) .card-heart {
     opacity: 1;
   }
+
+  /* En la vista de favoritos todos estaban marcados: el que se desmarca sigue
+     a la vista, vacío, para poder volver a marcarlo (§4.10) */
+  .card-heart.card-heart-keep {
+    opacity: 1;
+  }
 }
 
 /* La regla de arriba sustituye la transición del botón: la subida y la
