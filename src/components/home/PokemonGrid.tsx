@@ -109,8 +109,9 @@ export default function PokemonGrid({
               favoriteSlot={
                 // Hermano del enlace, encima de la zona reservada (§4.10): en
                 // la rejilla, el número de la tarjeta es el de la especie. En
-                // la fila del nombre (≥ 18rem) su centro va al de las cifras,
-                // que en Nunito 900 está a 0.47em de la parte de arriba. En la
+                // la fila del nombre (≥ 18rem) va a la izquierda del número, a
+                // 8px de él (el número mide 2.24em en Nunito 900), y su centro
+                // va al de las cifras, a 0.47em de la parte de arriba. En la
                 // vista de favoritos se ve siempre: al desmarcar, la tarjeta y
                 // su corazón vacío se quedan hasta la próxima navegación
                 <FavoriteButton
@@ -119,7 +120,7 @@ export default function PokemonGrid({
                     "{name}",
                     formatPokemonDisplayName(pokemon.name),
                   )}
-                  className={`card-heart ${favoritesView ? "card-heart-keep" : ""} absolute right-(--card-pad) top-[calc(62cqi+0.75rem)] @min-[18rem]:top-[calc(62cqi+0.75rem+0.47*var(--name-inline)-1rem)] z-20 size-8 before:absolute before:-top-3 before:-inset-x-1.5 before:bottom-0`}
+                  className={`card-heart ${favoritesView ? "card-heart-keep" : ""} absolute right-(--card-pad) top-[calc(62cqi+0.75rem)] @min-[18rem]:top-[calc(62cqi+0.75rem+0.47*var(--name-inline)-1rem)] @min-[18rem]:right-[calc(var(--card-pad)+2.24*var(--name-inline)+0.5rem)] z-20 size-8 before:absolute before:-top-3 before:-inset-x-1.5 before:bottom-0`}
                 />
               }
             />

@@ -78,9 +78,11 @@ export default function PokemonCard({
     ? "motion-safe:group-hover/cell:scale-[1.08] motion-safe:group-has-focus-visible/cell:scale-[1.08]"
     : "motion-safe:group-hover:scale-[1.08] motion-safe:group-focus-visible:scale-[1.08]";
   // El hueco del corazón está reservado siempre, se vea o no, para que la
-  // tarjeta no se mueva cuando aparece: en la fila del nombre (≥ 18rem) o en
-  // la del número, que en las estrechas va encima del nombre
-  const slot = favorite ? "@min-[18rem]:pr-10" : "";
+  // tarjeta no se mueva cuando aparece: en la fila del nombre (≥ 18rem), a la
+  // izquierda del número, que sigue pegado al borde y alineado con el Total
+  // de abajo aunque el corazón esté oculto; en las estrechas, al final de la
+  // fila del número, que va encima del nombre
+  const slot = favorite ? "@min-[18rem]:pl-10" : "";
   // En las estrechas la fila del número mide 18px y el corazón 32: la fila
   // crece a 32px (centrada con él) para que el nombre empiece por debajo
   const numberSlot = favorite ? "@max-[18rem]:pr-10 @max-[18rem]:min-h-8" : "";
@@ -125,7 +127,7 @@ export default function PokemonCard({
       <div className="relative z-10 flex flex-1 flex-col gap-[max(0.375rem,2.5cqi)] px-(--card-pad) pt-3 pb-(--card-pad) min-h-[84px] md:min-h-24">
         {/* Marca de agua del número en la fila del nombre: el artwork no llega */}
         <div
-          className={`flex items-baseline gap-[0.5em] text-(length:--name-inline) ${slot} @max-[18rem]:flex-col-reverse @max-[18rem]:items-start @max-[18rem]:gap-0.5 @max-[18rem]:text-(length:--name-stacked)`}
+          className={`flex items-baseline gap-[0.5em] text-(length:--name-inline) @max-[18rem]:flex-col-reverse @max-[18rem]:items-start @max-[18rem]:gap-0.5 @max-[18rem]:text-(length:--name-stacked)`}
           style={nameSize}
         >
           <Heading className="flex-1 min-w-0 truncate font-black leading-[1.05] tracking-[-0.03em] @max-[18rem]:w-full @max-[18rem]:overflow-visible @max-[18rem]:whitespace-normal @max-[18rem]:break-words">
@@ -134,7 +136,7 @@ export default function PokemonCard({
               {pokemon.form ? ` (${pokemon.form})` : ""}, {card.number} {pokemon.id}
             </span>
           </Heading>
-          <span className={`flex shrink-0 items-center justify-between gap-2 @max-[18rem]:w-full ${numberSlot}`}>
+          <span className={`flex shrink-0 items-center justify-between gap-2 @max-[18rem]:w-full ${slot} ${numberSlot}`}>
             <span
               aria-hidden="true"
               className="font-black leading-none tracking-[-0.04em] num opacity-40 select-none @max-[18rem]:text-small"
