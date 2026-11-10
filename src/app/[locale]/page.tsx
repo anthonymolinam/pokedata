@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getPaginatedPokemonList } from "@/lib/pokeapi";
 import {
+  HOME_PAGE_SIZE,
   countResults,
   getFilteredPage,
   homeQueryKey,
@@ -20,13 +21,15 @@ import HomeHero from "@/components/home/HomeHero";
 import PokemonGrid from "@/components/home/PokemonGrid";
 import PokemonFiltersBar from "@/components/home/PokemonFiltersBar";
 import { PokemonGridSkeleton } from "@/components/pokemon/PokemonCardSkeleton";
+import {
+  BrowserFavoritesCount,
+  BrowserFavoritesGrid,
+} from "@/components/home/BrowserFavorites";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<HomeSearchParams & { page?: string }>;
 }
-
-const PAGE_SIZE = 24;
 
 // La canónica es la portada sin filtros ni página: son vistas de la misma
 export async function generateMetadata({
@@ -63,7 +66,31 @@ export default async function HomePage({ params, searchParams }: PageProps) {
   const browserFavorites = needsBrowserFavorites(query);
 
   // El recuento y la rejilla se cargan aparte: mientras llega cada página,
-  // filtro o búsqueda se ven las tarjetas fantasma (DESIGN.md §4.8)
+  // filtro o búsqueda se ven las tarjetas fantasma (DESIGN.md §4.8). En modo
+  // navegador el servidor solo pinta las fantasma.
+  const count = browserFavorites ? (
+    <span className="invisible">1025 Pokémon</span>
+  ) : (
+    <Suspense
+      key={queryKey}
+      fallback={<span className="invisible">1025 Pokémon</span>}
+    >
+      <ResultCount query={query} />
+    </Suspense>
+  );
+  const grid = browserFavorites ? (
+    <PokemonGridSkeleton />
+  ) : (
+    <Suspense
+      key={`${queryKey}-${currentPage}`}
+      fallback={<PokemonGridSkeleton />}
+    >
+      <HomeResults locale={locale} currentPage={currentPage} query={query} />
+    </Suspense>
+  );
+
+  // Con ?fav=1, si la cookie no llega al servidor, el resultado lo pide el
+  // cliente a /api/home (§4.10)
   return (
     <div>
       <HomeHero locale={locale} />
@@ -84,28 +111,25 @@ export default async function HomePage({ params, searchParams }: PageProps) {
                 : filters.national
           }
           count={
-            browserFavorites ? (
-              <span className="invisible">1025 Pokémon</span>
+            query.fav ? (
+              <BrowserFavoritesCount serverHasFavorites={!browserFavorites}>
+                {count}
+              </BrowserFavoritesCount>
             ) : (
-              <Suspense
-                key={queryKey}
-                fallback={<span className="invisible">1025 Pokémon</span>}
-              >
-                <ResultCount query={query} />
-              </Suspense>
+              count
             )
           }
         />
 
-        {browserFavorites ? (
-          <PokemonGridSkeleton />
-        ) : (
-          <Suspense
-            key={`${queryKey}-${currentPage}`}
-            fallback={<PokemonGridSkeleton />}
+        {query.fav ? (
+          <BrowserFavoritesGrid
+            locale={locale}
+            serverHasFavorites={!browserFavorites}
           >
-            <HomeResults locale={locale} currentPage={currentPage} query={query} />
-          </Suspense>
+            {grid}
+          </BrowserFavoritesGrid>
+        ) : (
+          grid
         )}
       </section>
     </div>
@@ -123,8 +147,8 @@ async function HomeResults({
 }) {
   // Búsqueda, región, tipos o favoritos; sin ninguno, la lista paginada
   const { pokemon, totalPages } =
-    (await getFilteredPage(query, currentPage, PAGE_SIZE)) ??
-    (await getPaginatedPokemonList(currentPage, PAGE_SIZE));
+    (await getFilteredPage(query, currentPage, HOME_PAGE_SIZE)) ??
+    (await getPaginatedPokemonList(currentPage, HOME_PAGE_SIZE));
 
   const makePageUrl = (pageNum: number) => {
     const queryParams = homeQueryParams(query);

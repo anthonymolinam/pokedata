@@ -8,6 +8,7 @@ import {
   homeQueryKey,
   homeQueryParams,
   needsBrowserFavorites,
+  parseBrowserFavoritesQuery,
   parseHomeQuery,
   type HomeQueryDeps,
   type Query,
@@ -164,4 +165,31 @@ test("la clave de Suspense cambia con ?fav=1 y con los favoritos", () => {
   ]);
   assert.equal(keys.size, 5);
   assert.equal(homeQueryKey(query()), homeQueryKey(query({ favorites: [...FAVORITES] })));
+});
+
+// --- Modo navegador: GET /api/home?fav=<mapa de bits> ---
+
+test("modo navegador: la lista llega en ?fav= y da lo mismo que la cookie", async () => {
+  const fav = encodeFavoritesCookie(FAVORITES);
+  const combos: [string, Partial<Query>][] = [
+    ["", {}],
+    ["gen=1", { genId: 1 }],
+    ["types=fire", { types: ["fire"] }],
+    ["q=char", { q: "char" }],
+    ["gen=9&types=water", { genId: 9, types: ["water"] }],
+  ];
+  for (const [extra, over] of combos) {
+    const browser = parseBrowserFavoritesQuery(new URLSearchParams(`fav=${fav}&${extra}`));
+    assert.ok(browser);
+    assert.deepEqual(browser, query(over));
+    assert.equal(await countResults(browser, deps), await countResults(query(over), deps));
+  }
+});
+
+test("modo navegador: ?fav= que falta o no es válido no se adivina", () => {
+  for (const fav of ["", "1", "2.AQ", "1.@@", "1." + "A".repeat(4000), "1." + "_".repeat(200)]) {
+    assert.equal(parseBrowserFavoritesQuery(new URLSearchParams({ fav })), null, fav.slice(0, 12));
+  }
+  assert.equal(parseBrowserFavoritesQuery(new URLSearchParams("gen=1")), null);
+  assert.deepEqual(parseBrowserFavoritesQuery(new URLSearchParams("fav=1."))?.favorites, []);
 });

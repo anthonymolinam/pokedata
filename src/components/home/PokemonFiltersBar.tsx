@@ -22,6 +22,7 @@ import {
   getFavoritesSnapshot,
   subscribeToFavorites,
   syncFavoritesCookie,
+  getFavoritesCookieOk,
 } from "@/lib/favorites";
 import { Locale } from "@/proxy";
 
@@ -131,9 +132,10 @@ export default function PokemonFiltersBar({
   const regionName = (id: number) => filters.regionNames[id - 1];
 
   // Al cargar, si la cookie no coincide con localStorage se reescribe, y con
-  // ?fav=1 el servidor vuelve a calcular la rejilla con la buena (§4.10)
+  // ?fav=1 el servidor vuelve a calcular la rejilla con la buena (§4.10). Si
+  // la cookie no llega ni reescrita, no se pide: la calcula el navegador.
   useEffect(() => {
-    if (syncFavoritesCookie() && urlFav) router.refresh();
+    if (syncFavoritesCookie() && urlFav && getFavoritesCookieOk()) router.refresh();
     // Solo al montar: después cada cambio ya escribe la cookie
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

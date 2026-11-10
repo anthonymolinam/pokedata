@@ -10,6 +10,9 @@ import { GENERATIONS } from "@/constants/generations";
 
 const TOTAL_POKEMON = 1025;
 
+// Tarjetas por página de la portada, en el servidor y en el modo navegador
+export const HOME_PAGE_SIZE = 24;
+
 // Lo que pide la portada: tipos (?types=), región (?gen=), búsqueda (?q=) y
 // solo favoritos (?fav=1, DESIGN.md §4.10)
 export interface Query {
@@ -148,4 +151,20 @@ export function homeQueryParams(query: Query): URLSearchParams {
 export function homeQueryKey(query: Query): string {
   const favs = !query.fav ? "all" : query.favorites ? encodeFavoritesCookie(query.favorites) : "browser";
   return `${query.genId || "all"}-${query.types.join(",") || "all"}-${favs}-${query.q}`;
+}
+
+// Modo navegador (§4.10): GET /api/home?fav=<mapa de bits>&types=&gen=&q=.
+// La lista llega en ?fav= con el formato y el tope de la cookie. null si falta
+// o no es válida: la ruta no adivina y responde con un error.
+export function parseBrowserFavoritesQuery(params: URLSearchParams): Query | null {
+  const favorites = decodeFavoritesCookie(params.get("fav"));
+  if (favorites === null) return null;
+  const gen = Number(params.get("gen"));
+  return {
+    types: (params.get("types") ?? "").split(",").filter(Boolean),
+    genId: GENERATIONS.some((g) => g.id === gen) ? gen : null,
+    q: params.get("q")?.trim() ?? "",
+    fav: true,
+    favorites,
+  };
 }

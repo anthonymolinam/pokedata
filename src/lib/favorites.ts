@@ -138,26 +138,51 @@ function readStoredFavorites(): number[] {
   }
 }
 
+// Si la cookie que ve el servidor es la de localStorage. null hasta la primera
+// comprobación. Tras cada escritura se lee de vuelta con document.cookie: si
+// no coincide (cookies bloqueadas, escritura fallida), la portada pasa a modo
+// navegador para esta visita (§4.10).
+let cookieOk: boolean | null = null;
+
+function setCookieOk(ok: boolean) {
+  if (cookieOk === ok) return;
+  cookieOk = ok;
+  window.dispatchEvent(new Event(FAVORITES_EVENT));
+}
+
+function cookieMatches(ids: readonly number[]): boolean {
+  try {
+    return readFavoritesCookieValue(document.cookie) === encodeFavoritesCookie(ids);
+  } catch {
+    return false;
+  }
+}
+
 function writeFavoritesCookie(ids: readonly number[]) {
   try {
     document.cookie = favoritesCookieString(ids);
   } catch {
-    // Sin cookies el filtro se calcula en el navegador (§4.10, modo navegador)
+    // Sin cookies el filtro se calcula en el navegador (modo navegador)
   }
+  setCookieOk(cookieMatches(ids));
+}
+
+// Para useSyncExternalStore (con subscribeToFavorites): false solo cuando ya se
+// comprobó que la cookie no llega; null mientras no se sepa
+export function getFavoritesCookieOk(): boolean | null {
+  return cookieOk;
 }
 
 // Al cargar la portada manda localStorage: si la cookie no coincide (se borró,
 // caducó o la cambió otra cosa), se reescribe. Devuelve si hubo que hacerlo,
 // para que la portada con ?fav=1 pida de nuevo el resultado al servidor.
+// Tras reescribirla se lee de vuelta: si no llega, getFavoritesCookieOk() da
+// false y la portada no pide nada al servidor, lo calcula el navegador.
 export function syncFavoritesCookie(): boolean {
-  let cookie: string | null;
-  try {
-    cookie = readFavoritesCookieValue(document.cookie);
-  } catch {
+  if (cookieMatches(getFavoritesSnapshot())) {
+    setCookieOk(true);
     return false;
   }
-  const expected = encodeFavoritesCookie(getFavoritesSnapshot());
-  if (cookie === expected) return false;
   writeFavoritesCookie(getFavoritesSnapshot());
   return true;
 }
