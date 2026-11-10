@@ -580,6 +580,37 @@ body {
   }
 }
 
+/* Corazón de la tarjeta (§4.10): con puntero aparece con un fundido de 150ms
+   al pasar por la celda o con foco de teclado en ella, y si ya es favorito se
+   ve siempre. En táctil se ve siempre. Oculto sigue en el orden del teclado. */
+@media (hover: hover) {
+  .card-heart {
+    transition: opacity 150ms ease-out;
+  }
+
+  .card-heart[aria-pressed="false"] {
+    opacity: 0;
+  }
+
+  .card-cell:hover .card-heart,
+  .card-cell:has(:focus-visible) .card-heart {
+    opacity: 1;
+  }
+}
+
+/* La regla de arriba sustituye la transición del botón: la subida y la
+   pulsación vuelven solo con movimiento. Tailwind 4 las hace con las
+   propiedades translate y scale, no con transform; sin rebote, para que la
+   subida sobre la tarjeta, que ya ha subido, sea suave */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card-heart {
+    transition:
+      opacity 150ms ease-out,
+      translate 200ms ease-out,
+      scale 150ms ease-out;
+  }
+}
+
 /* En oscuro el color de tipo luce de verdad (§4.3): la capa de abajo sube al
    90 % y se suma un halo alrededor. El alcance no crece (46px por abajo y
    28px por los lados), así que los rellenos de la cadena evolutiva y del modal

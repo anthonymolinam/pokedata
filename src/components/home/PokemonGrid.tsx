@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { PokemonSummary } from "@/lib/pokeapi";
+import { PokemonSummary, formatPokemonDisplayName } from "@/lib/pokeapi";
 import PokemonCard from "@/components/pokemon/PokemonCard";
+import FavoriteButton from "@/components/common/FavoriteButton";
 import { CARD_GRID } from "@/components/pokemon/PokemonCardSkeleton";
 import { CANONICAL_TO_SPANISH } from "@/constants/pokemonAliases";
 import { getDictionary } from "@/constants/translations";
@@ -35,7 +36,7 @@ export default function PokemonGrid({
   nextPageHref,
   locale,
 }: PokemonGridProps) {
-  const { grid } = getDictionary(locale);
+  const { grid, favorites } = getDictionary(locale);
 
   const getPokemonUrl = (name: string) => {
     const cleanName = name.toLowerCase();
@@ -74,6 +75,20 @@ export default function PokemonGrid({
               eager={index < 4}
               headingAs="h3"
               favorite
+              favoriteSlot={
+                // Hermano del enlace, encima de la zona reservada (§4.10): en
+                // la rejilla, el número de la tarjeta es el de la especie. En
+                // la fila del nombre (≥ 18rem) su centro va al de las cifras,
+                // que en Nunito 900 está a 0.47em de la parte de arriba
+                <FavoriteButton
+                  speciesId={pokemon.id}
+                  label={favorites.cardButton.replace(
+                    "{name}",
+                    formatPokemonDisplayName(pokemon.name),
+                  )}
+                  className="card-heart absolute right-(--card-pad) top-[calc(62cqi+0.75rem)] @min-[18rem]:top-[calc(62cqi+0.75rem+0.47*var(--name-inline)-1rem)] z-20 size-8 before:absolute before:-top-3 before:-inset-x-1.5 before:bottom-0"
+                />
+              }
             />
           </li>
         ))}

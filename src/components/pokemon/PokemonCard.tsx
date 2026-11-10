@@ -81,7 +81,9 @@ export default function PokemonCard({
   // tarjeta no se mueva cuando aparece: en la fila del nombre (≥ 18rem) o en
   // la del número, que en las estrechas va encima del nombre
   const slot = favorite ? "@min-[18rem]:pr-10" : "";
-  const numberSlot = favorite ? "@max-[18rem]:pr-10" : "";
+  // En las estrechas la fila del número mide 18px y el corazón 32: la fila
+  // crece a 32px (centrada con él) para que el nombre empiece por debajo
+  const numberSlot = favorite ? "@max-[18rem]:pr-10 @max-[18rem]:min-h-8" : "";
 
   const card_ = (
     <CardRoot
@@ -191,7 +193,10 @@ export default function PokemonCard({
   // pasar por el borde. Dentro, lo que sube: la tarjeta y su corazón.
   return (
     <div className="card-cell group/cell relative h-full">
+      {/* Las medidas del nombre también aquí: el corazón, hermano de la
+          tarjeta, se centra con las cifras del número (--name-inline) */}
       <div
+        style={nameSize}
         className={`relative h-full @container [--card-pad:max(0.875rem,6.5cqi)] motion-safe:transition-transform ${spring} motion-safe:group-hover/cell:-translate-y-1.5 motion-safe:group-has-focus-visible/cell:-translate-y-1.5`}
       >
         {card_}
