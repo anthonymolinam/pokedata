@@ -1,6 +1,7 @@
 import { GENERATIONS } from "@/constants/generations";
 import { artworkUrl } from "@/lib/artwork";
 import { formatVarietyLabel } from "@/lib/pokemon-names";
+import { buildSearchEntries, rankSearch } from "@/lib/fuzzy-search";
 import {
   MULTILINGUAL_ALIASES,
   normalizeQuery,
@@ -629,7 +630,9 @@ export async function getAllPokemonIndex(): Promise<
   });
 }
 
-// 4b. Pokémon whose name (English or Spanish alias) or number matches the query
+// 4b. Pokémon whose name (English or Spanish alias) or number matches the
+// query: those that start with it, then those that contain it, and only if
+// there are none, those within a typo or two (src/lib/fuzzy-search.ts)
 export async function searchPokemonMatches(
   rawQuery: string,
 ): Promise<{ id: number; name: string }[]> {
@@ -642,21 +645,8 @@ export async function searchPokemonMatches(
     return allPokemon.filter((poke) => poke.id === Number(cleanQuery));
   }
 
-  const matchedCanonicalNames = new Set<string>();
-  for (const [spanishAlias, englishName] of Object.entries(
-    MULTILINGUAL_ALIASES,
-  )) {
-    if (spanishAlias.includes(cleanQuery)) {
-      matchedCanonicalNames.add(englishName);
-    }
-  }
-
-  return allPokemon.filter((poke) => {
-    const pokeName = normalizeQuery(poke.name);
-    return (
-      pokeName.includes(cleanQuery) || matchedCanonicalNames.has(pokeName)
-    );
-  });
+  const entries = buildSearchEntries(allPokemon, MULTILINGUAL_ALIASES, normalizeQuery);
+  return rankSearch(cleanQuery, entries).map(({ id, name }) => ({ id, name }));
 }
 
 // 5. Global search result details with offset and limit pagination
