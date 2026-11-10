@@ -642,6 +642,24 @@ body {
   animation: fade-in 400ms ease-out both;
 }
 
+/* Favorito (§4.10): al marcar, el corazón sube a 1.3 y vuelve con rebote
+   mientras se rellena. Con movimiento reducido no hay escala. */
+@keyframes heart-pop {
+  40% {
+    transform: scale(1.3);
+  }
+}
+
+.heart-pop {
+  animation: heart-pop 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-pop {
+    animation: none;
+  }
+}
+
 /* Barras de estadísticas (§6): scaleX de 0 a su valor (--v) al entrar en
    pantalla, 600ms con 70ms de escalonado (--i). Solo se encogen si el script
    marca el bloque como pendiente, así que sin JavaScript se ven ya llenas. Al

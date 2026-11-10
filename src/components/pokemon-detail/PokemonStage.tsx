@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Artwork from "@/components/common/Artwork";
+import FavoriteButton from "@/components/common/FavoriteButton";
 import AddToTeamButton from "@/components/pokemon-detail/AddToTeamButton";
 import AbilityLine from "@/components/pokemon-detail/AbilityLine";
 import FormPicker from "@/components/pokemon-detail/FormPicker";
@@ -87,7 +88,7 @@ export default function PokemonStage({
   onVariantChange,
   locale,
 }: PokemonStageProps) {
-  const { detail, typeNames } = getDictionary(locale);
+  const { detail, typeNames, favorites } = getDictionary(locale);
   const isEs = locale === "es";
   const [shiny, setShiny] = useState(false);
 
@@ -135,20 +136,29 @@ export default function PokemonStage({
         className="absolute inset-0 -z-10 bg-field fade-in"
       />
 
-      {/* Variocolor: interruptor aparte, arriba a la derecha, que se combina
-          con cualquier forma */}
-      {active.shinyImage && (
-        <button
-          type="button"
-          aria-pressed={shiny}
-          aria-label={detail.shiny}
-          title={detail.shiny}
-          onClick={() => setShiny((on) => !on)}
-          className={`${control} absolute right-4 top-4 z-10 grid size-12 place-items-center px-0 md:right-6 md:top-6`}
-        >
-          <Sparkles aria-hidden="true" strokeWidth={2.5} className="size-5" />
-        </button>
-      )}
+      {/* Arriba a la derecha: el favorito (por especie, §4.10) y, a su
+          derecha, Variocolor, un interruptor aparte que se combina con
+          cualquier forma. Sin variocolor, el corazón ocupa la esquina. */}
+      <div className="absolute right-4 top-4 z-10 flex gap-2.5 md:right-6 md:top-6">
+        <FavoriteButton
+          speciesId={pokemon.speciesId}
+          label={favorites.button}
+          title={favorites.button}
+          className="size-12"
+        />
+        {active.shinyImage && (
+          <button
+            type="button"
+            aria-pressed={shiny}
+            aria-label={detail.shiny}
+            title={detail.shiny}
+            onClick={() => setShiny((on) => !on)}
+            className={`${control} grid size-12 place-items-center px-0`}
+          >
+            <Sparkles aria-hidden="true" strokeWidth={2.5} className="size-5" />
+          </button>
+        )}
+      </div>
 
       <div
         aria-hidden="true"
