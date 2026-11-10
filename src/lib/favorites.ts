@@ -225,12 +225,15 @@ export function toggleFavorite(id: number): boolean {
 // Cambios desde esta pestaña y desde otras (evento storage, que recarga la
 // lista sin volver a escribirla: la otra pestaña ya escribió la cookie)
 export function subscribeToFavorites(onChange: () => void): () => void {
+  // Cada suscriptor escucha storage, pero solo el primero ve la lista distinta:
+  // por eso no avisa solo a su componente, sino a todos con el evento propio
+  // (con varios corazones en la página, todos se rellenan)
   const onStorage = (e: StorageEvent) => {
     if (e.key !== FAVORITES_STORAGE_KEY && e.key !== null) return;
     const stored = readStoredFavorites();
     if (current !== null && sameFavorites(current, stored)) return;
     current = stored;
-    onChange();
+    window.dispatchEvent(new Event(FAVORITES_EVENT));
   };
   window.addEventListener(FAVORITES_EVENT, onChange);
   window.addEventListener("storage", onStorage);
