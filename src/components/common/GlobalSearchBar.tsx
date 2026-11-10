@@ -82,6 +82,7 @@ export default function GlobalSearchBar({
         setIsOpen(false);
         setQuery("");
         setResults([]);
+        setLoading(false);
         setSelectedIndex(-1);
       }
     }
@@ -108,26 +109,36 @@ export default function GlobalSearchBar({
       return;
     }
 
+    // Cada letra lanza su búsqueda: al escribir otra se cancela la anterior.
+    // Si no, una búsqueda vieja y lenta («s», con muchos resultados) podía
+    // llegar después de la nueva («suic») y pisar sus resultados.
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
         const res = await fetch(
           `/api/search?q=${encodeURIComponent(trimmed)}&limit=20`,
+          { signal: controller.signal },
         );
         if (res.ok) {
           const data = await res.json();
+          if (controller.signal.aborted) return;
           setResults(data.results || []);
           setIsOpen(true);
           setSelectedIndex(-1);
         }
       } catch (err) {
+        if (controller.signal.aborted) return;
         console.error("Global search error:", err);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [query]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,6 +146,7 @@ export default function GlobalSearchBar({
     setQuery(val);
     if (!val.trim()) {
       setResults([]);
+      setLoading(false);
       setIsOpen(false);
       setSelectedIndex(-1);
     }
@@ -143,6 +155,7 @@ export default function GlobalSearchBar({
   const handleClear = () => {
     setQuery("");
     setResults([]);
+    setLoading(false);
     setIsOpen(false);
     setSelectedIndex(-1);
     inputRef.current?.focus({ preventScroll: true });
@@ -152,6 +165,7 @@ export default function GlobalSearchBar({
     setIsOpen(false);
     setQuery("");
     setResults([]);
+    setLoading(false);
 
     const cleanName = pokemonName.toLowerCase();
     // Si estamos navegando en español y existe un slug traducido, lo priorizamos en la URL
