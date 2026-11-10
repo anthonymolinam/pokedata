@@ -86,6 +86,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
 
   const types = searchParams.get("types");
   const gen = searchParams.get("gen");
+  const fav = searchParams.get("fav");
 
   return (
     <form
@@ -122,6 +123,7 @@ export default function HeroSearch({ locale }: { locale: Locale }) {
       {/* Sin JavaScript, el formulario conserva los filtros activos */}
       {types && <input type="hidden" name="types" value={types} />}
       {gen && <input type="hidden" name="gen" value={gen} />}
+      {fav === "1" && <input type="hidden" name="fav" value="1" />}
       {query && (
         <button
           type="button"

@@ -12,11 +12,17 @@ import {
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Check, SlidersHorizontal, X } from "lucide-react";
+import { Check, Heart, SlidersHorizontal, X } from "lucide-react";
 import { GENERATIONS } from "@/constants/generations";
 import { POKEMON_TYPES, type PokemonType } from "@/constants/typeChart";
 import { isPokemonType } from "@/constants/typeColors";
 import { getDictionary } from "@/constants/translations";
+import {
+  getFavoritesServerSnapshot,
+  getFavoritesSnapshot,
+  subscribeToFavorites,
+  syncFavoritesCookie,
+} from "@/lib/favorites";
 import { Locale } from "@/proxy";
 
 // Un Pokémon tiene como mucho dos tipos y el filtro es su intersección: al
@@ -60,9 +66,10 @@ interface PokemonFiltersBarProps {
 }
 
 // Barra de filtros (§4.3): título y recuento a la izquierda, botón «Filtros»
-// con contador a la derecha, panel con regiones y tipos y una fila de chips
-// removibles. Todo vive en la URL: ?types=fire,flying y ?gen=1, junto a la
-// búsqueda del hero (?q=), que se conserva. El panel se aplica con «Aplicar».
+// con contador a la derecha, panel con favoritos, regiones y tipos y una fila
+// de chips removibles. Todo vive en la URL: ?fav=1, ?types=fire,flying y
+// ?gen=1, junto a la búsqueda del hero (?q=), que se conserva. El panel se
+// aplica con «Aplicar».
 export default function PokemonFiltersBar({
   locale,
   title,
@@ -71,7 +78,15 @@ export default function PokemonFiltersBar({
   const router = useRouter();
   const searchParams = useSearchParams();
   const reduceMotion = useReducedMotion();
-  const { filters, typeNames } = getDictionary(locale);
+  const { filters, typeNames, favorites: favoritesText } = getDictionary(locale);
+  // Los favoritos guardados, para la cifra de la pastilla (§4.10). El panel
+  // solo se abre tras hidratar, así que el null del servidor nunca se ve.
+  const favorites = useSyncExternalStore(
+    subscribeToFavorites,
+    getFavoritesSnapshot,
+    getFavoritesServerSnapshot,
+  );
+  const favoriteCount = favorites?.length ?? 0;
 
   const isMobile = useSyncExternalStore(
     subscribeMobile,
@@ -85,37 +100,55 @@ export default function PokemonFiltersBar({
     .slice(0, MAX_TYPES);
   const genParam = Number(searchParams.get("gen"));
   const urlGen = GENERATIONS.some((g) => g.id === genParam) ? genParam : null;
+  // ?fav=1 es «mis favoritos»: los de quien abre la página
+  const urlFav = searchParams.get("fav") === "1";
 
   // Los filtros aplicados cambian al momento, sin esperar a la nueva URL
   const [, startTransition] = useTransition();
-  const [selection, setSelection] = useOptimistic({ types: urlTypes, gen: urlGen });
+  const [selection, setSelection] = useOptimistic({
+    types: urlTypes,
+    gen: urlGen,
+    fav: urlFav,
+  });
   const activeTypes = selection.types;
   const activeGen = selection.gen;
-  const activeCount = activeTypes.length + (activeGen !== null ? 1 : 0);
+  const activeFav = selection.fav;
+  const activeCount =
+    activeTypes.length + (activeGen !== null ? 1 : 0) + (activeFav ? 1 : 0);
 
   const [open, setOpen] = useState(false);
   // En el panel se elige un borrador, que solo se aplica con «Aplicar»
   const [draftTypes, setDraftTypes] = useState<PokemonType[]>([]);
   const [draftGen, setDraftGen] = useState<number | null>(null);
+  const [draftFav, setDraftFav] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  const draftKey = `${[...draftTypes].sort().join(",")}|${draftGen ?? ""}`;
-  const appliedKey = `${[...activeTypes].sort().join(",")}|${activeGen ?? ""}`;
+  const draftKey = `${[...draftTypes].sort().join(",")}|${draftGen ?? ""}|${draftFav}`;
+  const appliedKey = `${[...activeTypes].sort().join(",")}|${activeGen ?? ""}|${activeFav}`;
   const dirty = draftKey !== appliedKey;
 
   const regionName = (id: number) => filters.regionNames[id - 1];
 
-  const navigate = (types: PokemonType[], gen: number | null) => {
+  // Al cargar, si la cookie no coincide con localStorage se reescribe, y con
+  // ?fav=1 el servidor vuelve a calcular la rejilla con la buena (§4.10)
+  useEffect(() => {
+    if (syncFavoritesCookie() && urlFav) router.refresh();
+    // Solo al montar: después cada cambio ya escribe la cookie
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const navigate = (types: PokemonType[], gen: number | null, fav: boolean) => {
     const params = new URLSearchParams();
     if (types.length > 0) params.set("types", types.join(","));
     if (gen !== null) params.set("gen", String(gen));
+    if (fav) params.set("fav", "1");
     // La búsqueda del hero se mantiene al cambiar los filtros
     const search = searchParams.get("q");
     if (search) params.set("q", search);
     const query = params.toString();
     startTransition(() => {
-      setSelection({ types, gen });
+      setSelection({ types, gen, fav });
       router.push(`/${locale}${query ? `?${query}` : ""}`, { scroll: false });
     });
   };
@@ -123,6 +156,7 @@ export default function PokemonFiltersBar({
   const openPanel = () => {
     setDraftTypes(activeTypes);
     setDraftGen(activeGen);
+    setDraftFav(activeFav);
     setOpen(true);
   };
 
@@ -138,7 +172,7 @@ export default function PokemonFiltersBar({
     setDraftGen((current) => (current === id ? null : id));
 
   const apply = () => {
-    navigate(draftTypes, draftGen);
+    navigate(draftTypes, draftGen, draftFav);
     setOpen(false);
   };
 
@@ -203,6 +237,7 @@ export default function PokemonFiltersBar({
         onClick={() => {
           setDraftTypes([]);
           setDraftGen(null);
+          setDraftFav(false);
         }}
         className={`${pill} bg-control text-ink`}
       >
@@ -219,6 +254,31 @@ export default function PokemonFiltersBar({
     </>
   );
 
+  // «♥ Solo favoritos · 12», como las pastillas de región: 40px en el panel
+  // y 44px en la hoja. La cifra es la de favoritos guardados.
+  const favoritesPill = (size: string) => (
+    <button
+      type="button"
+      aria-pressed={draftFav}
+      aria-label={favoritesText.filterCountLabel.replace("{n}", String(favoriteCount))}
+      onClick={() => setDraftFav((current) => !current)}
+      className={`${size} bg-control text-ink ${draftFav ? selectedRing : ""}`}
+    >
+      {draftFav && (
+        <Check aria-hidden="true" strokeWidth={3.5} className="size-3.5 shrink-0 -ml-0.5" />
+      )}
+      <Heart
+        aria-hidden="true"
+        strokeWidth={2.5}
+        fill={draftFav ? "currentColor" : "none"}
+        className="size-4 shrink-0"
+      />
+      <span className="num">
+        {favoritesText.filterCount.replace("{n}", String(favoriteCount))}
+      </span>
+    </button>
+  );
+
   const typesHeading = (
     <div className="flex items-baseline gap-3 mb-3">
       <h3 id="filters-types" className="font-extrabold">
@@ -233,13 +293,16 @@ export default function PokemonFiltersBar({
   // tableta, las regiones pasan a dos filas y los tipos a tres).
   const desktopPanel = (
     <div className="mt-4 rounded-surface bg-surface text-ink p-6">
-      <section aria-labelledby="filters-region">
-        <div className="flex items-center justify-between gap-4 -mt-1.5 mb-3">
-          <h3 id="filters-region" className="font-extrabold">
-            {filters.region}
-          </h3>
-          {closeButton}
-        </div>
+      {/* Cabecera: «Solo favoritos» a la izquierda y «×» a la derecha */}
+      <div className="flex items-center justify-between gap-4 -mt-1.5">
+        {favoritesPill(`${compactPill} w-auto! px-4`)}
+        {closeButton}
+      </div>
+
+      <section aria-labelledby="filters-region" className="mt-3">
+        <h3 id="filters-region" className="font-extrabold mb-3">
+          {filters.region}
+        </h3>
         <ul className="grid grid-cols-5 lg:grid-cols-9 gap-2">
           {GENERATIONS.map((gen) => {
             const selected = draftGen === gen.id;
@@ -310,6 +373,8 @@ export default function PokemonFiltersBar({
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar px-6 pb-6">
+        <div className="mb-6">{favoritesPill(pill)}</div>
+
         <section aria-labelledby="filters-types">
           {typesHeading}
           <ul className="grid grid-cols-2 gap-2">
@@ -445,6 +510,27 @@ export default function PokemonFiltersBar({
       {activeCount > 0 && (
         <ul aria-label={filters.active} className="mt-4 flex flex-wrap items-center gap-2">
           <AnimatePresence initial={false}>
+            {activeFav && (
+              <motion.li
+                key="favorites"
+                initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="inline-flex items-center gap-1.5 h-10 pl-4 pr-1 rounded-pill bg-surface text-ink font-extrabold text-small"
+              >
+                <Heart aria-hidden="true" strokeWidth={2.5} fill="currentColor" className="size-4 shrink-0" />
+                {favoritesText.chip}
+                <button
+                  type="button"
+                  aria-label={`${filters.remove} ${favoritesText.chip}`}
+                  onClick={() => navigate(activeTypes, activeGen, false)}
+                  className="relative grid place-items-center size-8 ml-1 rounded-pill cursor-pointer active:scale-[0.9] motion-safe:transition-transform duration-150 after:absolute after:-inset-1.5"
+                >
+                  <X aria-hidden="true" strokeWidth={3} className="size-4" />
+                </button>
+              </motion.li>
+            )}
             {activeTypes.map((type) => (
               <motion.li
                 key={type}
@@ -463,6 +549,7 @@ export default function PokemonFiltersBar({
                     navigate(
                       activeTypes.filter((t) => t !== type),
                       activeGen,
+                      activeFav,
                     )
                   }
                   className="relative grid place-items-center size-8 ml-1 rounded-pill cursor-pointer active:scale-[0.9] motion-safe:transition-transform duration-150 after:absolute after:-inset-1.5"
@@ -484,7 +571,7 @@ export default function PokemonFiltersBar({
                 <button
                   type="button"
                   aria-label={`${filters.remove} ${regionName(activeGen)}`}
-                  onClick={() => navigate(activeTypes, null)}
+                  onClick={() => navigate(activeTypes, null, activeFav)}
                   className="relative grid place-items-center size-8 ml-1 rounded-pill cursor-pointer active:scale-[0.9] motion-safe:transition-transform duration-150 after:absolute after:-inset-1.5"
                 >
                   <X aria-hidden="true" strokeWidth={3} className="size-4" />
@@ -495,7 +582,7 @@ export default function PokemonFiltersBar({
           <li>
             <button
               type="button"
-              onClick={() => navigate([], null)}
+              onClick={() => navigate([], null, false)}
               className="h-11 px-2 rounded-pill font-extrabold text-small underline underline-offset-4 decoration-2 cursor-pointer"
             >
               {filters.clearAll}

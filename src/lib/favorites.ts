@@ -146,6 +146,22 @@ function writeFavoritesCookie(ids: readonly number[]) {
   }
 }
 
+// Al cargar la portada manda localStorage: si la cookie no coincide (se borró,
+// caducó o la cambió otra cosa), se reescribe. Devuelve si hubo que hacerlo,
+// para que la portada con ?fav=1 pida de nuevo el resultado al servidor.
+export function syncFavoritesCookie(): boolean {
+  let cookie: string | null;
+  try {
+    cookie = readFavoritesCookieValue(document.cookie);
+  } catch {
+    return false;
+  }
+  const expected = encodeFavoritesCookie(getFavoritesSnapshot());
+  if (cookie === expected) return false;
+  writeFavoritesCookie(getFavoritesSnapshot());
+  return true;
+}
+
 export function getFavoritesSnapshot(): number[] {
   if (current === null) current = readStoredFavorites();
   return current;

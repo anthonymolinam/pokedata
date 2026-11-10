@@ -48,7 +48,7 @@ export default async function HomePage({ params, searchParams }: PageProps) {
   const { locale: rawLocale } = await params;
   const locale: Locale = rawLocale === "en" ? "en" : "es";
   const resolvedParams = await searchParams;
-  const { filters } = getDictionary(locale);
+  const { filters, favorites } = getDictionary(locale);
 
   const currentPage = Math.max(1, Number(resolvedParams?.page) || 1);
   // La cookie de favoritos solo se lee con ?fav=1 (DESIGN.md §4.10)
@@ -75,7 +75,14 @@ export default async function HomePage({ params, searchParams }: PageProps) {
       >
         <PokemonFiltersBar
           locale={locale}
-          title={genParam ? filters.regionNames[genParam - 1] : filters.national}
+          // Con región manda la región; si no, «Tus favoritos» con ?fav=1
+          title={
+            genParam
+              ? filters.regionNames[genParam - 1]
+              : query.fav
+                ? favorites.title
+                : filters.national
+          }
           count={
             browserFavorites ? (
               <span className="invisible">1025 Pokémon</span>

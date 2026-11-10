@@ -666,7 +666,7 @@ Opción elegida (8 de noviembre de 2026): **un botón redondo como el de Varioco
 
 #### El filtro
 
-- **En el panel** (escritorio y hoja móvil), la fila de cabecera pasa a tener a la izquierda una pastilla **«♥ Solo favoritos · 12»** («Only favorites · 12»), igual que las de región (`--control`, 40px; 44px en la hoja). Al elegirla lleva la marca ✓ y el borde de selección, y la cifra es el número de favoritos guardados. El «×» sigue a la derecha, y «Región» baja a la línea siguiente, sobre sus pastillas. En escritorio el panel crece unos 52px (de unos 355 a unos 407px) y sigue sin scroll interno.
+- **En el panel** (escritorio y hoja móvil), la fila de cabecera pasa a tener a la izquierda una pastilla **«♥ Solo favoritos · 12»** («Only favorites · 12»), igual que las de región (`--control`, 40px; 44px en la hoja). Al elegirla lleva la marca ✓ y el borde de selección, y la cifra es el número de favoritos guardados. El «×» sigue a la derecha, y «Región» baja a la línea siguiente, sobre sus pastillas. En escritorio el panel crece unos 52px (de unos 355 a unos 412px medidos) y sigue sin scroll interno. En la hoja móvil la cabecera ya lleva el título «Filtros» y el «×», así que la pastilla va en la primera fila del contenido, sobre «Tipos».
 - Se aplica con el resto al pulsar «Aplicar», escribe **`?fav=1`** en la URL y suma uno al contador de «Filtros». Se combina con la región, los tipos y la búsqueda (`?q=`): el resultado es la intersección. La paginación se mantiene.
 - **`?fav=1` quiere decir «mis favoritos»:** quien abre un enlace con `?fav=1` ve los suyos, no los de quien lo envió.
 - **Chip:** el primero de la fila de chips, una pastilla blanca con el corazón relleno y «Favoritos» / «Favorites», y su «×» («Quitar filtro Favoritos»).
