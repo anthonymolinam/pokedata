@@ -103,7 +103,11 @@ export default function PokemonCard({
         style={{ height: `${ART_TOP_ZONE}cqi` }}
       >
         <div
-          className={`pointer-events-none absolute motion-safe:transition-transform ${spring} ${grow}`}
+          // will-change: el navegador dibuja el artwork una vez y lo reutiliza
+          // al crecer. Sin él, Chrome lo estira durante la animación y al
+          // acabar lo vuelve a dibujar a su nuevo tamaño: se veía «saltar» a
+          // nítido medio segundo después del hover
+          className={`pointer-events-none absolute motion-safe:will-change-transform motion-safe:transition-transform ${spring} ${grow}`}
           style={{
             left: `${fit.left}cqi`,
             top: `${fit.top}cqi`,
