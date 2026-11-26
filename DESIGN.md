@@ -716,7 +716,7 @@ Todos en `translations.ts`, en una sección `favorites`, en los dos idiomas: el 
   - `src/app/apple-icon.png`: 180×180 para iPhone, la marca al 68 % sobre blanco a sangre (iOS redondea las esquinas y no admite transparencia).
   - `src/app/manifest.ts` (`/manifest.webmanifest`) para Android: «PokéData», `display: standalone`, fondo y `theme_color` en `--ground` claro, y tres iconos en `public/icons/`: 192 y 512 (`any`, la marca al 72 % sobre blanco) y 512 `maskable` (la marca al 54 %, dentro del círculo seguro del 80 %).
   - El proxy de idioma deja pasar estas rutas porque llevan un punto.
-- **Dominio:** las canónicas, el `hreflang`, `og:url`, el JSON-LD, el sitemap y `robots.txt` salen de `SITE_URL` (`src/lib/metadata.ts`): `https://www.pokedata.app`, el dominio principal en Vercel (`pokedata.app` redirige ahí), salvo que `NEXT_PUBLIC_SITE_URL` diga otra cosa.
+- **Dominio:** las canónicas, el `hreflang`, `og:url`, el JSON-LD, el sitemap y `robots.txt` salen de `SITE_URL` (`src/lib/metadata.ts`): `https://pokedata.app`, sin www (`www.pokedata.app` y `*.vercel.app` redirigen ahí con 301 desde `src/proxy.ts`), salvo que `NEXT_PUBLIC_SITE_URL` diga otra cosa.
 
 ---
 

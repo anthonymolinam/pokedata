@@ -6,8 +6,34 @@ export const locales = ["en", "es"] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "es";
 
+// Dominio único de producción (el mismo de SITE_URL en src/lib/metadata.ts)
+const CANONICAL_HOST = "pokedata.app";
+
+function detectLocale(request: NextRequest): Locale {
+  const acceptLanguage = request.headers.get("accept-language") || "";
+  return acceptLanguage.toLowerCase().includes("es") ? "es" : defaultLocale;
+}
+
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // 0. Un solo dominio: *.vercel.app y www.pokedata.app van a pokedata.app con
+  // 301, con la misma ruta y query. Las vistas previas (VERCEL_ENV=preview) y
+  // el desarrollo local se quedan donde están
+  const host = (request.headers.get("host") || "").split(":")[0].toLowerCase();
+  const isPreview = process.env.VERCEL_ENV === "preview";
+  const wrongHost =
+    !isPreview && (host === `www.${CANONICAL_HOST}` || host.endsWith(".vercel.app"));
+  if (wrongHost) {
+    const target = new URL(request.nextUrl.pathname + request.nextUrl.search, `https://${CANONICAL_HOST}`);
+    // Sin idioma en la ruta, se resuelve aquí mismo para no encadenar dos saltos
+    const first = pathname.split("/").filter(Boolean)[0];
+    const skip = pathname.startsWith("/api") || pathname.startsWith("/_next") || pathname.includes(".");
+    if (!skip && !locales.includes(first as Locale)) {
+      target.pathname = `/${detectLocale(request)}${pathname}`;
+    }
+    return NextResponse.redirect(target, 301);
+  }
 
   // 1. Ignorar llamadas internas de Next.js, API, recursos estáticos, imágenes y favicon
   if (
@@ -24,14 +50,12 @@ export default function proxy(request: NextRequest) {
 
   // 2. Si no incluye /es o /en al inicio, redirigir detectando el idioma del navegador
   if (!pathnameHasLocale) {
-    const acceptLanguage = request.headers.get("accept-language") || "";
-    const preferredLocale: Locale = acceptLanguage.toLowerCase().includes("es")
-      ? "es"
-      : defaultLocale;
-
-    return NextResponse.redirect(
-      new URL(`/${preferredLocale}${pathname}`, request.url),
+    const res = NextResponse.redirect(
+      new URL(`/${detectLocale(request)}${pathname}`, request.url),
+      301,
     );
+    res.headers.set("Vary", "Accept-Language");
+    return res;
   }
 
   const currentLocale = firstSegment;
@@ -44,7 +68,8 @@ export default function proxy(request: NextRequest) {
     // Evitar bucle infinito si la ruta canónica tiene el mismo nombre que la interna
     if (localizedSlug !== currentSlug) {
       return NextResponse.redirect(
-        new URL(`/${currentLocale}/${localizedSlug}`, request.url),
+        new URL(`/${currentLocale}/${localizedSlug}${request.nextUrl.search}`, request.url),
+        301,
       );
     }
   }

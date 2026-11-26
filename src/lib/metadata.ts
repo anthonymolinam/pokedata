@@ -3,9 +3,9 @@ import type { Locale } from "@/proxy";
 
 // Dirección pública del sitio para canónicas, hreflang, sitemap y robots: el
 // dominio propio, salvo que NEXT_PUBLIC_SITE_URL diga otra (una vista previa).
-// Con www, que es el principal en Vercel: pokedata.app redirige ahí
+// Siempre sin www y nunca *.vercel.app: ambos redirigen con 301 (src/proxy.ts)
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.pokedata.app"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://pokedata.app"
 ).replace(/\/$/, "");
 
 export const SITE_NAME = "PokéData";
